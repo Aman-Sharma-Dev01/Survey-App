@@ -12,6 +12,7 @@ import Analysis from './pages/Analysis';
 import SurveyRespond from './pages/SurveyRespond';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import LandingPage from './components/LandingPage'; 
 
 // === Component Imports ===
 import Navbar from './components/Navbar';
@@ -23,15 +24,14 @@ const navigate = (path) => {
 
 // --- The Core Routing Component ---
 const App = () => {
-    // Uses hash-based routing (e.g., #dashboard, #login)
-    const [currentPath, setCurrentPath] = useState(window.location.hash.slice(1) || 'dashboard');
-    // Grab the full auth context object (user, token, isAuthenticated, login, logout, isLoading)
+    // Default path is '/'
+    const [currentPath, setCurrentPath] = useState(window.location.hash.slice(1) || '/');
     const authState = useAuth();
 
     // 1. Setup Hash Change Listener
     useEffect(() => {
         const handleHashChange = () => {
-            setCurrentPath(window.location.hash.slice(1) || 'dashboard');
+            setCurrentPath(window.location.hash.slice(1) || '/');
         };
         window.addEventListener('hashchange', handleHashChange);
         handleHashChange(); // Initial path check
@@ -40,10 +40,8 @@ const App = () => {
     }, []);
 
     // 2. Authentication Guard
-    // Redirects unauthenticated users away from protected routes.
     useEffect(() => {
         const protectedPaths = ['dashboard', 'create', 'analysis'];
-        // Split path to handle IDs (e.g., 'analysis/123' -> 'analysis')
         const path = currentPath.split('/')[0];
 
         if (protectedPaths.includes(path) && !authState.isAuthenticated) {
@@ -56,21 +54,19 @@ const App = () => {
         const [path, id] = currentPath.split('/');
 
         switch (path) {
+            case '/':
+                return <LandingPage navigate={navigate} />;
             case 'login':
                 return <Login navigate={navigate} />;
             case 'register':
                 return <Register navigate={navigate} />;
             case 'dashboard':
-                // Protected page - Guard handles unauth access
                 return <Dashboard navigate={navigate} />;
             case 'create':
-                // Protected page
                 return <SurveyCreate navigate={navigate} />;
             case 'analysis':
-                // Protected page, requires survey ID
                 return id ? <Analysis surveyId={id} /> : <Dashboard navigate={navigate} />;
             case 'respond':
-                // Public page, requires survey ID
                 return id ? <SurveyRespond surveyId={id} /> : (
                     <div className="text-center p-10 mt-20">
                         <h1 className="text-2xl font-bold text-gray-800">Public Survey Entry</h1>
@@ -78,14 +74,17 @@ const App = () => {
                     </div>
                 );
             default:
-                // Default route based on auth status
-                return authState.isAuthenticated ? <Dashboard navigate={navigate} /> : <Login navigate={navigate} />;
+                // Default for any unknown route is to go to the LandingPage
+                return <LandingPage navigate={navigate} />;
         }
     };
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
-            <Navbar currentPage={currentPath.split('/')[0]} handleNavigate={navigate} />
+            {/* CHANGED: Conditionally render the Navbar.
+              It will only show if the currentPath is NOT '/'
+            */}
+            {currentPath !== '/' && <Navbar currentPage={currentPath.split('/')[0]} handleNavigate={navigate} />}
             <main>
                 {renderPage()}
             </main>
@@ -94,7 +93,6 @@ const App = () => {
 };
 
 // --- Root Application Wrapper ---
-// This ensures that AuthProvider is at the highest level, making the context available to App.
 const RootApp = () => (
     <AuthProvider>
         <App />
