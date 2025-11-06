@@ -5,6 +5,7 @@ import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import surveyRoutes from './routes/surveyRoutes.js';
 import responseRoutes from './routes/responseRoutes.js';
+import aiRouter from './routes/ai.js';
 
 // Load environment variables
 dotenv.config();
@@ -15,7 +16,8 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(cors());
+// app.use(cors());
+app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json()); // Allows parsing of JSON request bodies
 
 // Simple test route
@@ -27,7 +29,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/surveys', surveyRoutes);
 app.use('/api/responses', responseRoutes);
-
+app.use('/api/ai', aiRouter);
 // Error Handling Middleware (Basic example)
 app.use((err, req, res, next) => {
     console.error(err.stack);
