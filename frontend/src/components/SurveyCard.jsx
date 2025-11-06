@@ -1,7 +1,7 @@
 import React from 'react';
-import { List, BarChart } from 'lucide-react';
+import { List, BarChart, Trash2 } from 'lucide-react'; // <-- Added Trash icon
 
-const SurveyCard = ({ survey, onAnalyze, onPublish, onUnpublish }) => {
+const SurveyCard = ({ survey, onAnalyze, onPublish, onUnpublish, onDelete }) => {
     const surveyLink = `${window.location.origin}/#respond/${survey._id}`;
 
     return (
@@ -16,6 +16,7 @@ const SurveyCard = ({ survey, onAnalyze, onPublish, onUnpublish }) => {
                     <span className="font-semibold text-green-700">{survey.responseCount} Responses</span>
                 </div>
             </div>
+
             <div className="mt-4 pt-4 border-t border-gray-100">
                 <div className={`text-center py-1 rounded-full text-xs font-semibold mb-3 ${
                     survey.isPublished ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
@@ -29,7 +30,6 @@ const SurveyCard = ({ survey, onAnalyze, onPublish, onUnpublish }) => {
                             type="text"
                             readOnly
                             value={surveyLink}
-                            // Using document.execCommand('copy') for better compatibility in isolated environments
                             onClick={(e) => { e.target.select(); document.execCommand('copy'); }}
                             className="w-full p-2 border border-indigo-300 rounded-lg text-xs bg-indigo-50 text-indigo-700 cursor-copy focus:ring-2 focus:ring-indigo-500"
                             title="Click to copy survey link"
@@ -38,6 +38,7 @@ const SurveyCard = ({ survey, onAnalyze, onPublish, onUnpublish }) => {
                     </div>
                 )}
 
+                {/* Action Buttons */}
                 <div className="flex justify-between space-x-2">
                     <button
                         onClick={() => onAnalyze()}
@@ -45,6 +46,7 @@ const SurveyCard = ({ survey, onAnalyze, onPublish, onUnpublish }) => {
                     >
                         Analyze
                     </button>
+
                     {survey.isPublished ? (
                         <button
                             onClick={() => onUnpublish(survey)}
@@ -60,6 +62,19 @@ const SurveyCard = ({ survey, onAnalyze, onPublish, onUnpublish }) => {
                             Publish
                         </button>
                     )}
+
+                    {/* 🗑️ Delete Button */}
+                    <button
+                        onClick={() => {
+                            if (window.confirm("Are you sure you want to delete this survey?")) {
+                                onDelete(survey._id);
+                            }
+                        }}
+                        className="px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition flex items-center"
+                    >
+                        <Trash2 size={16} className="mr-1 text-gray-600" />
+                        Delete
+                    </button>
                 </div>
             </div>
         </div>

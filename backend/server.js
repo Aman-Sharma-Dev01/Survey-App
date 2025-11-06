@@ -17,7 +17,7 @@ const app = express();
 
 // Middleware
 // app.use(cors());
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(cors({ origin: 'http://surveyzen.vercel.app', credentials: true }));
 app.use(express.json()); // Allows parsing of JSON request bodies
 
 // Simple test route

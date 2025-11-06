@@ -1,6 +1,6 @@
 // Replace with your backend server URL
-// const BASE_URL = 'https://survey-app-e5xz.onrender.com/api'; 
-const BASE_URL = 'http://localhost:5000/api'; 
+const BASE_URL = 'https://survey-app-e5xz.onrender.com/api'; 
+// const BASE_URL = 'http://localhost:5000/api'; 
 // Helper to access token storage directly (AuthContext stores token in localStorage)
 const getAuthToken = () => localStorage.getItem('token');
 const removeAuthToken = () => localStorage.removeItem('token');
@@ -60,5 +60,9 @@ export const fetchApi = async (url, method = 'GET', data = null, isProtected = f
     }
 };
 
+// API Call: DELETE /surveys/:surveyId
+export const deleteSurvey = async (surveyId) => {
+    return fetchApi(`/surveys/${surveyId}`, 'DELETE', null, true);
+};
 // Utility to create small temporary IDs used for client-side keys
 export const generateTempId = () => `t_${Math.random().toString(36).slice(2,9)}_${Date.now().toString(36)}`;

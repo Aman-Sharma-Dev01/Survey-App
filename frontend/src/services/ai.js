@@ -1,5 +1,5 @@
 export async function chatAI({ messages, context, model, temperature }) {
-  const r = await fetch('http://localhost:5000/api/ai/chat', {
+  const r = await fetch('https://survey-app-e5xz.onrender.com/api/ai/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
