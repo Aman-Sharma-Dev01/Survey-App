@@ -17,7 +17,7 @@ const app = express();
 
 // Middleware
 // app.use(cors());
-app.use(cors({ origin: 'https://surveyzen.live', credentials: true }));
+app.use(cors({ origin: 'https://www.surveyzen.live', credentials: true }));
 app.use(express.json()); // Allows parsing of JSON request bodies
 
 // Simple test route
