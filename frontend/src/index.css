@@ -1,3 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* You can force it, but the config file is usually enough */
+@layer base {
+  body {
+    font-family: 'Roboto', sans-serif;
+  }
+}
