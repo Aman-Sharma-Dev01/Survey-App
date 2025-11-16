@@ -274,7 +274,7 @@ export default function BlogPage({ navigate, slug }) {
             {visible.map((post) => (
               <article key={post.slug} className="p-6 bg-white border rounded-lg">
                 <a
-                  href={`/blog/${post.slug}`}
+                  href={`#blog/${post.slug}`}
                   className="text-xl font-bold hover:underline"
                 >
                   {post.title}
