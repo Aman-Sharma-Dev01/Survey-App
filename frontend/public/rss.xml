@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>SurveyZen Blog</title>
+    <link>https://surveyzen.live/#/blog</link>
+    <description>Tips, templates, and best practices for surveys, research, and feedback.</description>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 17 Feb 2025 12:00:00 GMT</lastBuildDate>
+
+    <!-- ===============================
+         Article 1
+    ================================ -->
+    <item>
+      <title>How to Create Effective Surveys in 2025</title>
+      <link>https://surveyzen.live/#/blog/how-to-create-effective-surveys-2025</link>
+      <description><![CDATA[Practical tips and templates to design surveys that get honest, useful responses — from question phrasing to distribution strategies.]]></description>
+      <pubDate>Thu, 10 Jul 2025 09:00:00 GMT</pubDate>
+      <guid>how-to-create-effective-surveys-2025</guid>
+    </item>
+
+    <!-- ===============================
+         Article 2
+    ================================ -->
+    <item>
+      <title>SurveyZen vs Google Forms — A Practical Comparison</title>
+      <link>https://surveyzen.live/#/blog/surveyzen-vs-google-forms</link>
+      <description><![CDATA[A straightforward feature-by-feature comparison between SurveyZen and Google Forms to help you choose the right tool for your needs.]]></description>
+      <pubDate>Fri, 02 May 2025 09:00:00 GMT</pubDate>
+      <guid>surveyzen-vs-google-forms</guid>
+    </item>
+
+    <!-- ===============================
+         Article 3
+    ================================ -->
+    <item>
+      <title>5 Survey Templates Every Educator Needs</title>
+      <link>https://surveyzen.live/#/blog/5-survey-templates-for-educators</link>
+      <description><![CDATA[Ready-to-use templates for course feedback, event evaluations, student check-ins, and parent surveys.]]></description>
+      <pubDate>Tue, 18 Mar 2025 09:00:00 GMT</pubDate>
+      <guid>5-survey-templates-for-educators</guid>
+    </item>
+
+  </channel>
+</rss>

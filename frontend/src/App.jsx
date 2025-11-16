@@ -12,6 +12,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import LandingPage from './components/LandingPage';
 import AboutUs from './components/AboutUs.jsx';
+import Blog from './components/Blog.jsx';   // ⭐ NEW IMPORT
 
 // === Component Imports ===
 import Navbar from './components/Navbar';
@@ -65,7 +66,6 @@ const App = () => {
     'features',
     'pricing',
     'how-it-works',
-   
     'contact',
   ];
 
@@ -85,8 +85,13 @@ const App = () => {
       case 'register':
         return <Register navigate={navigate} />;
 
-      case 'about':                      // ⭐ NEW ROUTE
+      case 'about':
         return <AboutUs navigate={navigate} />;
+
+      case 'blog':                      // ⭐ FULL BLOG ROUTE
+        return pathId
+          ? <Blog slug={pathId} navigate={navigate} />   // blog post view
+          : <Blog navigate={navigate} />;                // blog list view
 
       case 'dashboard':
         return <Dashboard navigate={navigate} />;
