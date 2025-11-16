@@ -11,8 +11,6 @@ import {
 } from 'lucide-react';
 
 // --- Navbar Component ---
-// Simple navigation with a logo, links, and action buttons.
-// It includes a mobile menu that is toggled with 'useState'.
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -34,7 +32,7 @@ const Navbar = () => {
             </span>
           </div>
 
-          {/* Desktop Nav Links */}
+          {/* Desktop Nav */}
           <div className="hidden md:flex md:items-center md:space-x-6">
             {navLinks.map((link) => (
               <a
@@ -47,16 +45,16 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Desktop Action Buttons */}
+          {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-3">
             <a
-              href="#login" // CHANGED
+              href="#login"
               className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium"
             >
               Log In
             </a>
             <a
-              href="#register" // CHANGED
+              href="#register"
               className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-shadow shadow-sm"
             >
               Sign Up Free
@@ -67,19 +65,15 @@ const Navbar = () => {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
             >
-              {isMobileMenuOpen ? (
-                <X className="block h-6 w-6" />
-              ) : (
-                <Menu className="block h-6 w-6" />
-              )}
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
@@ -95,13 +89,13 @@ const Navbar = () => {
           </div>
           <div className="px-4 py-3 border-t border-gray-200 space-y-3">
             <a
-              href="#register" // CHANGED
+              href="#register"
               className="block w-full text-center bg-indigo-600 text-white px-4 py-2 rounded-md text-base font-medium hover:bg-indigo-700"
             >
               Sign Up Free
             </a>
             <a
-              href="#login" // CHANGED
+              href="#login"
               className="block w-full text-center text-gray-600 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-md text-base font-medium"
             >
               Log In
@@ -114,8 +108,6 @@ const Navbar = () => {
 };
 
 // --- Hero Component ---
-// The main "above the fold" content.
-// A strong headline, sub-headline, and a clear call-to-action button.
 const Hero = () => {
   return (
     <section className="bg-white">
@@ -130,8 +122,8 @@ const Hero = () => {
         </p>
         <div className="mt-10 flex justify-center">
           <a
-            href="#register" // CHANGED
-            className="w-full sm:w-auto bg-indigo-600 text-white px-8 py-3 rounded-md text-lg font-medium hover:bg-indigo-700 transition-shadow shadow-lg transform hover:-translate-y-0.5"
+            href="#register"
+            className="w-full sm:w-auto bg-indigo-600 text-white px-8 py-3 rounded-md text-lg font-medium hover:bg-indigo-700 transition-shadow shadow-lg"
           >
             Create Your First Survey
           </a>
@@ -144,9 +136,7 @@ const Hero = () => {
   );
 };
 
-// --- Features Component ---
-// Highlights the top 3 benefits of the service.
-// Uses icons from lucide-react for visual appeal.
+// --- Features ---
 const Features = () => {
   const featureList = [
     {
@@ -200,8 +190,7 @@ const Features = () => {
   );
 };
 
-// --- HowItWorks Component ---
-// A simple 3-step guide to reassure users of the app's simplicity.
+// --- How It Works ---
 const HowItWorks = () => {
   const steps = [
     {
@@ -232,9 +221,14 @@ const HowItWorks = () => {
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-10">
           {steps.map((step, index) => (
             <div key={step.name} className="relative">
-              {/* Connector line for desktop */}
               {index < steps.length - 1 && (
-                <div className="hidden md:block absolute top-10 left-1/2 w-full h-0.5 bg-gray-200 -translate-x-0" style={{width: "calc(100% - 2.5rem)", left: "calc(50% + 1.25rem)"}}></div>
+                <div
+                  className="hidden md:block absolute top-10 left-1/2 w-full h-0.5 bg-gray-200 -translate-x-0"
+                  style={{
+                    width: 'calc(100% - 2.5rem)',
+                    left: 'calc(50% + 1.25rem)',
+                  }}
+                />
               )}
               <div className="relative flex flex-col items-center text-center p-6 bg-white rounded-lg">
                 <div className="flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100 text-indigo-600 mx-auto ring-8 ring-white">
@@ -255,8 +249,7 @@ const HowItWorks = () => {
   );
 };
 
-// --- FinalCTA Component ---
-// A final call-to-action to convert users before the footer.
+// --- Final CTA ---
 const FinalCTA = () => {
   return (
     <section className="bg-indigo-600">
@@ -268,7 +261,7 @@ const FinalCTA = () => {
           Join thousands of others getting the insights they need.
         </p>
         <a
-          href="#register" // CHANGED
+          href="#register"
           className="mt-8 w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-indigo-50"
         >
           Sign Up for Free
@@ -278,25 +271,43 @@ const FinalCTA = () => {
   );
 };
 
-// --- Footer Component ---
-// Standard website footer with links and copyright.
+// --- Footer Component (Updated) ---
 const Footer = () => {
   const footerSections = [
     {
       title: 'Product',
-      links: ['Features', 'Pricing', 'Integrations', 'Examples'],
+      links: [
+        { name: 'Features', href: '#features' },
+        { name: 'Pricing', href: '#pricing' },
+        { name: 'Integrations', href: '#' },
+        { name: 'Examples', href: '#' },
+      ],
     },
     {
       title: 'Company',
-      links: ['About Us', 'Careers', 'Blog', 'Contact'],
+      links: [
+        { name: 'About Us', href: '#about' }, // ⭐ FIXED
+        { name: 'Careers', href: '#' },
+        { name: 'Blog', href: '#' },
+        { name: 'Contact', href: '#contact' },
+      ],
     },
     {
       title: 'Resources',
-      links: ['Help Center', 'Templates', 'Security', 'Webinars'],
+      links: [
+        { name: 'Help Center', href: '#' },
+        { name: 'Templates', href: '#' },
+        { name: 'Security', href: '#' },
+        { name: 'Webinars', href: '#' },
+      ],
     },
     {
       title: 'Legal',
-      links: ['Privacy Policy', 'Terms of Service', 'Cookie Policy'],
+      links: [
+        { name: 'Privacy Policy', href: '#privacy' },
+        { name: 'Terms of Service', href: '#terms' },
+        { name: 'Cookie Policy', href: '#' },
+      ],
     },
   ];
 
@@ -311,9 +322,9 @@ const Footer = () => {
               </h3>
               <ul className="mt-4 space-y-3">
                 {section.links.map((link) => (
-                  <li key={link}>
-                    <a href="#" className="text-base hover:text-white">
-                      {link}
+                  <li key={link.name}>
+                    <a href={link.href} className="text-base hover:text-white">
+                      {link.name}
                     </a>
                   </li>
                 ))}
@@ -321,32 +332,21 @@ const Footer = () => {
             </div>
           ))}
         </div>
+
         <div className="mt-12 border-t border-gray-700 pt-8 flex flex-col sm:flex-row justify-between items-center">
           <p className="text-base">
-            &copy; {new Date().getFullYear()} SurveySphere. All rights reserved.
+            &copy; {new Date().getFullYear()} SurveyZen. All rights reserved.
           </p>
-          {/* Add social icons here if you want */}
         </div>
       </div>
     </footer>
   );
 };
 
-// --- Main App Component ---
-// This is the root component that renders all the sections.
-// RENAMED to LandingPage and it doesn't need the navigate prop
-// because the href attributes handle the hash change.
-export default function LandingPage({ navigate }) { // <-- Accepts navigate prop from App.jsx
+// --- Main Landing Page ---
+export default function LandingPage({ navigate }) {
   return (
     <div className="antialiased text-gray-800 bg-white">
-      {/* Even though we are using href="#login", we pass the navigate prop 
-        in case you want to change it to an onClick later.
-        For now, Navbar doesn't use it, but Hero and FinalCTA do.
-        Let's make them all consistent by using the navigate prop.
-        
-        RE-CORRECTION: Your App.jsx passes navigate, let's use it.
-        This is better for long-term maintenance. See updated code below.
-      */}
       <Navbar navigate={navigate} />
       <main>
         <Hero navigate={navigate} />
