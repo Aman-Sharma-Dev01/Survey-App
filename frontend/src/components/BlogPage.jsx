@@ -120,7 +120,7 @@ const estimateReadingTime = (text) =>
   Math.max(1, Math.round((text || "").split(/\s+/).length / 200));
 
 // ---------------------- BLOG COMPONENT ----------------------
-export default function Blog({ navigate, slug }) {
+export default function BlogPage({ navigate, slug }) {
   const [query, setQuery] = useState("");
   const [activeTag, setActiveTag] = useState("");
   const [page, setPage] = useState(1);
@@ -274,7 +274,7 @@ export default function Blog({ navigate, slug }) {
             {visible.map((post) => (
               <article key={post.slug} className="p-6 bg-white border rounded-lg">
                 <a
-                  href={`#/blog/${post.slug}`}
+                  href={`/blog/${post.slug}`}
                   className="text-xl font-bold hover:underline"
                 >
                   {post.title}
@@ -287,7 +287,7 @@ export default function Blog({ navigate, slug }) {
                 <p className="mt-3 text-slate-700">{post.excerpt}</p>
 
                 <a
-                  href={`/blog/${post.slug}`}
+                  href={`#blog/${post.slug}`}
                   className="text-indigo-600 underline mt-3 inline-block"
                 >
                   Read more →

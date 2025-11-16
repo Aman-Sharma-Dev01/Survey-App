@@ -10,7 +10,7 @@ import {
   Rocket
 } from 'lucide-react';
 
-import { blogPostsMeta } from "./Blog.jsx"; // ⭐ NEW IMPORT
+import { blogPostsMeta } from "./BlogPage.jsx"; // ⭐ NEW IMPORT
 
 // ================= NAVBAR =================
 const Navbar = () => {
@@ -20,7 +20,7 @@ const Navbar = () => {
     { name: 'Features', href: '#features' },
     { name: 'How it Works', href: '#how-it-works' },
     { name: 'Pricing', href: '#pricing' },
-    { name: 'Blog', href: '#/blog' }, // ⭐ Added
+    { name: 'Blog', href: '#blog' }, // ⭐ Added
   ];
 
   return (
