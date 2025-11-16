@@ -279,20 +279,25 @@ Incentives typically boost response rates by **20%–60%**.
 
 ### **Email Template**
 Subject: *Quick Question (Takes 1 Minute)*  
-Body:
-
+Body:Hi {{name}},
+We’re working on improving your experience and would love your feedback.
+This survey takes less than 60 seconds:
+{{survey_link}}
+Thank you for helping us improve!
 
 
 ---
 
 ### **WhatsApp Template**
-
-
-
----
+Hey! 👋
+We’d love your quick feedback (just 1 minute):
+{{survey_link}}
+Thanks for helping us improve!
 
 ### **Slack Reminder Template**
-
+Reminder! Please submit this week’s check-in survey:
+{{survey_link}}
+Your feedback helps us build a better workplace.
 
 
 ---

@@ -1,12 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from "react";
 
 /**
- * Blog Component (Markdown-Based)
- * Loads blog content from:
+ * BLOG COMPONENT — Markdown-Based
+ * Loads blog articles from:
  *    public/blog/<slug>.md
  *
- * postsData contains only metadata.
- * Markdown content is fetched dynamically.
+ * postsData contains metadata ONLY.
+ * Markdown content is fetched dynamically at runtime.
  */
 
 // ---------------------- POSTS METADATA ----------------------
@@ -17,7 +17,8 @@ const postsData = [
     date: "2025-01-10",
     author: "Asha Roy",
     tags: ["customer-experience", "best-practices"],
-    excerpt: "Learn how to design, distribute, and analyze customer satisfaction surveys to improve retention and brand sentiment.",
+    excerpt:
+      "Learn how to design, distribute, and analyze customer satisfaction surveys to improve retention and brand sentiment.",
   },
   {
     slug: "employee-feedback-best-practices",
@@ -25,7 +26,8 @@ const postsData = [
     date: "2025-01-18",
     author: "Milan Kapoor",
     tags: ["hr", "best-practices", "workplace"],
-    excerpt: "A complete framework for collecting meaningful feedback from employees to improve culture and productivity.",
+    excerpt:
+      "A complete framework for collecting meaningful feedback from employees to improve culture and productivity.",
   },
   {
     slug: "survey-distribution-strategies-2025",
@@ -33,7 +35,8 @@ const postsData = [
     date: "2025-01-25",
     author: "Lina Patel",
     tags: ["strategy", "survey-distribution"],
-    excerpt: "Discover proven channels and strategies to maximize survey reach and increase response rates.",
+    excerpt:
+      "Discover proven channels and strategies to maximize survey reach and increase response rates.",
   },
   {
     slug: "survey-writing-mistakes-to-avoid",
@@ -41,7 +44,8 @@ const postsData = [
     date: "2025-02-02",
     author: "Arun Mehta",
     tags: ["survey-design", "mistakes"],
-    excerpt: "Avoid these common survey writing mistakes to increase clarity, reduce bias, and improve response accuracy.",
+    excerpt:
+      "Avoid these common survey writing mistakes to increase clarity, reduce bias, and improve response accuracy.",
   },
   {
     slug: "data-analysis-for-beginners",
@@ -49,7 +53,8 @@ const postsData = [
     date: "2025-02-10",
     author: "Asha Roy",
     tags: ["data-analysis", "beginners"],
-    excerpt: "A simple and practical guide to cleaning, organizing, and analyzing survey data with confidence.",
+    excerpt:
+      "A practical guide to cleaning, organizing, and analyzing survey data with confidence.",
   },
   {
     slug: "survey-templates-2025",
@@ -57,7 +62,8 @@ const postsData = [
     date: "2025-02-16",
     author: "Milan Kapoor",
     tags: ["templates", "survey-design"],
-    excerpt: "A curated list of high-converting survey templates for education, HR, marketing, and customer research.",
+    excerpt:
+      "A curated list of high-converting survey templates for education, HR, marketing, and customer research.",
   },
   {
     slug: "research-methods-modern-teams",
@@ -65,7 +71,8 @@ const postsData = [
     date: "2025-02-20",
     author: "Lina Patel",
     tags: ["research", "methods"],
-    excerpt: "Learn the most effective research methodologies used by modern teams to collect reliable data fast.",
+    excerpt:
+      "Learn the most effective research methodologies used by modern teams to collect reliable data quickly.",
   },
   {
     slug: "survey-response-rates-improve",
@@ -73,7 +80,8 @@ const postsData = [
     date: "2025-02-25",
     author: "Arun Mehta",
     tags: ["engagement", "survey-response"],
-    excerpt: "Boost your survey response rates using these evidence-based techniques tested by top organizations.",
+    excerpt:
+      "Boost your survey response rates using evidence-based techniques tested by successful organizations.",
   },
   {
     slug: "market-research-for-startups",
@@ -81,7 +89,8 @@ const postsData = [
     date: "2025-03-01",
     author: "Asha Roy",
     tags: ["startup", "market-research"],
-    excerpt: "A complete market research framework built specifically for early-stage founders and small teams.",
+    excerpt:
+      "A complete market research framework built for early-stage founders and fast-moving product teams.",
   },
   {
     slug: "survey-tools-comparison-2025",
@@ -89,8 +98,9 @@ const postsData = [
     date: "2025-03-05",
     author: "Milan Kapoor",
     tags: ["comparison", "tools"],
-    excerpt: "A full comparison of the best survey tools in 2025 — features, pricing, integrations, and unique strengths.",
-  }
+    excerpt:
+      "A full comparison of the best survey tools in 2025 — features, pricing, integrations, and ideal use-cases.",
+  },
 ];
 
 // ---------------------- HELPERS ----------------------
@@ -117,7 +127,7 @@ export default function Blog({ navigate, slug }) {
   const [postContent, setPostContent] = useState("");
   const perPage = 6;
 
-  // ---------- Fetch Markdown for single post ----------
+  // ----- Fetch Markdown for SINGLE POST -----
   useEffect(() => {
     if (slug) {
       fetch(`/blog/${slug}.md`)
@@ -127,14 +137,14 @@ export default function Blog({ navigate, slug }) {
     }
   }, [slug]);
 
-  // ---------- Derived tags ----------
+  // ----- Collect all unique tags -----
   const allTags = useMemo(() => {
     const s = new Set();
     postsData.forEach((p) => p.tags.forEach((t) => s.add(t)));
     return [...s];
   }, []);
 
-  // ---------- Search + Filter ----------
+  // ----- Search + Tag filtering -----
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
     return postsData.filter((p) => {
@@ -147,12 +157,12 @@ export default function Blog({ navigate, slug }) {
     });
   }, [query, activeTag]);
 
-  // ---------- Pagination ----------
+  // ----- Pagination -----
   const totalPages = Math.ceil(filtered.length / perPage);
   const start = (page - 1) * perPage;
   const visible = filtered.slice(start, start + perPage);
 
-  // ---------- SEO Meta Updates ----------
+  // ----- SEO Meta Updates -----
   useEffect(() => {
     const t = document.querySelector("title");
     const d = document.querySelector('meta[name="description"]');
@@ -167,7 +177,7 @@ export default function Blog({ navigate, slug }) {
       t.textContent = "Blog — SurveyZen";
       d?.setAttribute(
         "content",
-        "SurveyZen blog: professional guides on surveys, feedback, and research."
+        "SurveyZen Blog: Professional insights on surveys, analytics, engagement, and modern research methods."
       );
     }
   }, [slug]);
@@ -175,6 +185,7 @@ export default function Blog({ navigate, slug }) {
   // ---------------------- SINGLE POST VIEW ----------------------
   if (slug) {
     const post = postsData.find((p) => p.slug === slug);
+
     if (!post) {
       return (
         <div className="max-w-4xl mx-auto py-20 text-center">
@@ -193,6 +204,7 @@ export default function Blog({ navigate, slug }) {
           {formatDate(post.date)} · {post.author}
         </p>
 
+        {/* Content */}
         {postContent === "ERROR" ? (
           <p className="mt-6 text-red-500">
             Error loading this article. File missing or unreadable.
@@ -217,20 +229,22 @@ export default function Blog({ navigate, slug }) {
     <section className="max-w-6xl mx-auto px-6 py-16">
       <h2 className="text-3xl font-extrabold">SurveyZen Blog</h2>
       <p className="mt-2 text-slate-600">
-        Professional guides on surveys, analytics, and research strategy.
+        Professional guides on surveys, analytics, customer insights, and research strategy.
       </p>
 
-      {/* Search + Filters */}
+      {/* Search + Sidebar */}
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Sidebar */}
         <aside className="lg:col-span-1 p-4 bg-white border rounded-lg">
-          <label className="block text-sm">Search</label>
+          <label className="block text-sm font-medium">Search</label>
           <input
-            className="w-full border rounded px-2 py-1 mt-1"
+            className="w-full border rounded px-2 py-1 mt-2 text-sm"
+            placeholder="Search articles..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
 
-          <h4 className="mt-4 font-semibold text-sm">Tags</h4>
+          <h4 className="mt-6 font-semibold text-sm">Tags</h4>
           <div className="flex flex-wrap gap-2 mt-2">
             <button
               onClick={() => setActiveTag("")}
@@ -254,6 +268,7 @@ export default function Blog({ navigate, slug }) {
           </div>
         </aside>
 
+        {/* Posts List */}
         <div className="lg:col-span-3">
           <div className="grid gap-6">
             {visible.map((post) => (
@@ -272,7 +287,7 @@ export default function Blog({ navigate, slug }) {
                 <p className="mt-3 text-slate-700">{post.excerpt}</p>
 
                 <a
-                  href={`#/blog/${post.slug}`}
+                  href={`/blog/${post.slug}`}
                   className="text-indigo-600 underline mt-3 inline-block"
                 >
                   Read more →
@@ -308,3 +323,6 @@ export default function Blog({ navigate, slug }) {
     </section>
   );
 }
+
+// Export metadata for homepage "Latest Blog Posts"
+export const blogPostsMeta = postsData;
