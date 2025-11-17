@@ -17,7 +17,7 @@ const app = express();
 
 // Middleware
 // app.use(cors());
-const allowedOrigins = ['https://surveyzen.live', 'https://www.surveyzen.live'];
+const allowedOrigins = ['https://surveyzen.live', 'https://www.surveyzen.live', 'http://localhost:5173'];
 
 app.use(cors({
   origin: function (origin, callback) {
