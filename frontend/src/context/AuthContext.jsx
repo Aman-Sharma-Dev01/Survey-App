@@ -1,3 +1,4 @@
+// src/context/AuthContext.jsx
 import React, { useState, useEffect, createContext, useContext, useMemo, useCallback } from 'react';
 
 const AuthContext = createContext();
@@ -17,20 +18,23 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('token');
         setUser(null);
         setToken(null);
-        // Navigate via hash change to trigger router refresh
         window.location.hash = '#login';
+    }, []);
+
+    // Optional: call this to populate user from token (if you later add /profile endpoint)
+    const setUserFromToken = useCallback(async (profile) => {
+        if (profile) setUser(profile);
     }, []);
 
     useEffect(() => {
         const initializeAuth = async () => {
             if (token) {
                 try {
-                    // For now, using placeholder data
-                    // In a real app, you would validate the token with your backend
-                    setUser({ email: 'creator@example.com' });
+                    // Minimal placeholder: keep existing simple behaviour
+                    // Ideally, call backend /api/auth/me or /api/users/profile to get details
+                    setUser(prev => prev || { email: 'creator@example.com' });
                 } catch (error) {
                     console.error('Error initializing auth:', error);
-                    // If there's an error, clear the invalid token
                     localStorage.removeItem('token');
                     setToken(null);
                     setUser(null);
@@ -50,8 +54,9 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!token,
         login,
         logout,
-        isLoading
-    }), [user, token, login, logout, isLoading]);
+        isLoading,
+        setUserFromToken,
+    }), [user, token, login, logout, isLoading, setUserFromToken]);
 
     return (
         <AuthContext.Provider value={value}>

@@ -1,3 +1,4 @@
+// src/pages/LoginPage.jsx
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { loginCreator } from '../services/authService';
@@ -15,12 +16,14 @@ const LoginPage = ({ navigate }) => {
         setLoading(true);
 
         try {
-            // API Call: POST /auth/login (Phase I, Step 2)
             const data = await loginCreator({ email, password });
+            // Backend returns token & user info
             login({ email: data.email, name: data.name }, data.token);
             navigate('dashboard');
         } catch (err) {
-            setError(err.message || 'Login failed. Check your credentials.');
+            // Show precise messages from backend
+            const msg = err.message || 'Login failed. Check your credentials.';
+            setError(msg);
         } finally {
             setLoading(false);
         }
@@ -52,6 +55,17 @@ const LoginPage = ({ navigate }) => {
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                         />
                     </div>
+
+                    <div className="flex justify-end">
+                        <button
+                            type="button"
+                            onClick={() => navigate('forgot-password')}
+                            className="text-sm text-indigo-600 hover:text-indigo-500"
+                        >
+                            Forgot password?
+                        </button>
+                    </div>
+
                     <button
                         type="submit"
                         disabled={loading}
