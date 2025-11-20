@@ -2,6 +2,7 @@ import express from 'express';
 import Survey from '../models/Survey.js';
 import Response from '../models/Response.js'; // ✅ Import added
 import { protect } from '../middleware/authMiddleware.js';
+import { sendNewSurveyEmail } from '../utils/notificationService.js'; 
 
 const router = express.Router();
 
@@ -9,22 +10,23 @@ const router = express.Router();
 // @route   POST /api/surveys
 // @access  Private (Creator)
 router.post('/', protect, async (req, res) => {
-  try {
     const { title, description, questions } = req.body;
 
     const survey = new Survey({
-      title,
-      description,
-      questions,
-      creator: req.user._id,
+        title,
+        description,
+        questions,
+        creator: req.user._id,
     });
 
     const createdSurvey = await survey.save();
+    
+    // --- EMAIL NOTIFICATION LOGIC ---
+    // Send EMAIL notification to the creator
+    sendNewSurveyEmail(req.user.email, createdSurvey.title);
+    // ----------------------------------
+
     res.status(201).json(createdSurvey);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error creating survey' });
-  }
 });
 
 // @desc    Get all surveys for a creator
