@@ -14,6 +14,10 @@ import LandingPage from './components/LandingPage';
 import AboutUs from './components/AboutUs.jsx';
 import BlogPage from './components/BlogPage.jsx';
 
+// ⭐ Newly added pages
+import VerifyPage from './pages/VerifyPage.jsx';
+import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
+import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 
 // === Component Imports ===
 import Navbar from './components/Navbar';
@@ -32,7 +36,7 @@ const App = () => {
 
   const authState = useAuth();
 
-  // Normalize path segments
+  // Normalize path segments (e.g. "/verify/123" → [verify, 123])
   const getPathSegments = (rawPath) => {
     const cleaned = String(rawPath || '/').replace(/^\/+|\/+$/g, '');
     return cleaned === '' ? [''] : cleaned.split('/');
@@ -64,11 +68,14 @@ const App = () => {
     '',
     'login',
     'register',
+    'verify',
+    'forgot-password',
+    'reset-password',
     'features',
     'pricing',
     'how-it-works',
     'contact',
-    'respond'
+    'respond',
   ];
 
   const [pathRoot, pathId] = getPathSegments(currentPath);
@@ -87,13 +94,25 @@ const App = () => {
       case 'register':
         return <Register navigate={navigate} />;
 
+      // ⭐ NEW — Verify email page
+      case 'verify':
+        return <VerifyPage navigate={navigate} />;
+
+      // ⭐ NEW — Forgot password
+      case 'forgot-password':
+        return <ForgotPasswordPage navigate={navigate} />;
+
+      // ⭐ NEW — Reset password page
+      case 'reset-password':
+        return <ResetPasswordPage navigate={navigate} />;
+
       case 'about':
         return <AboutUs navigate={navigate} />;
 
-      case 'blog':                      // ⭐ FULL BLOG ROUTE
+      case 'blog':
         return pathId
-          ? <BlogPage slug={pathId} navigate={navigate} />   // blog post view
-          : <BlogPage navigate={navigate} />;                // blog list view
+          ? <BlogPage slug={pathId} navigate={navigate} />
+          : <BlogPage navigate={navigate} />;
 
       case 'dashboard':
         return <Dashboard navigate={navigate} />;

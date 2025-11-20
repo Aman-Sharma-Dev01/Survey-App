@@ -1,23 +1,41 @@
+// src/services/authService.js
 import { fetchApi } from './api';
 
 /**
- * Handles the creator registration process.
- * API Call: POST /auth/register (Phase I, Step 1)
- * @param {object} credentials - { name, email, password }
- * @returns {Promise<object>} - { _id, name, email, token }
+ * Register a new creator
+ * Backend sends verification email automatically
  */
 export const registerCreator = async (credentials) => {
-    // The route is publicly accessible, so isProtected is false
-    return fetchApi('/auth/register', 'POST', credentials, false); 
+    return fetchApi('/auth/register', 'POST', credentials, false);
 };
 
 /**
- * Handles the creator login process.
- * API Call: POST /auth/login (Phase I, Step 2)
- * @param {object} credentials - { email, password }
- * @returns {Promise<object>} - { _id, name, email, token }
+ * Login creator
  */
 export const loginCreator = async (credentials) => {
-    // The route is publicly accessible, so isProtected is false
     return fetchApi('/auth/login', 'POST', credentials, false);
+};
+
+/**
+ * Verify email using the token sent in email
+ * GET /auth/verify/:token
+ */
+export const verifyEmail = async (token) => {
+    return fetchApi(`/auth/verify/${token}`, 'GET', null, false);
+};
+
+/**
+ * Forgot password - send reset link to email
+ * POST /auth/forgot-password
+ */
+export const forgotPassword = async (email) => {
+    return fetchApi('/auth/forgot-password', 'POST', { email }, false);
+};
+
+/**
+ * Reset password using token
+ * POST /auth/reset-password/:token
+ */
+export const resetPassword = async (token, newPassword) => {
+    return fetchApi(`/auth/reset-password/${token}`, 'POST', { password: newPassword }, false);
 };

@@ -1,6 +1,7 @@
+// src/pages/RegisterPage.jsx
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext.jsx';
 import { registerCreator } from '../services/authService';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const RegisterPage = ({ navigate = () => {} }) => {
     const [name, setName] = useState('');
@@ -18,19 +19,13 @@ const RegisterPage = ({ navigate = () => {} }) => {
         setLoading(true);
 
         try {
-            // API Call: POST /auth/register
+            // Call register endpoint (backend should send verification email)
             const data = await registerCreator({ name, email, password });
 
-            // Log the user in (optional — can skip if you want manual login)
-            login({ email: data.email, name: data.name }, data.token);
-
-            // Show success message
-            setSuccess('Registration successful! Redirecting to dashboard...');
-
-            // Redirect after short delay
-            setTimeout(() => {
-                navigate('dashboard');
-            }, 1500);
+            // Do NOT auto-login. Ask user to verify via email.
+            setSuccess('Registration successful! Please check your email and click the verification link before logging in.');
+            // Optionally redirect to login after a short delay
+            setTimeout(() => navigate('login'), 2500);
         } catch (err) {
             setError(err.message || 'Registration failed. Try again.');
         } finally {
