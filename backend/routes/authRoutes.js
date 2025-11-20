@@ -67,16 +67,17 @@ router.get("/verify/:token", async (req, res) => {
     const { token } = req.params;
 
     const user = await User.findOne({ verificationToken: token });
-    if (!user) return res.status(400).send("Invalid or expired verification link");
+    if (!user) {
+        return res.status(400).json({ message: "Invalid or expired verification link" });
+    }
 
     user.isVerified = true;
     user.verificationToken = undefined;
     await user.save();
 
-    sendRegistrationEmail(user.email, user.name);
-
-    res.redirect(`${process.env.CLIENT_URL}/#dashboard`);
+    return res.json({ message: "Verification successful" });
 });
+
 
 router.post('/forgot-password', async (req, res) => {
     const { email } = req.body;
