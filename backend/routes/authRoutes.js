@@ -74,7 +74,7 @@ router.get("/verify/:token", async (req, res) => {
     user.isVerified = true;
     user.verificationToken = undefined;
     await user.save();
-
+    sendRegistrationEmail(user.email, user.name);
     return res.json({ message: "Verification successful" });
 });
 
