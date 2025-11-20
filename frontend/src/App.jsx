@@ -68,6 +68,7 @@ const App = () => {
     'pricing',
     'how-it-works',
     'contact',
+    'respond'
   ];
 
   const [pathRoot, pathId] = getPathSegments(currentPath);
