@@ -2,7 +2,9 @@ import express from 'express';
 import Survey from '../models/Survey.js';
 import Response from '../models/Response.js'; // ✅ Import added
 import { protect } from '../middleware/authMiddleware.js';
-import { sendNewSurveyEmail } from '../utils/notificationService.js'; 
+// import { sendNewSurveyEmail } from '../utils/notificationService.js'; 
+import { sendNewSurveyEmail } from '../utils/emailService.js';
+
 
 const router = express.Router();
 
