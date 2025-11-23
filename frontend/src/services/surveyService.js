@@ -16,3 +16,9 @@ export const updateSurveyPublishStatus = async (surveyId, isPublished) => {
 };
 
 // Note: Your page components (Dashboard.jsx, SurveyCreate.jsx) should now import and use these functions.
+export const updateSurveyShareStatus = async (surveyId, status) => {
+    return fetchApi(`/surveys/share/${surveyId}`, "PUT", { isShareable: status }, true);
+};
+
+export const getSurveyDetails = async (surveyId) =>
+  fetchApi(`/surveys/${surveyId}`, "GET", null, true);
