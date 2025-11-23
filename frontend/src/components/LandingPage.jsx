@@ -308,8 +308,20 @@ const Footer = () => {
           ))}
         </div>
 
-         <a href="//www.dmca.com/Protection/Status.aspx?ID=3b429a82-a1ac-45e2-8d4e-29804753a560" title="DMCA.com Protection Status" class="dmca-badge"> <img src ="https://images.dmca.com/Badges/DMCA_badge_trn_60w.png?ID=3b429a82-a1ac-45e2-8d4e-29804753a560"  alt="DMCA.com Protection Status" /></a>  <script src="https://images.dmca.com/Badges/DMCABadgeHelper.min.js"> </script>
-       {/* <a href="https://www.producthunt.com/products/surveyzen?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-surveyzen" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1041372&theme=light&t=1763890037404" alt="SurveyZen - The&#0032;minimalist&#0032;survey&#0032;builder&#0032;for&#0032;modern&#0032;creators&#0046; | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a> */}
+         <a href="//www.dmca.com/Protection/Status.aspx?ID=3b429a82-a1ac-45e2-8d4e-29804753a560" title="DMCA.com Protection Status" className="dmca-badge"> <img src ="https://images.dmca.com/Badges/DMCA_badge_trn_60w.png?ID=3b429a82-a1ac-45e2-8d4e-29804753a560"  alt="DMCA.com Protection Status" /></a>  <script src="https://images.dmca.com/Badges/DMCABadgeHelper.min.js"> </script>
+      <a 
+  href="https://www.producthunt.com/products/surveyzen?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-surveyzen" 
+  target="_blank" 
+  rel="noopener noreferrer"
+>
+  <img 
+    src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1041372&theme=light&t=1763890037404" 
+    alt="SurveyZen - The minimalist survey builder for modern creators. | Product Hunt" 
+    style={{ width: '250px', height: '54px' }} 
+    width="250" 
+    height="54" 
+  />
+</a>
 
         <div className="mt-12 border-t border-gray-700 pt-8 text-center">
           <p>&copy; {new Date().getFullYear()} SurveyZen. All rights reserved.</p>
