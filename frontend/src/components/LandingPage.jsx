@@ -104,94 +104,104 @@ const Navbar = () => {
 // ================= HERO =================
 // ================= HERO =================
 const Hero = () => {
-  // 1. STATE: To track which image is currently showing (0, 1, 2, or 3)
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // 2. DATA: Your array of 4 images
-  // Replace these URLs with your actual imports (e.g., heroImg1, heroImg2...)
   const heroImages = [
-    "./Hero1.jpg", // Image 1
-    "./Hero4.jpg",     // Image 2
-    "./Hero6.jpg",     // Image 3
-    "./Hero8.jpg"      // Image 4
+    "./Hero1.jpg",
+    "./Hero4.jpg",
+    "./Hero6.jpg",
+    "./Hero8.jpg"
   ];
 
-  // 3. EFFECT: Change the index every 20 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) => 
-        // If we are at the last image, go back to 0, otherwise add 1
+      setCurrentImageIndex((prevIndex) =>
         prevIndex === heroImages.length - 1 ? 0 : prevIndex + 1
       );
     }, 4000);
 
-    // Cleanup: Stop the timer if the user leaves the page
     return () => clearInterval(interval);
   }, [heroImages.length]);
 
   return (
     <section className="bg-white overflow-hidden">
-      <div className="max-w-7xl mx-auto pt-16 pb-20 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto pt-10 pb-24 px-4 sm:px-6 lg:px-8">
 
-        <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-16">
+        <div className="flex flex-col md:flex-row items-center gap-14">
 
-          {/* LEFT SIDE: Text Content */}
-          <div className="w-full md:w-7/12 text-center md:text-left">
+          {/* LEFT CONTENT */}
+          <div className="w-full md:w-6/12 md:text-left text-center">
+
+            {/* Heading */}
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight">
               Get the feedback
-              <span className="block text-indigo-600">you need, instantly.</span>
+              <span className="block text-indigo-600">
+                you need, instantly.
+              </span>
             </h1>
 
-            <p className="mt-6 text-lg text-gray-600 max-w-2xl mx-auto md:mx-0">
-              Create beautiful, easy-to-use surveys in minutes. Share them instantly and analyze results in real time.
+            {/* Subtext */}
+            <p className="mt-6 text-lg text-gray-600 max-w-xl mx-auto md:mx-0">
+              Create beautiful, easy-to-use surveys in minutes. Share them instantly, track powerful analytics in real time, and make smarter decisions backed by meaningful insights.
             </p>
 
+            {/* ⭐ NEW: Supporting bullet points */}
+            <div className="mt-8 space-y-3 text-gray-700 text-base mx-auto md:mx-0">
+              <div className="flex items-center justify-center md:justify-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-indigo-600" />
+                <span>AI-powered question suggestions</span>
+              </div>
+
+              <div className="flex items-center justify-center md:justify-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-indigo-600" />
+                <span>Real-time response analytics</span>
+              </div>
+
+              <div className="flex items-center justify-center md:justify-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-indigo-600" />
+                <span>Instant sharing across all channels</span>
+              </div>
+            </div>
+
+            {/* CTA */}
             <div className="mt-10 flex justify-center md:justify-start">
-              <a href="#register" className="bg-indigo-600 text-white px-8 py-3 rounded-md text-lg hover:bg-indigo-700 shadow-lg transition duration-300">
+              <a
+                href="#register"
+                className="bg-indigo-600 text-white px-8 py-3 rounded-md text-lg hover:bg-indigo-700 shadow-lg transition duration-300"
+              >
                 Create Your First Survey
               </a>
             </div>
 
             <p className="mt-4 text-sm text-gray-500">
-              Free to start &middot; No credit card required
+              Free to start · No credit card required
             </p>
+
+            
+
           </div>
 
-          {/* RIGHT SIDE: Image Carousel */}
-          <div className="w-full md:w-5/12 relative">
-            
-            <div className="relative rounded-xl shadow-2xl overflow-hidden border border-gray-100 group">
-               
-               {/* TRICK: We render an invisible copy of the first image to give the 
-                  container the correct height/width ratio. 
-               */}
-               <img 
-                 src={heroImages[0]} 
-                 alt="Spacer" 
-                 className="w-full h-auto opacity-0 pointer-events-none relative z-0"
-               />
+          {/* RIGHT SIDE IMAGE CAROUSEL */}
+          <div className="w-full md:w-6/12 relative">
 
-               {/* ACTUAL CAROUSEL IMAGES */}
-               {heroImages.map((imgSrc, index) => (
-                 <img
-                   key={index}
-                   src={imgSrc}
-                   alt={`Slide ${index + 1}`}
-                   className={`
-                     absolute inset-0 w-full h-full object-cover 
-                     transition-opacity duration-1000 ease-in-out
-                     ${index === currentImageIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}
-                   `}
-                 />
-               ))}
+            <div className="relative rounded-xl shadow-2xl overflow-hidden border border-gray-100">
+              <img
+                src={heroImages[0]}
+                className="w-full opacity-0"
+                alt="spacer"
+              />
 
-               {/* Optional: Overlay gradient */}
-               <div className="absolute inset-0 bg-indigo-900/10 mix-blend-multiply z-20 pointer-events-none"></div>
+              {heroImages.map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt=""
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+                    i === currentImageIndex ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+              ))}
             </div>
-
-            {/* Optional: Navigation Dots (shows which image is active) */}
-           
-
           </div>
 
         </div>
@@ -199,6 +209,7 @@ const Hero = () => {
     </section>
   );
 };
+
 
 // ================= FEATURES =================
 const Features = () => {
