@@ -412,7 +412,7 @@ const Footer = () => {
             <img
               src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1041372&theme=light&t=1763890037404"
               alt="SurveyZen - The minimalist survey builder for modern creators. | Product Hunt"
-              style={{ width: '160px', height: '99px' }}
+              style={{ width: '210px', height: '99px' }}
               width="100"
               height="99"
             />
