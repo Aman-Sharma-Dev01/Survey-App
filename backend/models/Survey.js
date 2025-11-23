@@ -21,7 +21,13 @@ const surveySchema = mongoose.Schema(
         creator: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
         questions: [questionSchema],
         isPublished: { type: Boolean, default: false },
-        responseCount: { type: Number, default: 0 } // Cached count for dashboard
+        responseCount: { type: Number, default: 0 }, // Cached count for dashboard
+       isShareable: {
+    type: Boolean,
+    default: false,
+},
+
+
     },
     { timestamps: true }
 );

@@ -15,21 +15,23 @@ import AboutUs from './components/AboutUs.jsx';
 import BlogPage from './components/BlogPage.jsx';
 import ContactPage from './components/ContactPage.jsx';
 
-// ⭐ Newly added pages
+// ⭐ New Pages
 import VerifyPage from './pages/VerifyPage.jsx';
 import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 
-// === Component Imports ===
+// ⭐ NEW — Public Share Results Page
+import ShareResultsPage from './pages/ShareResultsPage.jsx';
+
+// === Components ===
 import Navbar from './components/Navbar';
 
-// Helper for navigation (uses hash routing)
+// Helper for navigation (hash routing)
 const navigate = (path) => {
   const cleaned = String(path).replace(/^#/, '');
   window.location.hash = cleaned;
 };
 
-// --- The Core Routing Component ---
 const App = () => {
   const [currentPath, setCurrentPath] = useState(
     window.location.hash.slice(1) || '/'
@@ -37,13 +39,12 @@ const App = () => {
 
   const authState = useAuth();
 
-  // Normalize path segments (e.g. "/verify/123" → [verify, 123])
   const getPathSegments = (rawPath) => {
     const cleaned = String(rawPath || '/').replace(/^\/+|\/+$/g, '');
     return cleaned === '' ? [''] : cleaned.split('/');
   };
 
-  // 1. Setup Hash Change Listener
+  // Listen for hash changes
   useEffect(() => {
     const handleHashChange = () => {
       setCurrentPath(window.location.hash.slice(1) || '/');
@@ -51,10 +52,11 @@ const App = () => {
 
     window.addEventListener('hashchange', handleHashChange);
     handleHashChange();
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    return () =>
+      window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // 2. Authentication Guard
+  // Protect private pages
   useEffect(() => {
     const protectedPaths = ['dashboard', 'create', 'analysis'];
     const [pathSegment] = getPathSegments(currentPath);
@@ -64,7 +66,9 @@ const App = () => {
     }
   }, [currentPath, authState.isAuthenticated]);
 
-  // 3. Navbar visibility handling
+  const [pathRoot, pathId] = getPathSegments(currentPath);
+
+  // ▢ Pages where navbar should NOT show
   const landingRoutes = [
     '',
     'login',
@@ -77,13 +81,12 @@ const App = () => {
     'how-it-works',
     'contact',
     'respond',
+    'share',       // ⭐ NEW (hide navbar for public shared page)
   ];
-
-  const [pathRoot, pathId] = getPathSegments(currentPath);
 
   const shouldShowNavbar = !landingRoutes.includes(pathRoot);
 
-  // 4. Page Renderer
+  // Router logic
   const renderPage = () => {
     switch (pathRoot) {
       case '':
@@ -95,15 +98,12 @@ const App = () => {
       case 'register':
         return <Register navigate={navigate} />;
 
-      // ⭐ NEW — Verify email page
       case 'verify':
         return <VerifyPage navigate={navigate} />;
 
-      // ⭐ NEW — Forgot password
       case 'forgot-password':
         return <ForgotPasswordPage navigate={navigate} />;
 
-      // ⭐ NEW — Reset password page
       case 'reset-password':
         return <ResetPasswordPage navigate={navigate} />;
 
@@ -142,6 +142,11 @@ const App = () => {
           </div>
         );
 
+      // ⭐ NEW — Public shareable survey results
+      case 'share':
+  return <ShareResultsPage surveyId={pathId} />;
+
+
       default:
         return <LandingPage navigate={navigate} />;
     }
@@ -149,7 +154,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      {/* Navbar only on non-landing pages */}
+      {/* Show navbar on internal pages only */}
       {shouldShowNavbar && (
         <Navbar currentPage={pathRoot} handleNavigate={navigate} />
       )}
@@ -159,7 +164,6 @@ const App = () => {
   );
 };
 
-// --- Wrapper ---
 const RootApp = () => (
   <AuthProvider>
     <App />

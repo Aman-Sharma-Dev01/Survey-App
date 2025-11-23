@@ -1,6 +1,6 @@
 import express from 'express';
 import { protect } from '../middleware/authMiddleware.js';
-import { getPublicSurvey, submitResponse, getSurveyAnalysis } from '../controllers/responseController.js';
+import { getPublicSurvey, submitResponse, getSurveyAnalysis, exportResponsesCSV, getSharedSurveyResults } from '../controllers/responseController.js';
 
 const router = express.Router();
 
@@ -18,5 +18,18 @@ router.post('/:surveyId', submitResponse);
 // @route   GET /api/responses/analysis/:surveyId
 // @access  Private (Creator)
 router.get('/analysis/:surveyId', protect, getSurveyAnalysis);
+
+router.get('/export/:surveyId', (req, res, next) => {
+    // Allow ?token=XYZ
+    if (req.query.token) {
+        req.headers.authorization = `Bearer ${req.query.token}`;
+    }
+    next();
+}, protect, exportResponsesCSV);
+
+router.get("/share/:surveyId", getSharedSurveyResults);   // ⭐ PUBLIC
+
+
+
 
 export default router;
