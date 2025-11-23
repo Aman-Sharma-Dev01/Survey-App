@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
 import {
   ClipboardList,
   Share2,
@@ -100,31 +100,105 @@ const Navbar = () => {
   );
 };
 
+
 // ================= HERO =================
-const Hero = () => (
-  <section className="bg-white">
-    <div className="max-w-7xl mx-auto py-20 px-4 sm:px-6 lg:px-8 text-center">
-      <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900">
-        Get the feedback
-        <span className="block text-indigo-600">you need, instantly.</span>
-      </h1>
+// ================= HERO =================
+const Hero = () => {
+  // 1. STATE: To track which image is currently showing (0, 1, 2, or 3)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-      <p className="mt-6 text-lg text-gray-600 max-w-2xl mx-auto">
-        Create beautiful, easy-to-use surveys in minutes. Share them instantly and analyze results in real time.
-      </p>
+  // 2. DATA: Your array of 4 images
+  // Replace these URLs with your actual imports (e.g., heroImg1, heroImg2...)
+  const heroImages = [
+    "./Hero1.jpg", // Image 1
+    "./Hero4.jpg",     // Image 2
+    "./Hero6.jpg",     // Image 3
+    "./Hero8.jpg"      // Image 4
+  ];
 
-      <div className="mt-10 flex justify-center">
-        <a href="#register" className="bg-indigo-600 text-white px-8 py-3 rounded-md text-lg hover:bg-indigo-700 shadow-lg">
-          Create Your First Survey
-        </a>
+  // 3. EFFECT: Change the index every 20 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => 
+        // If we are at the last image, go back to 0, otherwise add 1
+        prevIndex === heroImages.length - 1 ? 0 : prevIndex + 1
+      );
+    }, 8000);
+
+    // Cleanup: Stop the timer if the user leaves the page
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
+
+  return (
+    <section className="bg-white overflow-hidden">
+      <div className="max-w-7xl mx-auto pt-16 pb-20 px-4 sm:px-6 lg:px-8">
+
+        <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-16">
+
+          {/* LEFT SIDE: Text Content */}
+          <div className="w-full md:w-7/12 text-center md:text-left">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight">
+              Get the feedback
+              <span className="block text-indigo-600">you need, instantly.</span>
+            </h1>
+
+            <p className="mt-6 text-lg text-gray-600 max-w-2xl mx-auto md:mx-0">
+              Create beautiful, easy-to-use surveys in minutes. Share them instantly and analyze results in real time.
+            </p>
+
+            <div className="mt-10 flex justify-center md:justify-start">
+              <a href="#register" className="bg-indigo-600 text-white px-8 py-3 rounded-md text-lg hover:bg-indigo-700 shadow-lg transition duration-300">
+                Create Your First Survey
+              </a>
+            </div>
+
+            <p className="mt-4 text-sm text-gray-500">
+              Free to start &middot; No credit card required
+            </p>
+          </div>
+
+          {/* RIGHT SIDE: Image Carousel */}
+          <div className="w-full md:w-5/12 relative">
+            
+            <div className="relative rounded-xl shadow-2xl overflow-hidden border border-gray-100 group">
+               
+               {/* TRICK: We render an invisible copy of the first image to give the 
+                  container the correct height/width ratio. 
+               */}
+               <img 
+                 src={heroImages[0]} 
+                 alt="Spacer" 
+                 className="w-full h-auto opacity-0 pointer-events-none relative z-0"
+               />
+
+               {/* ACTUAL CAROUSEL IMAGES */}
+               {heroImages.map((imgSrc, index) => (
+                 <img
+                   key={index}
+                   src={imgSrc}
+                   alt={`Slide ${index + 1}`}
+                   className={`
+                     absolute inset-0 w-full h-full object-cover 
+                     transition-opacity duration-1000 ease-in-out
+                     ${index === currentImageIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}
+                   `}
+                 />
+               ))}
+
+               {/* Optional: Overlay gradient */}
+               <div className="absolute inset-0 bg-indigo-900/10 mix-blend-multiply z-20 pointer-events-none"></div>
+            </div>
+
+            {/* Optional: Navigation Dots (shows which image is active) */}
+           
+
+          </div>
+
+        </div>
       </div>
-
-      <p className="mt-4 text-sm text-gray-500">
-        Free to start &middot; No credit card required
-      </p>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 // ================= FEATURES =================
 const Features = () => {
@@ -317,7 +391,7 @@ const Footer = () => {
           <a
             href="//www.dmca.com/Protection/Status.aspx?ID=3b429a82-a1ac-45e2-8d4e-29804753a560"
             title="DMCA.com Protection Status"
-            className="dmca-badge hover:opacity-80 transition-opacity"
+            className="dmca-badge hover:opacity-80  transition-opacity"
           >
             <img
               src="https://images.dmca.com/Badges/DMCA_badge_trn_60w.png?ID=3b429a82-a1ac-45e2-8d4e-29804753a560"
@@ -338,9 +412,9 @@ const Footer = () => {
             <img
               src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1041372&theme=light&t=1763890037404"
               alt="SurveyZen - The minimalist survey builder for modern creators. | Product Hunt"
-              style={{ width: '250px', height: '54px' }}
-              width="250"
-              height="54"
+              style={{ width: '160px', height: '99px' }}
+              width="100"
+              height="99"
             />
           </a>
         </div>
