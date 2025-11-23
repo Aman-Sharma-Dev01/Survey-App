@@ -308,6 +308,9 @@ const Footer = () => {
           ))}
         </div>
 
+         <a href="//www.dmca.com/Protection/Status.aspx?ID=3b429a82-a1ac-45e2-8d4e-29804753a560" title="DMCA.com Protection Status" class="dmca-badge"> <img src ="https://images.dmca.com/Badges/DMCA_badge_trn_60w.png?ID=3b429a82-a1ac-45e2-8d4e-29804753a560"  alt="DMCA.com Protection Status" /></a>  <script src="https://images.dmca.com/Badges/DMCABadgeHelper.min.js"> </script>
+
+
         <div className="mt-12 border-t border-gray-700 pt-8 text-center">
           <p>&copy; {new Date().getFullYear()} SurveyZen. All rights reserved.</p>
         </div>
