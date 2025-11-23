@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 
 import { blogPostsMeta } from "./BlogPage.jsx"; // ⭐ NEW IMPORT
+import ContactPage from './ContactPage.jsx';
 
 // ================= NAVBAR =================
 const Navbar = () => {
@@ -47,9 +48,13 @@ const Navbar = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-3">
-            <a href="#login" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+            <a href="#contact" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+              Contact
+            </a>
+             <a href="#login" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
               Log In
             </a>
+            
             <a href="#register" className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
               Sign Up Free
             </a>
@@ -302,6 +307,9 @@ const Footer = () => {
             </div>
           ))}
         </div>
+
+         <a href="//www.dmca.com/Protection/Status.aspx?ID=3b429a82-a1ac-45e2-8d4e-29804753a560" title="DMCA.com Protection Status" class="dmca-badge"> <img src ="https://images.dmca.com/Badges/DMCA_badge_trn_60w.png?ID=3b429a82-a1ac-45e2-8d4e-29804753a560"  alt="DMCA.com Protection Status" /></a>  <script src="https://images.dmca.com/Badges/DMCABadgeHelper.min.js"> </script>
+
 
         <div className="mt-12 border-t border-gray-700 pt-8 text-center">
           <p>&copy; {new Date().getFullYear()} SurveyZen. All rights reserved.</p>
