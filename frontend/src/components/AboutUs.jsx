@@ -28,10 +28,10 @@ export default function AboutSurveyZen() {
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              <a href="/signup" className="inline-flex items-center justify-center px-5 py-3 rounded-lg bg-indigo-600 text-white font-semibold shadow hover:bg-indigo-700">
+              <a href="/#register" className="inline-flex items-center justify-center px-5 py-3 rounded-lg bg-indigo-600 text-white font-semibold shadow hover:bg-indigo-700">
                 Get started — it’s free
               </a>
-              <a href="/contact" className="inline-flex items-center justify-center px-5 py-3 rounded-lg border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50">
+              <a href="/#contact" className="inline-flex items-center justify-center px-5 py-3 rounded-lg border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50">
                 Contact sales
               </a>
             </div>
@@ -87,13 +87,23 @@ export default function AboutSurveyZen() {
                     <span className="text-slate-600">We minimize data collection, offer anonymous response options, and provide guidance for compliant surveys.</span>
                   </div>
                 </li>
+
                 <li className="flex gap-3 items-start">
+                  <span className="mt-1 inline-flex items-center justify-center w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 font-bold">3</span>
+                  <div>
+                    <strong className="block">Actionable insight</strong>
+                    <span className="text-slate-600">Clear exports and simple charts to help you turn responses into decisions — so you can understand insights faster and take action with confidence.</span>
+                  </div>
+                </li>
+
+                {/* <li className="flex gap-3 items-start">
                   <span className="mt-1 inline-flex items-center justify-center w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 font-bold">3</span>
                   <div>
                     <strong className="block">Actionable insights</strong>
                     <span className="text-slate-600">Clear exports and simple charts to help you turn responses into decisions.</span>
                   </div>
-                </li>
+                </li> */}
+                
               </ul>
             </div>
 
@@ -160,26 +170,26 @@ n
           <div className="mt-8 grid sm:grid-cols-2 md:grid-cols-4 gap-6">
             {/** Example team cards - replace with real photos & names */}
             <div className="p-6 bg-slate-50 rounded-lg text-center">
-              <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-indigo-200 to-indigo-400 flex items-center justify-center text-white font-bold">AS</div>
-              <h4 className="mt-4 font-semibold">Asha Roy</h4>
+              <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-indigo-200 to-indigo-400 flex items-center justify-center text-white font-bold">SKY</div>
+              <h4 className="mt-4 font-semibold">Shivam kumar Yadav</h4>
               <p className="text-sm text-slate-600">Founder & Product</p>
             </div>
 
             <div className="p-6 bg-slate-50 rounded-lg text-center">
-              <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-indigo-200 to-indigo-400 flex items-center justify-center text-white font-bold">MK</div>
-              <h4 className="mt-4 font-semibold">Milan Kapoor</h4>
-              <p className="text-sm text-slate-600">Engineering</p>
+              <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-indigo-200 to-indigo-400 flex items-center justify-center text-white font-bold">AS</div>
+              <h4 className="mt-4 font-semibold">Aman Sharma</h4>
+              <p className="text-sm text-slate-600">Product Lead</p>
             </div>
 
             <div className="p-6 bg-slate-50 rounded-lg text-center">
-              <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-indigo-200 to-indigo-400 flex items-center justify-center text-white font-bold">SR</div>
-              <h4 className="mt-4 font-semibold">Siddharth Rana</h4>
-              <p className="text-sm text-slate-600">Design</p>
+              <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-indigo-200 to-indigo-400 flex items-center justify-center text-white font-bold">KS</div>
+              <h4 className="mt-4 font-semibold">Karan Sharma</h4>
+              <p className="text-sm text-slate-600">Research</p>
             </div>
 
             <div className="p-6 bg-slate-50 rounded-lg text-center">
-              <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-indigo-200 to-indigo-400 flex items-center justify-center text-white font-bold">LP</div>
-              <h4 className="mt-4 font-semibold">Lina Patel</h4>
+              <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-indigo-200 to-indigo-400 flex items-center justify-center text-white font-bold">AS</div>
+              <h4 className="mt-4 font-semibold">Aryan Singh</h4>
               <p className="text-sm text-slate-600">Community</p>
             </div>
           </div>
@@ -195,18 +205,18 @@ n
 
         <div className="mt-8 grid md:grid-cols-3 gap-6">
           <blockquote className="p-6 bg-white border border-slate-100 rounded-lg">
-            <p className="text-slate-700">“SurveyZen made it effortless to create post-event feedback surveys — responses doubled and analysis was straightforward.”</p>
-            <footer className="mt-4 text-sm text-slate-500">— Priya, Event Manager</footer>
+            <p className="text-slate-700">SurveyZen made it effortless to create post-event feedback surveys — responses doubled and analysis was straightforward.</p>
+            <footer className="mt-4 text-sm text-slate-500">— Navneet, Event Manager</footer>
           </blockquote>
 
           <blockquote className="p-6 bg-white border border-slate-100 rounded-lg">
-            <p className="text-slate-700">“We love the anonymous mode for sensitive research. Easy to set up and respects participant privacy.”</p>
-            <footer className="mt-4 text-sm text-slate-500">— Raj, University Researcher</footer>
+            <p className="text-slate-700">We love the anonymous mode for sensitive research. Easy to set up and respects participant privacy.</p>
+            <footer className="mt-4 text-sm text-slate-500">— Deepti Thakral,University Researcher</footer>
           </blockquote>
 
           <blockquote className="p-6 bg-white border border-slate-100 rounded-lg">
-            <p className="text-slate-700">“Straightforward exports and templates saved our team hours every month.”</p>
-            <footer className="mt-4 text-sm text-slate-500">— Kavita, Product Lead</footer>
+            <p className="text-slate-700">Straightforward exports and templates saved our team hours every month.</p>
+            <footer className="mt-4 text-sm text-slate-500">— Aman, Product Lead</footer>
           </blockquote>
         </div>
       </section>
@@ -243,8 +253,8 @@ n
               <p className="mt-2 text-indigo-100">Create your first survey in minutes — no credit card required.</p>
             </div>
             <div className="flex gap-3">
-              <a href="/signup" className="inline-flex items-center justify-center px-5 py-3 rounded-lg bg-white text-indigo-600 font-semibold">Create account</a>
-              <a href="/contact" className="inline-flex items-center justify-center px-5 py-3 rounded-lg border border-white text-white">Contact us</a>
+              <a href="/#register" className="inline-flex items-center justify-center px-5 py-3 rounded-lg bg-white text-indigo-600 font-semibold">Create account</a>
+              <a href="/#contact" className="inline-flex items-center justify-center px-5 py-3 rounded-lg border border-white text-white">Contact us</a>
             </div>
           </div>
         </div>
@@ -257,7 +267,7 @@ n
           <div className="flex gap-4 text-sm">
             <a href="/privacy" className="text-slate-600 hover:underline">Privacy Policy</a>
             <a href="/terms" className="text-slate-600 hover:underline">Terms of Service</a>
-            <a href="/contact" className="text-slate-600 hover:underline">Contact</a>
+            <a href="/#contact" className="text-slate-600 hover:underline">Contact</a>
           </div>
         </div>
       </footer>

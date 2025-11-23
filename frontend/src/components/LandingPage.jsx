@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 
 import { blogPostsMeta } from "./BlogPage.jsx"; // ⭐ NEW IMPORT
+import ContactPage from './ContactPage.jsx';
 
 // ================= NAVBAR =================
 const Navbar = () => {
@@ -47,9 +48,13 @@ const Navbar = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-3">
-            <a href="#login" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+            <a href="#contact" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+              Contact
+            </a>
+             <a href="#login" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
               Log In
             </a>
+            
             <a href="#register" className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
               Sign Up Free
             </a>

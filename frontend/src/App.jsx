@@ -13,6 +13,7 @@ import Register from './pages/Register';
 import LandingPage from './components/LandingPage';
 import AboutUs from './components/AboutUs.jsx';
 import BlogPage from './components/BlogPage.jsx';
+import ContactPage from './components/ContactPage.jsx';
 
 // ⭐ Newly added pages
 import VerifyPage from './pages/VerifyPage.jsx';
@@ -108,6 +109,10 @@ const App = () => {
 
       case 'about':
         return <AboutUs navigate={navigate} />;
+
+ case 'contact':
+        return <ContactPage navigate={navigate} />;
+
 
       case 'blog':
         return pathId
