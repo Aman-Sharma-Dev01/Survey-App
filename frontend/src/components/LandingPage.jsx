@@ -102,7 +102,6 @@ const Navbar = () => {
 
 
 // ================= HERO =================
-// ================= HERO =================
 const Hero = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -125,80 +124,81 @@ const Hero = () => {
 
   return (
     <section className="bg-white overflow-hidden">
-      <div className="max-w-7xl mx-auto pt-10 pb-24 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 
+                      pt-10 pb-16 sm:pt-16 sm:pb-24">
 
-        <div className="flex flex-col md:flex-row items-center gap-14">
+        <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
 
-          {/* LEFT CONTENT */}
-          <div className="w-full md:w-6/12 md:text-left text-center">
+          {/* LEFT SIDE */}
+          <div className="w-full md:w-6/12 text-center md:text-left">
 
-            {/* Heading */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight">
+            {/* 🔥 Improved Mobile Typography */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl 
+                           font-extrabold text-gray-900 leading-tight">
               Get the feedback
               <span className="block text-indigo-600">
                 you need, instantly.
               </span>
             </h1>
 
-            {/* Subtext */}
-            <p className="mt-6 text-lg text-gray-600 max-w-xl mx-auto md:mx-0">
-              Create beautiful, easy-to-use surveys in minutes. Share them instantly, track powerful analytics in real time, and make smarter decisions backed by meaningful insights.
+            <p className="mt-4 sm:mt-6 text-base sm:text-lg text-gray-600 
+                          max-w-xl mx-auto md:mx-0">
+              Create beautiful, easy-to-use surveys in minutes. Share them instantly,
+              track analytics in real time, and make smarter decisions backed by
+              meaningful insights.
             </p>
 
-            {/* ⭐ NEW: Supporting bullet points */}
-            <div className="mt-8 space-y-3 text-gray-700 text-base mx-auto md:mx-0">
-              <div className="flex items-center justify-center md:justify-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-indigo-600" />
+            {/* 🔥 MOBILE-FRIENDLY BULLETS */}
+            <div className="mt-6 sm:mt-8 space-y-3 text-gray-700 text-sm sm:text-base 
+                            mx-auto md:mx-0">
+
+              <div className="flex items-center justify-center md:justify-start gap-2">
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
                 <span>AI-powered question suggestions</span>
               </div>
 
-              <div className="flex items-center justify-center md:justify-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-indigo-600" />
+              <div className="flex items-center justify-center md:justify-start gap-2">
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
                 <span>Real-time response analytics</span>
               </div>
 
-              <div className="flex items-center justify-center md:justify-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-indigo-600" />
-                <span>Instant sharing across all channels</span>
+              <div className="flex items-center justify-center md:justify-start gap-2">
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+                <span>Instant sharing across channels</span>
               </div>
             </div>
 
             {/* CTA */}
-            <div className="mt-10 flex justify-center md:justify-start">
+            <div className="mt-8 sm:mt-10 flex justify-center md:justify-start">
               <a
                 href="#register"
-                className="bg-indigo-600 text-white px-8 py-3 rounded-md text-lg hover:bg-indigo-700 shadow-lg transition duration-300"
+                className="bg-indigo-600 text-white px-6 sm:px-8 py-3 rounded-md 
+                           text-base sm:text-lg hover:bg-indigo-700 shadow-lg 
+                           transition duration-300"
               >
                 Create Your First Survey
               </a>
             </div>
 
-            <p className="mt-4 text-sm text-gray-500">
+            <p className="mt-3 text-xs sm:text-sm text-gray-500">
               Free to start · No credit card required
             </p>
-
-            
-
           </div>
 
-          {/* RIGHT SIDE IMAGE CAROUSEL */}
-          <div className="w-full md:w-6/12 relative">
+          {/* RIGHT SIDE IMAGE ON MOBILE BELOW TEXT */}
+          <div className="w-full md:w-6/12 mt-10 md:mt-0 relative">
 
             <div className="relative rounded-xl shadow-2xl overflow-hidden border border-gray-100">
-              <img
-                src={heroImages[0]}
-                className="w-full opacity-0"
-                alt="spacer"
-              />
+              <img src={heroImages[0]} className="w-full opacity-0" alt="spacer" />
 
               {heroImages.map((src, i) => (
                 <img
                   key={i}
                   src={src}
                   alt=""
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
-                    i === currentImageIndex ? "opacity-100" : "opacity-0"
-                  }`}
+                  className={`absolute inset-0 w-full h-full object-cover 
+                             transition-opacity duration-1000 
+                             ${i === currentImageIndex ? "opacity-100" : "opacity-0"}`}
                 />
               ))}
             </div>
