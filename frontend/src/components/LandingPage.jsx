@@ -123,7 +123,7 @@ const Hero = () => {
         // If we are at the last image, go back to 0, otherwise add 1
         prevIndex === heroImages.length - 1 ? 0 : prevIndex + 1
       );
-    }, 8000);
+    }, 4000);
 
     // Cleanup: Stop the timer if the user leaves the page
     return () => clearInterval(interval);
