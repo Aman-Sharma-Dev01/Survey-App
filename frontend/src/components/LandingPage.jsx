@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
 import {
   ClipboardList,
   Share2,
@@ -100,31 +100,116 @@ const Navbar = () => {
   );
 };
 
+
 // ================= HERO =================
-const Hero = () => (
-  <section className="bg-white">
-    <div className="max-w-7xl mx-auto py-20 px-4 sm:px-6 lg:px-8 text-center">
-      <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900">
-        Get the feedback
-        <span className="block text-indigo-600">you need, instantly.</span>
-      </h1>
+const Hero = () => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-      <p className="mt-6 text-lg text-gray-600 max-w-2xl mx-auto">
-        Create beautiful, easy-to-use surveys in minutes. Share them instantly and analyze results in real time.
-      </p>
+  const heroImages = [
+    "./Hero1.jpg",
+    "./Hero4.jpg",
+    "./Hero6.jpg",
+    "./Hero8.jpg"
+  ];
 
-      <div className="mt-10 flex justify-center">
-        <a href="#register" className="bg-indigo-600 text-white px-8 py-3 rounded-md text-lg hover:bg-indigo-700 shadow-lg">
-          Create Your First Survey
-        </a>
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === heroImages.length - 1 ? 0 : prevIndex + 1
+      );
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
+
+  return (
+    <section className="bg-white overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 
+                      pt-10 pb-16 sm:pt-16 sm:pb-24">
+
+        <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
+
+          {/* LEFT SIDE */}
+          <div className="w-full md:w-6/12 text-center md:text-left">
+
+            {/* 🔥 Improved Mobile Typography */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl 
+                           font-extrabold text-gray-900 leading-tight">
+              Get the feedback
+              <span className="block text-indigo-600">
+                you need, instantly.
+              </span>
+            </h1>
+
+            <p className="mt-4 sm:mt-6 text-base sm:text-lg text-gray-600 
+                          max-w-xl mx-auto md:mx-0">
+              Create beautiful, easy-to-use surveys in minutes. Share them instantly,
+              track analytics in real time, and make smarter decisions backed by
+              meaningful insights.
+            </p>
+
+            {/* 🔥 MOBILE-FRIENDLY BULLETS */}
+            <div className="mt-6 sm:mt-8 space-y-3 text-gray-700 text-sm sm:text-base 
+                            mx-auto md:mx-0">
+
+              <div className="flex items-center justify-center md:justify-start gap-2">
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+                <span>AI-powered question suggestions</span>
+              </div>
+
+              <div className="flex items-center justify-center md:justify-start gap-2">
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+                <span>Real-time response analytics</span>
+              </div>
+
+              <div className="flex items-center justify-center md:justify-start gap-2">
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+                <span>Instant sharing across channels</span>
+              </div>
+            </div>
+
+            {/* CTA */}
+            <div className="mt-8 sm:mt-10 flex justify-center md:justify-start">
+              <a
+                href="#register"
+                className="bg-indigo-600 text-white px-6 sm:px-8 py-3 rounded-md 
+                           text-base sm:text-lg hover:bg-indigo-700 shadow-lg 
+                           transition duration-300"
+              >
+                Create Your First Survey
+              </a>
+            </div>
+
+            <p className="mt-3 text-xs sm:text-sm text-gray-500">
+              Free to start · No credit card required
+            </p>
+          </div>
+
+          {/* RIGHT SIDE IMAGE ON MOBILE BELOW TEXT */}
+          <div className="w-full md:w-6/12 mt-10 md:mt-0 relative">
+
+            <div className="relative rounded-xl shadow-2xl overflow-hidden border border-gray-100">
+              <img src={heroImages[0]} className="w-full opacity-0" alt="spacer" />
+
+              {heroImages.map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt=""
+                  className={`absolute inset-0 w-full h-full object-cover 
+                             transition-opacity duration-1000 
+                             ${i === currentImageIndex ? "opacity-100" : "opacity-0"}`}
+                />
+              ))}
+            </div>
+          </div>
+
+        </div>
       </div>
+    </section>
+  );
+};
 
-      <p className="mt-4 text-sm text-gray-500">
-        Free to start &middot; No credit card required
-      </p>
-    </div>
-  </section>
-);
 
 // ================= FEATURES =================
 const Features = () => {
@@ -291,14 +376,17 @@ const Footer = () => {
   return (
     <footer className="bg-gray-900 text-gray-400">
       <div className="max-w-7xl mx-auto py-12 px-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        {/* Links Section */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
           {footerSections.map((section) => (
             <div key={section.title}>
-              <h3 className="text-sm font-semibold text-gray-300 uppercase">{section.title}</h3>
+              <h3 className="text-sm font-semibold text-gray-300 uppercase">
+                {section.title}
+              </h3>
               <ul className="mt-4 space-y-3">
                 {section.links.map((link) => (
                   <li key={link.name}>
-                    <a href={link.href} className="hover:text-white">
+                    <a href={link.href} className="hover:text-white transition-colors">
                       {link.name}
                     </a>
                   </li>
@@ -308,16 +396,50 @@ const Footer = () => {
           ))}
         </div>
 
-         <a href="//www.dmca.com/Protection/Status.aspx?ID=3b429a82-a1ac-45e2-8d4e-29804753a560" title="DMCA.com Protection Status" class="dmca-badge"> <img src ="https://images.dmca.com/Badges/DMCA_badge_trn_60w.png?ID=3b429a82-a1ac-45e2-8d4e-29804753a560"  alt="DMCA.com Protection Status" /></a>  <script src="https://images.dmca.com/Badges/DMCABadgeHelper.min.js"> </script>
+        {/* Badges Section - Centered and Side by Side */}
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-6 mb-8">
+          {/* DMCA Badge */}
+          <a
+            href="//www.dmca.com/Protection/Status.aspx?ID=3b429a82-a1ac-45e2-8d4e-29804753a560"
+            title="DMCA.com Protection Status"
+            className="dmca-badge hover:opacity-80  transition-opacity"
+          >
+            <img
+              src="https://images.dmca.com/Badges/DMCA_badge_trn_60w.png?ID=3b429a82-a1ac-45e2-8d4e-29804753a560"
+              alt="DMCA.com Protection Status"
+            />
+          </a>
+          
+          {/* Note: Script tags inside JSX can be tricky. If this doesn't load, move it to your index.html or useEffect */}
+          <script src="https://images.dmca.com/Badges/DMCABadgeHelper.min.js"></script>
 
+          {/* Product Hunt Badge */}
+          <a
+            href="https://www.producthunt.com/products/surveyzen?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-surveyzen"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:opacity-80 transition-opacity"
+          >
+            <img
+              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1041372&theme=light&t=1763890037404"
+              alt="SurveyZen - The minimalist survey builder for modern creators. | Product Hunt"
+              style={{ width: '210px', height: '99px' }}
+              width="100"
+              height="99"
+            />
+          </a>
+        </div>
 
-        <div className="mt-12 border-t border-gray-700 pt-8 text-center">
+        {/* Copyright Section */}
+        <div className="border-t border-gray-700 pt-8 text-center">
           <p>&copy; {new Date().getFullYear()} SurveyZen. All rights reserved.</p>
         </div>
       </div>
     </footer>
   );
 };
+
+
 
 // ================= MAIN LANDING PAGE =================
 export default function LandingPage({ navigate }) {
