@@ -1,7 +1,6 @@
 import axios from "axios";
 import dotenv from "dotenv";
-import logo from "../public/image.png";
-import logoName from "../public/image1.png";
+import {logo1 , logo2} from '../logos/logo.js'
 dotenv.config();
 
 /**
@@ -47,7 +46,7 @@ export const sendRegistrationEmail = async (toEmail, name) => {
 
         <!-- Header / Logo -->
         <div style="text-align:center; padding:20px 0; background:#ffffff;">
-          <img src="${logo}" alt="SurveyZen Logo" style="width:150px; height:auto; display:block; margin:0 auto;" />
+          <img src="${logo2}" alt="SurveyZen Logo" style="width:150px; height:auto; display:block; margin:0 auto;" />
         </div>
 
         <!-- Body -->
@@ -83,7 +82,7 @@ export const sendRegistrationEmail = async (toEmail, name) => {
 
         <!-- Bottom Logo -->
         <div style="text-align:center; padding:20px 0;">
-          <img src="${logoName}" alt="SurveyZen Logo" style="width:120px; height:auto; opacity:0.85;" />
+          <img src="${logo1}" alt="SurveyZen Logo" style="width:120px; height:auto; opacity:0.85;" />
         </div>
 
         <!-- Footer -->
