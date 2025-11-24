@@ -1,5 +1,7 @@
 import axios from "axios";
 import dotenv from "dotenv";
+import logo from "../public/image.png";
+import logoName from "../public/image1.png";
 dotenv.config();
 
 /**
@@ -38,18 +40,63 @@ export const sendEmail = async ({ to, subject, html }) => {
 export const sendRegistrationEmail = async (toEmail, name) => {
   return sendEmail({
     to: toEmail,
-    subject: "Welcome to SurveyZen! Your Account is Ready",
+    subject: "Welcome to SurveyZen , Your Account is Ready",
     html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-        <h2>Welcome, ${name}!</h2>
-        <p>Thank you for registering your creator account with SurveyZen.</p>
-        <p>You can now log in and start building your first survey.</p>
-        <p>We’re excited to help you collect valuable feedback.</p>
-        <p>Best regards,<br>The SurveyZen Team</p>
+    <div style="font-family: Arial, sans-serif; background:#f7f7f7; padding: 40px;">
+      <div style="max-width:600px; margin:0 auto; background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+
+        <!-- Header / Logo -->
+        <div style="text-align:center; padding:20px 0; background:#ffffff;">
+          <img src="${logo}" alt="SurveyZen Logo" style="width:150px; height:auto; display:block; margin:0 auto;" />
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 30px 40px; color:#333333;">
+          <h2 style="margin-top:0; font-size:24px; font-weight:600; text-align:center; color:#222;">Welcome to SurveyZen, ${name}! 🎉</h2>
+
+          <p style="font-size:16px; margin-bottom:16px;">
+            Thank you for joining SurveyZen — we’re excited to have you on board!
+          </p>
+
+          <p style="font-size:16px; margin-bottom:16px;">
+            Your account has been successfully activated. You can now start creating interactive surveys, analyzing responses, and exploring powerful features built to help you make informed decisions.
+          </p>
+
+          <!-- CTA Button -->
+          <div style="text-align:center; margin:32px 0;">
+            <a href="https://surveyzen.live/login" 
+              style="background:#0ea5e9; color:#ffffff; text-decoration:none; padding:14px 28px; border-radius:6px; font-size:16px; display:inline-block; font-weight:600;">
+              Login to your account
+            </a>
+          </div>
+
+          <p style="font-size:16px; margin-bottom:16px;">
+            Need help or have questions? Our support team is always here to assist you. Contact us anytime at:
+            <a href="mailto:contact@surveyzen.live" style="color:#0ea5e9;">contact@surveyzen.live</a>
+          </p>
+
+          <p style="font-size:16px; margin-top:32px;">
+            Warm Regards,<br>
+            <strong>Team SurveyZen</strong>
+          </p>
+        </div>
+
+        <!-- Bottom Logo -->
+        <div style="text-align:center; padding:20px 0;">
+          <img src="${logoName}" alt="SurveyZen Logo" style="width:120px; height:auto; opacity:0.85;" />
+        </div>
+
+        <!-- Footer -->
+        <div style="background:#f2f2f2; text-align:center; padding:15px; font-size:13px; color:#666;">
+          © ${new Date().getFullYear()} SurveyZen. All rights reserved.
+        </div>
+
       </div>
+    </div>
     `
   });
 };
+
 
 /**
  * Sends an email when a new survey is created
