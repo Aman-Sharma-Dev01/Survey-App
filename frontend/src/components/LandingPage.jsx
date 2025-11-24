@@ -344,7 +344,7 @@ const Footer = () => {
       links: [
         { name: 'Features', href: '#features' },
         { name: 'Pricing', href: '#pricing' },
-        { name: 'Integrations', href: '#' },
+        
         { name: 'Examples', href: '#' },
       ],
     },

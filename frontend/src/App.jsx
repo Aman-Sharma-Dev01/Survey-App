@@ -123,6 +123,10 @@ const App = () => {
       case 'dashboard':
         return <Dashboard navigate={navigate} />;
 
+
+            case 'pricing':
+        return <PricingPage navigate={navigate} />;
+
       case 'create':
         return <SurveyCreate navigate={navigate} />;
 
