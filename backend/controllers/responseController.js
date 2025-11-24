@@ -108,42 +108,44 @@ export const getSurveyAnalysis = async (req, res) => {
 //  NEW API #1: EXPORT RESPONSES AS CSV
 //  GET /api/responses/export/:surveyId
 // ---------------------------------------------------
+import { Parser } from "json2csv";
+
 export const exportResponsesCSV = async (req, res) => {
-    const surveyId = req.params.surveyId;
+  const surveyId = req.params.surveyId;
 
-    const survey = await Survey.findById(surveyId).select('creator questions');
-    if (!survey || survey.creator.toString() !== req.user._id.toString()) {
-        return res.status(403).json({ message: 'Not authorized' });
-    }
+  const survey = await Survey.findById(surveyId).select("creator questions");
+  if (!survey || survey.creator.toString() !== req.user._id.toString()) {
+    return res.status(403).json({ message: "Not authorized" });
+  }
 
-    const responses = await Response.find({ survey: surveyId });
+  const responses = await Response.find({ survey: surveyId });
 
-    const flatData = [];
+  // Build CSV rows: One row per response
+  const rows = responses.map((r) => {
+    const row = {
+      responseId: r._id.toString(),
+      submittedAt: r.createdAt,
+    };
 
-    responses.forEach(r => {
-        r.answers.forEach(a => {
-            const question = survey.questions.find(q => q._id.toString() === a.questionId.toString());
+    survey.questions.forEach((q) => {
+      const ans = r.answers.find(a => a.questionId.toString() === q._id.toString());
 
-            flatData.push({
-                surveyId,
-                questionId: a.questionId,
-                questionText: question?.questionText || '',
-                answerValue: Array.isArray(a.answerValue)
-                    ? a.answerValue.join(', ')
-                    : a.answerValue,
-                submittedAt: r.createdAt
-            });
-        });
+      row[q.questionText] = ans
+        ? Array.isArray(ans.answerValue) ? ans.answerValue.join(", ") : ans.answerValue
+        : ""; // blank if no response for this question
     });
 
-    const fields = ['surveyId', 'questionId', 'questionText', 'answerValue', 'submittedAt'];
-    const json2csv = new Json2csvParser({ fields });
-    const csv = json2csv.parse(flatData);
+    return row;
+  });
 
-    res.header('Content-Type', 'text/csv');
-    res.attachment(`survey_${surveyId}_responses.csv`);
-    return res.send(csv);
+  const parser = new Parser();
+  const csv = parser.parse(rows);
+
+  res.header("Content-Type", "text/csv");
+  res.attachment(`survey_${surveyId}_responses.csv`);
+  return res.send(csv);
 };
+
 
 // ---------------------------------------------------
 //  NEW API #2: SHAREABLE PUBLIC RESULTS
