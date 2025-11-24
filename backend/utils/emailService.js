@@ -1,6 +1,5 @@
 import axios from "axios";
 import dotenv from "dotenv";
-import {logo1 , logo2} from '../logos/logo.js'
 dotenv.config();
 
 /**
@@ -46,7 +45,7 @@ export const sendRegistrationEmail = async (toEmail, name) => {
 
         <!-- Header / Logo -->
         <div style="text-align:center; padding:20px 0; background:#ffffff;">
-          <img src="${logo2}" alt="SurveyZen Logo" style="width:150px; height:auto; display:block; margin:0 auto;" />
+          <img src="https://surveyzen.live/logo3.png" alt="SurveyZen Logo" style="width:150px; height:auto; display:block; margin:0 auto;" />
         </div>
 
         <!-- Body -->
@@ -63,7 +62,7 @@ export const sendRegistrationEmail = async (toEmail, name) => {
 
           <!-- CTA Button -->
           <div style="text-align:center; margin:32px 0;">
-            <a href="https://surveyzen.live/login" 
+            <a href="https://surveyzen.live/#login" 
               style="background:#0ea5e9; color:#ffffff; text-decoration:none; padding:14px 28px; border-radius:6px; font-size:16px; display:inline-block; font-weight:600;">
               Login to your account
             </a>
@@ -82,7 +81,7 @@ export const sendRegistrationEmail = async (toEmail, name) => {
 
         <!-- Bottom Logo -->
         <div style="text-align:center; padding:20px 0;">
-          <img src="${logo1}" alt="SurveyZen Logo" style="width:120px; height:auto; opacity:0.85;" />
+          <img src="https://surveyzen.live/logo1.png" alt="SurveyZen Logo" style="width:120px; height:auto; opacity:0.85;" />
         </div>
 
         <!-- Footer -->
@@ -105,16 +104,62 @@ export const sendNewSurveyEmail = async (toEmail, surveyTitle) => {
     to: toEmail,
     subject: `Survey Created: "${surveyTitle}"`,
     html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-        <h2>Your Survey Has Been Created</h2>
-        <p>Your new survey <strong>"${surveyTitle}"</strong> is now in draft mode.</p>
-        <p>You can review and publish it anytime.</p>
-        <p>Happy surveying!</p>
-        <p>The SurveyZen Team</p>
+    <div style="font-family: Arial, sans-serif; background:#f7f7f7; padding: 40px;">
+      <div style="max-width:600px; margin:0 auto; background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+
+        <!-- Header Logo -->
+        <div style="text-align:center; padding:25px 0;">
+          <img src="https://surveyzen.live/logo3.png" alt="SurveyZen Logo" style="width:150px; display:block; margin:0 auto;" />
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 30px 40px; color:#333;">
+          <h2 style="margin-top:0; font-size:24px; font-weight:600; text-align:center; color:#222;">
+            🎉 Your Survey Has Been Created
+          </h2>
+
+          <p style="font-size:16px; margin-bottom:16px;">
+            Your new survey titled <strong>"${surveyTitle}"</strong> has been successfully created and is currently in <strong>draft</strong> mode.
+          </p>
+
+          <p style="font-size:16px; margin-bottom:16px;">
+            You can now review the content, make updates, add questions, and publish it whenever you're ready.
+          </p>
+
+          <!-- CTA Button -->
+          <div style="text-align:center; margin:32px 0;">
+            <a href="https://surveyzen.live/#dashboard"
+              style="background:#0ea5e9; color:#ffffff; text-decoration:none; padding:14px 28px; border-radius:6px; font-size:16px; display:inline-block; font-weight:600;">
+              Go to Dashboard
+            </a>
+          </div>
+
+          <p style="font-size:16px;">
+            Happy surveying! 🚀
+          </p>
+
+          <p style="font-size:16px; margin-top:25px;">
+            Warm regards,<br>
+            <strong>Team SurveyZen</strong>
+          </p>
+        </div>
+
+        <!-- Bottom Logo -->
+        <div style="text-align:center; padding:20px 0;">
+          <img src="https://surveyzen.live/logo1.png" alt="SurveyZen Logo" style="width:120px; opacity:0.85;" />
+        </div>
+
+        <!-- Footer -->
+        <div style="background:#f2f2f2; text-align:center; padding:15px; font-size:13px; color:#666;">
+          © ${new Date().getFullYear()} SurveyZen. All rights reserved.
+        </div>
+
       </div>
+    </div>
     `
   });
 };
+
 
 
 export const sendVerificationEmail = async (toEmail, name, token) => {
@@ -122,17 +167,67 @@ export const sendVerificationEmail = async (toEmail, name, token) => {
 
   return sendEmail({
     to: toEmail,
-    subject: "Verify your SurveyZen Account",
+    subject: "Verify Your SurveyZen Account",
     html: `
-      <h2>Hello ${name},</h2>
-      <p>Please verify your account by clicking the link below:</p>
-      <a href="${verifyUrl}" style="padding:10px 20px; background:#4f46e5; color:white; text-decoration:none; border-radius:5px;">
-        Verify Account
-      </a>
-      <p>This link expires in <b>24 hours</b>.</p>
+    <div style="font-family: Arial, sans-serif; background:#f7f7f7; padding: 40px;">
+      <div style="max-width:600px; margin:0 auto; background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+
+        <!-- Logo Header -->
+        <div style="text-align:center; padding:25px 0;">
+          <img src="https://surveyzen.live/logo3.png" alt="SurveyZen Logo"
+               style="width:150px; display:block; margin:0 auto;" />
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 30px 40px; color:#333;">
+          <h2 style="margin:0 0 15px 0; font-size:24px; font-weight:600; text-align:center; color:#222;">
+            Hi ${name}, Welcome to SurveyZen! 🎉
+          </h2>
+
+          <p style="font-size:16px; margin-bottom:16px;">
+            Thank you for registering with SurveyZen. To complete your signup, please verify your account by clicking the button below.
+          </p>
+
+          <!-- CTA -->
+          <div style="text-align:center; margin:32px 0;">
+            <a href="${verifyUrl}"
+              style="background:#4f46e5; color:#ffffff; text-decoration:none;
+                     padding:14px 28px; border-radius:6px; font-size:16px; display:inline-block; font-weight:600;">
+              Verify Account
+            </a>
+          </div>
+
+          <p style="font-size:16px;">
+            This verification link will expire in <strong>24 hours</strong> for your security.
+          </p>
+
+          <p style="font-size:16px; margin-top:25px;">
+            If you did not create this account, please ignore this message.
+          </p>
+
+          <p style="font-size:16px; margin-top:25px;">
+            Warm regards,<br>
+            <strong>Team SurveyZen</strong>
+          </p>
+        </div>
+
+        <!-- Bottom Logo -->
+        <div style="text-align:center; padding:20px 0;">
+          <img src="https://surveyzen.live/logo1.png" alt="SurveyZen Logo"
+               style="width:120px; opacity:0.85;" />
+        </div>
+
+        <!-- Footer -->
+        <div style="background:#f2f2f2; text-align:center; padding:15px; font-size:13px; color:#666;">
+          © ${new Date().getFullYear()} SurveyZen. All rights reserved.
+        </div>
+
+      </div>
+    </div>
     `
   });
 };
+
 
 export const sendResetPasswordEmail = async (toEmail, token) => {
   const resetUrl = `${process.env.PUBLIC_SITE_URL}/#reset-password/${token}`;
@@ -141,12 +236,61 @@ export const sendResetPasswordEmail = async (toEmail, token) => {
     to: toEmail,
     subject: "Reset Your SurveyZen Password",
     html: `
-      <h2>Password Reset Request</h2>
-      <p>Click the button below to set a new password:</p>
-      <a href="${resetUrl}" style="padding:10px 20px; background:#e11d48; color:white; border-radius:5px; text-decoration:none;">
-        Reset Password
-      </a>
-      <p>This link expires in <b>15 minutes</b>.</p>
+    <div style="font-family: Arial, sans-serif; background:#f7f7f7; padding: 40px;">
+      <div style="max-width:600px; margin:0 auto; background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+
+        <!-- Logo Header -->
+        <div style="text-align:center; padding:25px 0;">
+          <img src="https://surveyzen.live/logo3.png" alt="SurveyZen Logo"
+               style="width:150px; display:block; margin:0 auto;" />
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 30px 40px; color:#333;">
+          <h2 style="margin-top:0; font-size:24px; font-weight:600; text-align:center; color:#222;">
+            Password Reset Request
+          </h2>
+
+          <p style="font-size:16px; margin-bottom:16px;">
+            We received a request to reset your SurveyZen account password. If you made this request, please click the button below to create a new password.
+          </p>
+
+          <!-- CTA Button -->
+          <div style="text-align:center; margin:32px 0;">
+            <a href="${resetUrl}"
+              style="background:#e11d48; color:#ffffff; text-decoration:none;
+                     padding:14px 28px; border-radius:6px; font-size:16px; display:inline-block; font-weight:600;">
+              Reset Password
+            </a>
+          </div>
+
+          <p style="font-size:16px;">
+            ⚠ For security reasons, this link will expire in <strong>15 minutes</strong>.
+          </p>
+
+          <p style="font-size:16px; margin-top:25px;">
+            If you did not request a password reset, please ignore this email. Your account will remain safe.
+          </p>
+
+          <p style="font-size:16px; margin-top:25px;">
+            Warm regards,<br>
+            <strong>Team SurveyZen</strong>
+          </p>
+        </div>
+
+        <!-- Bottom Logo -->
+        <div style="text-align:center; padding:20px 0;">
+          <img src="https://surveyzen.live/logo1.png" alt="SurveyZen Logo"
+               style="width:120px; opacity:0.85;" />
+        </div>
+
+        <!-- Footer -->
+        <div style="background:#f2f2f2; text-align:center; padding:15px; font-size:13px; color:#666;">
+          © ${new Date().getFullYear()} SurveyZen. All rights reserved.
+        </div>
+
+      </div>
+    </div>
     `
   });
 };
