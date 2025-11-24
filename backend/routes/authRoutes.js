@@ -2,8 +2,8 @@ import express from 'express';
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 // import { sendRegistrationEmail } from '../utils/notificationService.js'; // Removed SMS import
-import { sendRegistrationEmail } from '../utils/emailService.js';
-import { sendVerificationEmail, sendResetPasswordEmail } from '../utils/emailService.js';
+// import { sendRegistrationEmail } from '../utils/emailService.js';
+import { sendVerificationEmail, sendResetPasswordEmail ,sendRegistrationEmail } from '../utils/emailService.js';
 
 
 

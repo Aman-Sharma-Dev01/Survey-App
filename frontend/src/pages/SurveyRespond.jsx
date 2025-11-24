@@ -11,10 +11,15 @@ const SurveyRespondPage = ({ surveyId }) => {
     const [isSubmitted, setIsSubmitted] = useState(false);
 
     useEffect(() => {
+        // ⭐ Check if survey already submitted in this browser
+        const alreadySubmitted = localStorage.getItem(`survey_${surveyId}_submitted`);
+        if (alreadySubmitted) {
+            setIsSubmitted(true);
+        }
+
         const fetchSurvey = async () => {
             setLoading(true);
             try {
-                // API Call: GET /responses/public/:surveyId (Phase III, Step 6)
                 const data = await getPublicSurvey(surveyId);
                 setSurvey(data);
                 setError('');
@@ -25,6 +30,7 @@ const SurveyRespondPage = ({ surveyId }) => {
                 setLoading(false);
             }
         };
+
         fetchSurvey();
     }, [surveyId]);
 
@@ -32,7 +38,6 @@ const SurveyRespondPage = ({ surveyId }) => {
         e.preventDefault();
         setError('');
 
-        // Basic validation: check if all required questions are answered
         const requiredQuestions = survey.questions.filter(q => q.isRequired);
         const missingAnswers = requiredQuestions.some(rq => {
             const answer = answers.find(a => a.questionId === rq._id);
@@ -50,8 +55,11 @@ const SurveyRespondPage = ({ surveyId }) => {
 
         setLoading(true);
         try {
-            // API Call: POST /responses/:surveyId (Phase III, Step 7)
             await submitAnonymousResponse(surveyId, answers);
+
+            // ⭐ Store flag in LocalStorage so user cannot submit again
+            localStorage.setItem(`survey_${surveyId}_submitted`, "true");
+
             setIsSubmitted(true);
             setAnswers([]);
         } catch (err) {
@@ -70,10 +78,11 @@ const SurveyRespondPage = ({ surveyId }) => {
         </div>
     );
 
+    // ⭐ User already submitted view
     if (isSubmitted) return (
         <div className="max-w-xl mx-auto p-10 mt-10 text-center bg-green-50 border border-green-200 rounded-xl shadow-lg">
             <h2 className="text-3xl font-bold text-green-700 mb-4">Thank You!</h2>
-            <p className="text-lg text-green-600">Your response has been submitted anonymously.</p>
+            <p className="text-lg text-green-600">Your response has already been submitted.</p>
             <p className="mt-4 text-sm text-gray-500">You can now close this window.</p>
         </div>
     );
