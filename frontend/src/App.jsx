@@ -14,6 +14,7 @@ import LandingPage from './components/LandingPage';
 import AboutUs from './components/AboutUs.jsx';
 import BlogPage from './components/BlogPage.jsx';
 import ContactPage from './components/ContactPage.jsx';
+import PricingPage from './components/PricingPage.jsx';
 
 // ⭐ New Pages
 import VerifyPage from './pages/VerifyPage.jsx';
