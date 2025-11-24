@@ -82,7 +82,10 @@ const App = () => {
     'how-it-works',
     'contact',
     'respond',
-    'share',       // ⭐ NEW (hide navbar for public shared page)
+    'share',  
+    'about',
+    'blog',
+
   ];
 
   const shouldShowNavbar = !landingRoutes.includes(pathRoot);

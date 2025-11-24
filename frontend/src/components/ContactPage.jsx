@@ -17,33 +17,50 @@ import {
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const navLinks = [
+    { name: 'Features', href: '#features' },
+    { name: 'How it Works', href: '#how-it-works' },
+    { name: 'Pricing', href: '#pricing' },
+    { name: 'Blog', href: '#blog' }, // ⭐ Added
+  ];
+
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex-shrink-0 flex items-center cursor-pointer" onClick={() => window.location.href = '/'}>
+          <div className="flex-shrink-0 flex items-center cursor-pointer">
             <Rocket className="h-8 w-8 text-indigo-600" />
             <span className="text-2xl font-bold text-gray-900 ml-2">
               SurveyZen
             </span>
           </div>
 
-          <div className="hidden md:flex md:items-center md:space-x-8">
-            <a href="/" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Home</a>
-            <a href="/#features" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Features</a>
-            <a href="/#pricing" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Pricing</a>
-            <a href="/#contact" className="text-indigo-600 bg-indigo-50 px-3 py-2 rounded-md text-sm font-medium">Contact</a>
+          <div className="hidden md:flex md:items-center md:space-x-6">
+            {navLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                {link.name}
+              </a>
+            ))}
           </div>
 
           <div className="hidden md:flex items-center space-x-3">
+            <a href="#contact" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+              Contact
+            </a>
              <a href="#login" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
               Log In
             </a>
+            
             <a href="#register" className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
               Sign Up Free
             </a>
           </div>
 
+          {/* Mobile Menu */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -56,15 +73,26 @@ const Navbar = () => {
       </div>
 
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
-          <div className="px-4 py-3 space-y-3">
-            <a href="/" className="block text-gray-600 font-medium">Home</a>
-            <a href="/#features" className="block text-gray-600 font-medium">Features</a>
-            <a href="/#contact" className="block text-indigo-600 font-medium">Contact</a>
-            <div className="pt-4 border-t border-gray-100">
-                <a href="#login" className="block text-center text-gray-600 bg-gray-50 px-4 py-2 rounded-md mb-2">Log In</a>
-                <a href="#register" className="block text-center bg-indigo-600 text-white px-4 py-2 rounded-md">Sign Up Free</a>
-            </div>
+        <div className="md:hidden bg-white border-t border-gray-200">
+          <div className="px-2 pt-2 pb-3 space-y-1">
+            {navLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                className="text-gray-600 hover:bg-gray-50 hover:text-indigo-600 block px-3 py-2 rounded-md text-base"
+              >
+                {link.name}
+              </a>
+            ))}
+          </div>
+
+          <div className="px-4 py-3 border-t border-gray-200 space-y-3">
+            <a href="#register" className="block text-center bg-indigo-600 text-white px-4 py-2 rounded-md text-base hover:bg-indigo-700">
+              Sign Up Free
+            </a>
+            <a href="#login" className="block text-center text-gray-600 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-md text-base">
+              Log In
+            </a>
           </div>
         </div>
       )}
@@ -112,14 +140,17 @@ const Footer = () => {
   return (
     <footer className="bg-gray-900 text-gray-400">
       <div className="max-w-7xl mx-auto py-12 px-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        {/* Links Section */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
           {footerSections.map((section) => (
             <div key={section.title}>
-              <h3 className="text-sm font-semibold text-gray-300 uppercase">{section.title}</h3>
+              <h3 className="text-sm font-semibold text-gray-300 uppercase">
+                {section.title}
+              </h3>
               <ul className="mt-4 space-y-3">
                 {section.links.map((link) => (
                   <li key={link.name}>
-                    <a href={link.href} className="hover:text-white">
+                    <a href={link.href} className="hover:text-white transition-colors">
                       {link.name}
                     </a>
                   </li>
@@ -129,7 +160,42 @@ const Footer = () => {
           ))}
         </div>
 
-        <div className="mt-12 border-t border-gray-700 pt-8 text-center">
+        {/* Badges Section - Centered and Side by Side */}
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-6 mb-8">
+          {/* DMCA Badge */}
+          <a
+            href="//www.dmca.com/Protection/Status.aspx?ID=3b429a82-a1ac-45e2-8d4e-29804753a560"
+            title="DMCA.com Protection Status"
+            className="dmca-badge hover:opacity-80  transition-opacity"
+          >
+            <img
+              src="https://images.dmca.com/Badges/DMCA_badge_trn_60w.png?ID=3b429a82-a1ac-45e2-8d4e-29804753a560"
+              alt="DMCA.com Protection Status"
+            />
+          </a>
+          
+          {/* Note: Script tags inside JSX can be tricky. If this doesn't load, move it to your index.html or useEffect */}
+          <script src="https://images.dmca.com/Badges/DMCABadgeHelper.min.js"></script>
+
+          {/* Product Hunt Badge */}
+          <a
+            href="https://www.producthunt.com/products/surveyzen?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-surveyzen"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:opacity-80 transition-opacity"
+          >
+            <img
+              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1041372&theme=light&t=1763890037404"
+              alt="SurveyZen - The minimalist survey builder for modern creators. | Product Hunt"
+              style={{ width: '210px', height: '99px' }}
+              width="100"
+              height="99"
+            />
+          </a>
+        </div>
+
+        {/* Copyright Section */}
+        <div className="border-t border-gray-700 pt-8 text-center">
           <p>&copy; {new Date().getFullYear()} SurveyZen. All rights reserved.</p>
         </div>
       </div>
