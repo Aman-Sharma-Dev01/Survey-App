@@ -24,6 +24,12 @@ import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 // ⭐ NEW — Public Share Results Page
 import ShareResultsPage from './pages/ShareResultsPage.jsx';
 
+// ⭐ Quiz Pages
+import QuizCreate from './pages/QuizCreate.jsx';
+import QuizDashboard from './pages/QuizDashboard.jsx';
+import QuizTake from './pages/QuizTake.jsx';
+import QuizAnalytics from './pages/QuizAnalytics.jsx';
+
 // === Components ===
 import Navbar from './components/Navbar';
 
@@ -59,7 +65,7 @@ const App = () => {
 
   // Protect private pages
   useEffect(() => {
-    const protectedPaths = ['dashboard', 'create', 'analysis'];
+    const protectedPaths = ['dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-analytics'];
     const [pathSegment] = getPathSegments(currentPath);
 
     if (protectedPaths.includes(pathSegment) && !authState.isAuthenticated) {
@@ -85,7 +91,7 @@ const App = () => {
     'share',  
     'about',
     'blog',
-
+    'quiz', // Public quiz taking page
   ];
 
   const shouldShowNavbar = !landingRoutes.includes(pathRoot);
@@ -152,8 +158,31 @@ const App = () => {
 
       // ⭐ NEW — Public shareable survey results
       case 'share':
-  return <ShareResultsPage surveyId={pathId} />;
+        return <ShareResultsPage surveyId={pathId} />;
 
+      // ⭐ Quiz Routes
+      case 'quiz-dashboard':
+        return <QuizDashboard navigate={navigate} />;
+
+      case 'quiz-create':
+        return <QuizCreate navigate={navigate} />;
+
+      case 'quiz-analytics':
+        return pathId ? (
+          <QuizAnalytics quizId={pathId} navigate={navigate} />
+        ) : (
+          <QuizDashboard navigate={navigate} />
+        );
+
+      case 'quiz':
+        return pathId ? (
+          <QuizTake quizId={pathId} />
+        ) : (
+          <div className="text-center p-10 mt-20">
+            <h1 className="text-2xl font-bold text-gray-800">Quiz</h1>
+            <p className="text-gray-500">Please use a valid quiz link to participate.</p>
+          </div>
+        );
 
       default:
         return <LandingPage navigate={navigate} />;

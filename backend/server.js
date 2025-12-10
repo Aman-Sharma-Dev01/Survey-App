@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoutes.js';
 import surveyRoutes from './routes/surveyRoutes.js';
 import responseRoutes from './routes/responseRoutes.js';
 import aiRouter from './routes/ai.js';
+import quizRoutes from './routes/quizRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -42,6 +43,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/surveys', surveyRoutes);
 app.use('/api/responses', responseRoutes);
 app.use('/api/ai', aiRouter);
+app.use('/api/quizzes', quizRoutes);
+
 // Error Handling Middleware (Basic example)
 app.use((err, req, res, next) => {
     console.error(err.stack);

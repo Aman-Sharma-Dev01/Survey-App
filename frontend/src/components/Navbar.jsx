@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, PlusCircle, LayoutDashboard } from 'lucide-react';
+import { LogOut, PlusCircle, LayoutDashboard, HelpCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const NavButton = ({ Icon, label, target, onClick, current }) => {
@@ -30,8 +30,9 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                 <nav className="hidden sm:flex space-x-4 items-center">
                     {isAuthenticated ? (
                         <>
-                            <NavButton Icon={LayoutDashboard} label="Dashboard" target="dashboard" onClick={() => handleNavigate('dashboard')} current={currentPage} />
-                            <NavButton Icon={PlusCircle} label="Create" target="create" onClick={() => handleNavigate('create')} current={currentPage} />
+                            <NavButton Icon={LayoutDashboard} label="Surveys" target="dashboard" onClick={() => handleNavigate('dashboard')} current={currentPage} />
+                            <NavButton Icon={PlusCircle} label="Create Survey" target="create" onClick={() => handleNavigate('create')} current={currentPage} />
+                            <NavButton Icon={HelpCircle} label="Quizzes" target="quiz-dashboard" onClick={() => handleNavigate('quiz-dashboard')} current={currentPage} />
                             <div className="text-white text-sm opacity-75 hidden lg:block">Welcome, {user?.emails || 'Creator'}</div>
                             <button
                                 onClick={logout}

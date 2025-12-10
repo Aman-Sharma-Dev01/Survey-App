@@ -1,0 +1,359 @@
+import express from 'express';
+import Quiz from '../models/Quiz.js';
+import QuizResponse from '../models/QuizResponse.js';
+import { protect } from '../middleware/authMiddleware.js';
+
+const router = express.Router();
+
+/* ===========================================================
+   CREATE NEW QUIZ
+   POST /api/quizzes (Private)
+=========================================================== */
+router.post('/', protect, async (req, res) => {
+    try {
+        const { title, description, questions, settings } = req.body;
+
+        const quiz = new Quiz({
+            title,
+            description,
+            questions,
+            settings,
+            creator: req.user._id,
+        });
+
+        const createdQuiz = await quiz.save();
+        res.status(201).json(createdQuiz);
+    } catch (error) {
+        console.error('Create quiz error:', error);
+        res.status(500).json({ message: 'Error creating quiz', error: error.message });
+    }
+});
+
+/* ===========================================================
+   GET ALL QUIZZES FOR CREATOR
+   GET /api/quizzes (Private)
+=========================================================== */
+router.get('/', protect, async (req, res) => {
+    try {
+        const quizzes = await Quiz.find({ creator: req.user._id })
+            .sort({ createdAt: -1 });
+        res.json(quizzes);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching quizzes' });
+    }
+});
+
+/* ===========================================================
+   GET PUBLIC QUIZ (for taking) - MUST BE BEFORE /:id
+   GET /api/quizzes/public/:id (Public)
+=========================================================== */
+router.get('/public/:id', async (req, res) => {
+    try {
+        const quiz = await Quiz.findById(req.params.id);
+
+        if (!quiz) {
+            return res.status(404).json({ message: 'Quiz not found' });
+        }
+
+        if (!quiz.isPublished) {
+            return res.status(403).json({ message: 'This quiz is not available' });
+        }
+
+        // Return quiz without correct answers
+        const publicQuiz = {
+            _id: quiz._id,
+            title: quiz.title,
+            description: quiz.description,
+            questions: quiz.questions.map(q => ({
+                _id: q._id,
+                questionText: q.questionText,
+                questionType: q.questionType,
+                options: q.options.map(opt => ({
+                    optionText: opt.optionText
+                    // isCorrect is intentionally NOT included
+                })),
+                points: q.points
+            })),
+            settings: {
+                timeLimit: quiz.settings.timeLimit,
+                shuffleQuestions: quiz.settings.shuffleQuestions,
+                shuffleOptions: quiz.settings.shuffleOptions
+            },
+            totalPoints: quiz.questions.reduce((sum, q) => sum + (q.points || 1), 0)
+        };
+
+        res.json(publicQuiz);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching quiz' });
+    }
+});
+
+/* ===========================================================
+   SUBMIT QUIZ RESPONSE - MUST BE BEFORE /:id
+   POST /api/quizzes/submit/:id (Public)
+=========================================================== */
+router.post('/submit/:id', async (req, res) => {
+    try {
+        const { answers, participantName, participantEmail, timeTaken, startedAt } = req.body;
+
+        const quiz = await Quiz.findById(req.params.id);
+
+        if (!quiz) {
+            return res.status(404).json({ message: 'Quiz not found' });
+        }
+
+        if (!quiz.isPublished) {
+            return res.status(403).json({ message: 'This quiz is not available' });
+        }
+
+        // Grade the quiz
+        let totalScore = 0;
+        const totalPoints = quiz.questions.reduce((sum, q) => sum + (q.points || 1), 0);
+
+        const gradedAnswers = answers.map(answer => {
+            const question = quiz.questions.find(q => q._id.toString() === answer.questionId);
+            
+            if (!question) {
+                return { ...answer, isCorrect: false, pointsEarned: 0 };
+            }
+
+            // Find correct options
+            const correctOptions = question.options
+                .filter(opt => opt.isCorrect)
+                .map(opt => opt.optionText);
+
+            // Check if answer is correct
+            let isCorrect = false;
+            
+            if (question.questionType === 'MULTIPLE') {
+                // For multiple choice, all correct options must be selected and no incorrect ones
+                const selected = answer.selectedOptions || [];
+                isCorrect = correctOptions.length === selected.length &&
+                    correctOptions.every(opt => selected.includes(opt));
+            } else {
+                // For single choice / true-false, selected must match correct
+                const selected = answer.selectedOptions?.[0];
+                isCorrect = correctOptions.includes(selected);
+            }
+
+            const pointsEarned = isCorrect ? (question.points || 1) : 0;
+            totalScore += pointsEarned;
+
+            return {
+                questionId: answer.questionId,
+                selectedOptions: answer.selectedOptions,
+                isCorrect,
+                pointsEarned
+            };
+        });
+
+        const percentage = totalPoints > 0 ? Math.round((totalScore / totalPoints) * 100) : 0;
+        const passed = percentage >= (quiz.settings.passingScore || 60);
+
+        // Create response
+        const quizResponse = new QuizResponse({
+            quiz: quiz._id,
+            participantName: participantName || 'Anonymous',
+            participantEmail,
+            answers: gradedAnswers,
+            score: totalScore,
+            totalPoints,
+            percentage,
+            passed,
+            timeTaken,
+            startedAt: startedAt ? new Date(startedAt) : new Date()
+        });
+
+        await quizResponse.save();
+
+        // Update attempt count
+        quiz.attemptCount += 1;
+        await quiz.save();
+
+        // Prepare response with correct answers if settings allow
+        const responseData = {
+            _id: quizResponse._id,
+            score: totalScore,
+            totalPoints,
+            percentage,
+            passed,
+            timeTaken
+        };
+
+        if (quiz.settings.showCorrectAnswers) {
+            responseData.gradedAnswers = gradedAnswers;
+            responseData.correctAnswers = quiz.questions.map(q => ({
+                questionId: q._id,
+                questionText: q.questionText,
+                correctOptions: q.options.filter(opt => opt.isCorrect).map(opt => opt.optionText),
+                explanation: quiz.settings.showExplanations ? q.explanation : undefined
+            }));
+        }
+
+        res.status(201).json(responseData);
+    } catch (error) {
+        console.error('Submit quiz error:', error);
+        res.status(500).json({ message: 'Error submitting quiz' });
+    }
+});
+
+/* ===========================================================
+   GET QUIZ ANALYTICS - MUST BE BEFORE /:id
+   GET /api/quizzes/analytics/:id (Private)
+=========================================================== */
+router.get('/analytics/:id', protect, async (req, res) => {
+    try {
+        const quiz = await Quiz.findById(req.params.id);
+
+        if (!quiz) {
+            return res.status(404).json({ message: 'Quiz not found' });
+        }
+
+        if (quiz.creator.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        const responses = await QuizResponse.find({ quiz: req.params.id })
+            .sort({ submittedAt: -1 });
+
+        // Calculate analytics
+        const totalResponses = responses.length;
+        const passedCount = responses.filter(r => r.passed).length;
+        const avgScore = totalResponses > 0 
+            ? Math.round(responses.reduce((sum, r) => sum + r.percentage, 0) / totalResponses)
+            : 0;
+        const avgTime = totalResponses > 0
+            ? Math.round(responses.reduce((sum, r) => sum + (r.timeTaken || 0), 0) / totalResponses)
+            : 0;
+
+        // Question-level analytics
+        const questionStats = quiz.questions.map(question => {
+            const questionResponses = responses.flatMap(r => 
+                r.answers.filter(a => a.questionId.toString() === question._id.toString())
+            );
+            const correctCount = questionResponses.filter(a => a.isCorrect).length;
+            
+            return {
+                questionId: question._id,
+                questionText: question.questionText,
+                totalAttempts: questionResponses.length,
+                correctCount,
+                accuracy: questionResponses.length > 0 
+                    ? Math.round((correctCount / questionResponses.length) * 100) 
+                    : 0
+            };
+        });
+
+        res.json({
+            quiz: {
+                _id: quiz._id,
+                title: quiz.title,
+                totalPoints: quiz.questions.reduce((sum, q) => sum + (q.points || 1), 0)
+            },
+            analytics: {
+                totalResponses,
+                passedCount,
+                failedCount: totalResponses - passedCount,
+                passRate: totalResponses > 0 ? Math.round((passedCount / totalResponses) * 100) : 0,
+                avgScore,
+                avgTime
+            },
+            questionStats,
+            recentResponses: responses.slice(0, 20).map(r => ({
+                _id: r._id,
+                participantName: r.participantName,
+                score: r.score,
+                totalPoints: r.totalPoints,
+                percentage: r.percentage,
+                passed: r.passed,
+                timeTaken: r.timeTaken,
+                submittedAt: r.submittedAt
+            }))
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching analytics' });
+    }
+});
+
+/* ===========================================================
+   GET QUIZ BY ID (for editing) - AFTER specific routes
+   GET /api/quizzes/:id (Private)
+=========================================================== */
+router.get('/:id', protect, async (req, res) => {
+    try {
+        const quiz = await Quiz.findById(req.params.id);
+
+        if (!quiz) {
+            return res.status(404).json({ message: 'Quiz not found' });
+        }
+
+        if (quiz.creator.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        res.json(quiz);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching quiz' });
+    }
+});
+
+/* ===========================================================
+   UPDATE QUIZ
+   PUT /api/quizzes/:id (Private)
+=========================================================== */
+router.put('/:id', protect, async (req, res) => {
+    try {
+        const quiz = await Quiz.findById(req.params.id);
+
+        if (!quiz) {
+            return res.status(404).json({ message: 'Quiz not found' });
+        }
+
+        if (quiz.creator.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        const { title, description, questions, settings, isPublished } = req.body;
+
+        if (title) quiz.title = title;
+        if (description !== undefined) quiz.description = description;
+        if (questions) quiz.questions = questions;
+        if (settings) quiz.settings = { ...quiz.settings, ...settings };
+        if (isPublished !== undefined) quiz.isPublished = isPublished;
+
+        const updatedQuiz = await quiz.save();
+        res.json(updatedQuiz);
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating quiz' });
+    }
+});
+
+/* ===========================================================
+   DELETE QUIZ
+   DELETE /api/quizzes/:id (Private)
+=========================================================== */
+router.delete('/:id', protect, async (req, res) => {
+    try {
+        const quiz = await Quiz.findById(req.params.id);
+
+        if (!quiz) {
+            return res.status(404).json({ message: 'Quiz not found' });
+        }
+
+        if (quiz.creator.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        // Delete all responses for this quiz
+        await QuizResponse.deleteMany({ quiz: req.params.id });
+
+        // Delete the quiz
+        await Quiz.deleteOne({ _id: req.params.id });
+
+        res.json({ message: 'Quiz and all responses deleted' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting quiz' });
+    }
+});
+
+export default router;
