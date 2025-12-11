@@ -324,6 +324,17 @@ const QuizTakePage = ({ quizId }) => {
                         </span>
                     </div>
 
+                    {/* Question Image */}
+                    {currentQuestion.questionImage?.url && (
+                        <div className="mb-4">
+                            <img 
+                                src={currentQuestion.questionImage.url} 
+                                alt="Question diagram" 
+                                className="max-w-full max-h-64 rounded-lg border border-gray-200 object-contain mx-auto"
+                            />
+                        </div>
+                    )}
+
                     <p className="text-sm text-gray-500 mb-4">
                         {currentQuestion.questionType === 'MULTIPLE' 
                             ? 'Select all that apply' 
@@ -346,12 +357,22 @@ const QuizTakePage = ({ quizId }) => {
                                     }`}
                                 >
                                     <div className="flex items-center">
-                                        <div className={`w-5 h-5 mr-3 rounded-${isMultiple ? 'md' : 'full'} border-2 flex items-center justify-center ${
+                                        <div className={`w-5 h-5 mr-3 rounded-${isMultiple ? 'md' : 'full'} border-2 flex items-center justify-center flex-shrink-0 ${
                                             isSelected ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'
                                         }`}>
                                             {isSelected && <CheckCircle size={14} className="text-white" />}
                                         </div>
-                                        {option.optionText}
+                                        <div className="flex-1">
+                                            <span>{option.optionText}</span>
+                                            {/* Option Image */}
+                                            {option.optionImage?.url && (
+                                                <img 
+                                                    src={option.optionImage.url} 
+                                                    alt={`Option ${idx + 1}`} 
+                                                    className="mt-2 max-w-full max-h-32 rounded border border-gray-200 object-contain"
+                                                />
+                                            )}
+                                        </div>
                                     </div>
                                 </button>
                             );

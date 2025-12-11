@@ -3,6 +3,10 @@ import mongoose from 'mongoose';
 // Schema for a single quiz question
 const quizQuestionSchema = mongoose.Schema({
     questionText: { type: String, required: true },
+    questionImage: { 
+        url: { type: String },
+        publicId: { type: String }
+    },
     questionType: { 
         type: String, 
         enum: ['SINGLE', 'MULTIPLE', 'TRUE_FALSE'], 
@@ -11,6 +15,10 @@ const quizQuestionSchema = mongoose.Schema({
     },
     options: [{
         optionText: { type: String, required: true },
+        optionImage: {
+            url: { type: String },
+            publicId: { type: String }
+        },
         isCorrect: { type: Boolean, default: false }
     }],
     points: { type: Number, default: 1 },

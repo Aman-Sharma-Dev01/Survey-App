@@ -67,9 +67,11 @@ router.get('/public/:id', async (req, res) => {
             questions: quiz.questions.map(q => ({
                 _id: q._id,
                 questionText: q.questionText,
+                questionImage: q.questionImage, // Include question image
                 questionType: q.questionType,
                 options: q.options.map(opt => ({
-                    optionText: opt.optionText
+                    optionText: opt.optionText,
+                    optionImage: opt.optionImage // Include option image
                     // isCorrect is intentionally NOT included
                 })),
                 points: q.points

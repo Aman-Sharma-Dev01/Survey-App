@@ -1,7 +1,101 @@
-import React, { useState } from 'react';
-import { PlusCircle, Trash2, ChevronDown, ChevronUp, Check, Settings, Clock, HelpCircle } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { PlusCircle, Trash2, ChevronDown, ChevronUp, Check, Settings, Clock, HelpCircle, Image, X, Loader } from 'lucide-react';
 import { generateTempId } from '../services/api';
 import { createQuiz } from '../services/quizService';
+import { uploadImage, deleteImage } from '../services/uploadService';
+
+// Image Upload Component
+const ImageUploader = ({ image, onUpload, onRemove, label }) => {
+    const fileInputRef = useRef(null);
+    const [uploading, setUploading] = useState(false);
+
+    const handleFileSelect = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('Please select an image file');
+            return;
+        }
+
+        // Validate file size (5MB limit)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Image must be less than 5MB');
+            return;
+        }
+
+        setUploading(true);
+        try {
+            const result = await uploadImage(file);
+            onUpload({ url: result.url, publicId: result.publicId });
+        } catch (error) {
+            alert('Failed to upload image: ' + error.message);
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    const handleRemove = async () => {
+        if (image?.publicId) {
+            try {
+                await deleteImage(image.publicId);
+            } catch (error) {
+                console.error('Failed to delete image from cloud:', error);
+            }
+        }
+        onRemove();
+    };
+
+    return (
+        <div className="relative">
+            {image?.url ? (
+                <div className="relative inline-block">
+                    <img 
+                        src={image.url} 
+                        alt={label} 
+                        className="max-w-full max-h-48 rounded-lg border border-gray-200 object-contain"
+                    />
+                    <button
+                        type="button"
+                        onClick={handleRemove}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md"
+                        title="Remove image"
+                    >
+                        <X size={14} />
+                    </button>
+                </div>
+            ) : (
+                <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="flex items-center gap-2 px-3 py-2 text-sm border border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-emerald-400 hover:text-emerald-600 transition disabled:opacity-50"
+                >
+                    {uploading ? (
+                        <>
+                            <Loader size={16} className="animate-spin" />
+                            Uploading...
+                        </>
+                    ) : (
+                        <>
+                            <Image size={16} />
+                            {label}
+                        </>
+                    )}
+                </button>
+            )}
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+            />
+        </div>
+    );
+};
 
 // Question types for quiz
 const QUESTION_TYPES = [
@@ -96,6 +190,19 @@ const QuizQuestionEditor = ({ question, index, updateQuestion, removeQuestion })
                         />
                     </div>
 
+                    {/* Question Image */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Question Image <span className="text-gray-400">(optional - for diagrams, charts, etc.)</span>
+                        </label>
+                        <ImageUploader
+                            image={question.questionImage}
+                            onUpload={(img) => updateQuestion(question.tempId, { questionImage: img })}
+                            onRemove={() => updateQuestion(question.tempId, { questionImage: null })}
+                            label="Add Question Image"
+                        />
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                         {/* Question Type */}
                         <div>
@@ -129,39 +236,52 @@ const QuizQuestionEditor = ({ question, index, updateQuestion, removeQuestion })
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Answer Options <span className="text-gray-500">(click checkmark to mark correct)</span>
                         </label>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {question.options.map((option, optIndex) => (
-                                <div key={optIndex} className="flex items-center space-x-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => toggleCorrect(optIndex)}
-                                        className={`p-2 rounded-lg border-2 transition ${
-                                            option.isCorrect 
-                                                ? 'bg-emerald-500 border-emerald-500 text-white' 
-                                                : 'border-gray-300 text-gray-400 hover:border-emerald-400'
-                                        }`}
-                                        title={option.isCorrect ? 'Correct answer' : 'Mark as correct'}
-                                    >
-                                        <Check size={16} />
-                                    </button>
-                                    <input
-                                        type="text"
-                                        value={option.optionText}
-                                        onChange={(e) => handleOptionChange(optIndex, 'optionText', e.target.value)}
-                                        className={`flex-1 p-2 border rounded-lg ${
-                                            option.isCorrect ? 'border-emerald-300 bg-emerald-50' : 'border-gray-300'
-                                        }`}
-                                        placeholder={`Option ${optIndex + 1}`}
-                                        disabled={question.questionType === 'TRUE_FALSE'}
-                                    />
-                                    {question.questionType !== 'TRUE_FALSE' && question.options.length > 2 && (
+                                <div key={optIndex} className="p-3 border border-gray-200 rounded-lg bg-gray-50">
+                                    <div className="flex items-center space-x-2">
                                         <button
                                             type="button"
-                                            onClick={() => removeOption(optIndex)}
-                                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                                            onClick={() => toggleCorrect(optIndex)}
+                                            className={`p-2 rounded-lg border-2 transition ${
+                                                option.isCorrect 
+                                                    ? 'bg-emerald-500 border-emerald-500 text-white' 
+                                                    : 'border-gray-300 text-gray-400 hover:border-emerald-400'
+                                            }`}
+                                            title={option.isCorrect ? 'Correct answer' : 'Mark as correct'}
                                         >
-                                            <Trash2 size={16} />
+                                            <Check size={16} />
                                         </button>
+                                        <input
+                                            type="text"
+                                            value={option.optionText}
+                                            onChange={(e) => handleOptionChange(optIndex, 'optionText', e.target.value)}
+                                            className={`flex-1 p-2 border rounded-lg ${
+                                                option.isCorrect ? 'border-emerald-300 bg-emerald-50' : 'border-gray-300 bg-white'
+                                            }`}
+                                            placeholder={`Option ${optIndex + 1}`}
+                                            disabled={question.questionType === 'TRUE_FALSE'}
+                                        />
+                                        {question.questionType !== 'TRUE_FALSE' && question.options.length > 2 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => removeOption(optIndex)}
+                                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        )}
+                                    </div>
+                                    {/* Option Image */}
+                                    {question.questionType !== 'TRUE_FALSE' && (
+                                        <div className="mt-2 ml-10">
+                                            <ImageUploader
+                                                image={option.optionImage}
+                                                onUpload={(img) => handleOptionChange(optIndex, 'optionImage', img)}
+                                                onRemove={() => handleOptionChange(optIndex, 'optionImage', null)}
+                                                label="Add Option Image"
+                                            />
+                                        </div>
                                     )}
                                 </div>
                             ))}
