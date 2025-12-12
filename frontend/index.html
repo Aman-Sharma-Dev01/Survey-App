@@ -55,7 +55,156 @@
         "priceCurrency": "USD"
       },
       "logo": "https://surveyzen.live/logo2.png",
-      "image": "https://surveyzen.live/og-image.png"
+      "image": "https://surveyzen.live/og-image.png",
+      "featureList": [
+        "Create unlimited surveys",
+        "Real-time analytics dashboard",
+        "Multiple question types",
+        "Quiz creation with scoring",
+        "Image upload support",
+        "Share surveys via link",
+        "Export responses to CSV"
+      ]
+    }
+    </script>
+
+    <!-- Organization Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "SurveyZen",
+      "url": "https://surveyzen.live",
+      "logo": "https://surveyzen.live/logo2.png",
+      "sameAs": [],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "url": "https://surveyzen.live/#contact"
+      }
+    }
+    </script>
+
+    <!-- Website with SearchAction for Sitelinks Search Box -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "SurveyZen",
+      "url": "https://surveyzen.live",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://surveyzen.live/#dashboard?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- SiteNavigationElement for Sitelinks -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "itemListElement": [
+        {
+          "@type": "SiteNavigationElement",
+          "position": 1,
+          "name": "Create Survey",
+          "description": "Build beautiful surveys with multiple question types",
+          "url": "https://surveyzen.live/#create"
+        },
+        {
+          "@type": "SiteNavigationElement",
+          "position": 2,
+          "name": "Dashboard",
+          "description": "Manage your surveys and view analytics",
+          "url": "https://surveyzen.live/#dashboard"
+        },
+        {
+          "@type": "SiteNavigationElement",
+          "position": 3,
+          "name": "Quizzes",
+          "description": "Create and manage interactive quizzes with scoring",
+          "url": "https://surveyzen.live/#quiz-dashboard"
+        },
+        {
+          "@type": "SiteNavigationElement",
+          "position": 4,
+          "name": "Pricing",
+          "description": "View pricing plans and features",
+          "url": "https://surveyzen.live/#pricing"
+        },
+        {
+          "@type": "SiteNavigationElement",
+          "position": 5,
+          "name": "About Us",
+          "description": "Learn more about SurveyZen",
+          "url": "https://surveyzen.live/#about"
+        },
+        {
+          "@type": "SiteNavigationElement",
+          "position": 6,
+          "name": "Contact",
+          "description": "Get in touch with our team",
+          "url": "https://surveyzen.live/#contact"
+        },
+        {
+          "@type": "SiteNavigationElement",
+          "position": 7,
+          "name": "Login",
+          "description": "Sign in to your SurveyZen account",
+          "url": "https://surveyzen.live/#login"
+        },
+        {
+          "@type": "SiteNavigationElement",
+          "position": 8,
+          "name": "Register",
+          "description": "Create a free SurveyZen account",
+          "url": "https://surveyzen.live/#register"
+        }
+      ]
+    }
+    </script>
+
+    <!-- FAQ Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is SurveyZen?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "SurveyZen is a free, intuitive survey builder that helps teams, educators, and businesses create beautiful surveys with real-time analytics."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is SurveyZen free to use?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! SurveyZen offers a free plan with unlimited surveys, real-time analytics, and multiple question types. No credit card required."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I create quizzes with SurveyZen?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, SurveyZen supports quiz creation with automatic scoring, time limits, multiple choice questions, and detailed analytics."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I share my survey?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "After creating your survey, you get a unique shareable link that you can send via email, social media, or embed on your website."
+          }
+        }
+      ]
     }
     </script>
   </head>
