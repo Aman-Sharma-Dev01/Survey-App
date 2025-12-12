@@ -149,20 +149,20 @@ const Hero = () => {
             </p>
 
             {/* 🔥 MOBILE-FRIENDLY BULLETS */}
-            <div className="mt-6 sm:mt-8 space-y-3 text-gray-700 text-sm sm:text-base 
-                            flex flex-col items-center md:items-start">
+            <div className="mt-6 sm:mt-8 text-gray-700 text-sm sm:text-base 
+                            w-fit mx-auto md:mx-0">
               
-              <div className="inline-flex items-center gap-2">
+              <div className="flex items-center gap-2 mb-3">
                 <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600 flex-shrink-0" />
                 <span>AI-powered question suggestions</span>
               </div>
 
-              <div className="inline-flex items-center gap-2">
+              <div className="flex items-center gap-2 mb-3">
                 <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600 flex-shrink-0" />
                 <span>Real-time response analytics</span>
               </div>
 
-              <div className="inline-flex items-center gap-2">
+              <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600 flex-shrink-0" />
                 <span>Instant sharing across channels</span>
               </div>
