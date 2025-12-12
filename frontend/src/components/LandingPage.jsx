@@ -123,9 +123,9 @@ const Hero = () => {
   }, [heroImages.length]);
 
   return (
-    <section className="bg-white overflow-hidden">
+    <section className="bg-white overflow-hidden w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 
-                      pt-10 pb-16 sm:pt-16 sm:pb-24">
+                      pt-10 pb-16 sm:pt-16 sm:pb-24 w-full">
 
         <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
 
@@ -150,20 +150,20 @@ const Hero = () => {
 
             {/* 🔥 MOBILE-FRIENDLY BULLETS */}
             <div className="mt-6 sm:mt-8 space-y-3 text-gray-700 text-sm sm:text-base 
-                            mx-auto md:mx-0">
-
-              <div className="flex items-center justify-center md:justify-start gap-2">
-                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+                            flex flex-col items-center md:items-start">
+              
+              <div className="inline-flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600 flex-shrink-0" />
                 <span>AI-powered question suggestions</span>
               </div>
 
-              <div className="flex items-center justify-center md:justify-start gap-2">
-                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+              <div className="inline-flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600 flex-shrink-0" />
                 <span>Real-time response analytics</span>
               </div>
 
-              <div className="flex items-center justify-center md:justify-start gap-2">
-                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+              <div className="inline-flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600 flex-shrink-0" />
                 <span>Instant sharing across channels</span>
               </div>
             </div>
@@ -444,9 +444,9 @@ const Footer = () => {
 // ================= MAIN LANDING PAGE =================
 export default function LandingPage({ navigate }) {
   return (
-    <div className="antialiased text-gray-800 bg-white">
+    <div className="antialiased text-gray-800 bg-white min-h-screen w-full overflow-x-hidden">
       <Navbar />
-      <main>
+      <main className="w-full">
         <Hero />
         <Features />
         <HowItWorks />

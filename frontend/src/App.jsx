@@ -190,13 +190,13 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-gray-50 font-sans w-full overflow-x-hidden">
       {/* Show navbar on internal pages only */}
       {shouldShowNavbar && (
         <Navbar currentPage={pathRoot} handleNavigate={navigate} />
       )}
 
-      <main>{renderPage()}</main>
+      <main className="w-full">{renderPage()}</main>
     </div>
   );
 };

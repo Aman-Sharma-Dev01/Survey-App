@@ -6,8 +6,34 @@
 
 /* You can force it, but the config file is usually enough */
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
   body {
     font-family: 'Roboto', sans-serif;
+    background-color: #ffffff;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Fix mobile viewport issues */
+  #root {
+    min-height: 100vh;
+    background-color: #ffffff;
+    overflow-x: hidden;
+  }
+}
+
+/* Mobile-specific fixes */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+  
+  #root {
+    width: 100%;
   }
 }
 
