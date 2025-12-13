@@ -1,29 +1,12 @@
 import React, { useState } from 'react';
-import { Check, X, HelpCircle, Minus, Plus } from 'lucide-react';
+import { Check, X, Minus, Plus } from 'lucide-react';
 import LandingFooter from './LandingFooter';
 import LandingNavbar from './LandingNavbar';
 
 
 
-const Switch = ({ enabled, setEnabled }) => (
-  <button
-    className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-      enabled ? 'bg-indigo-600' : 'bg-slate-200'
-    }`}
-    onClick={() => setEnabled(!enabled)}
-  >
-    <span
-      className={`${
-        enabled ? 'translate-x-7' : 'translate-x-1'
-      } inline-block h-6 w-6 transform rounded-full bg-white transition shadow-sm`}
-    />
-  </button>
-);
-
-const PricingCard = ({ plan, isYearly }) => {
-  const price = isYearly ? plan.price.yearly : plan.price.monthly;
-  const period = isYearly ? '/year' : '/month';
-  const subtext = isYearly ? 'Billed annually' : 'Billed monthly';
+const PricingCard = ({ plan }) => {
+  const price = plan.price.monthly;
 
   return (
     <div
@@ -55,14 +38,14 @@ const PricingCard = ({ plan, isYearly }) => {
       <div className="mb-8">
         <div className="flex items-baseline">
           <span className="text-4xl font-extrabold text-slate-900">
-            ${price}
+            ₹{price}
           </span>
           <span className="text-slate-500 ml-2 font-medium">
-            {price === 0 ? '' : period}
+            {price === 0 ? '' : ''}
           </span>
         </div>
         <p className="text-slate-400 text-xs mt-1 font-medium">
-          {price === 0 ? 'Forever free' : subtext}
+          {price === 0 ? 'Free forever' : 'One-time payment'}
         </p>
       </div>
 
@@ -153,79 +136,77 @@ const FaqItem = ({ question, answer }) => {
 // --- Main App Component ---
 
 const App = () => {
-  const [isYearly, setIsYearly] = useState(true);
-
   const plans = [
     {
-      name: 'Spark',
-      description: 'For hobbyists and side projects just getting started.',
+      name: 'Starter',
+      description: 'Perfect for trying out AI-powered surveys and quizzes.',
       price: { monthly: 0, yearly: 0 },
       cta: 'Start Free',
       popular: false,
       features: [
-        { text: '100 responses / month', included: true },
-        { text: 'Unlimited questions', included: true },
-        { text: 'Standard templates', included: true },
+        { text: '200 AI Credits included', included: true },
+        { text: 'Unlimited surveys & quizzes', included: true },
+        { text: 'Unlimited responses', included: true },
+        { text: 'Basic analytics', included: true },
         { text: 'Email support', included: true },
-        { text: 'Remove SurveyZen branding', included: false },
-        { text: 'Custom logic jumps', included: false },
-        { text: 'Data export (CSV/XLS)', included: false }
+        { text: 'Export to Excel', included: true },
+        { text: 'Priority support', included: false }
       ]
     },
     {
-      name: 'Flow',
-      description: 'For professionals who need power and customization.',
-      price: { monthly: 29, yearly: 290 }, // 2 months free equivalent
-      cta: 'Get Started',
+      name: 'Pro',
+      description: 'For power users who need more AI generations.',
+      price: { monthly: 10, yearly: 10 },
+      cta: 'Buy Credits',
       popular: true,
       features: [
+        { text: '1,000 AI Credits', included: true },
+        { text: 'Unlimited surveys & quizzes', included: true },
         { text: 'Unlimited responses', included: true },
-        { text: 'Unlimited questions', included: true },
-        { text: 'Premium templates', included: true },
+        { text: 'Advanced analytics', included: true },
         { text: 'Priority email support', included: true },
-        { text: 'Remove SurveyZen branding', included: true },
-        { text: 'Custom logic jumps', included: true },
-        { text: 'Data export (CSV/XLS)', included: true }
+        { text: 'Export to Excel', included: true },
+        { text: 'Best value for regular use', included: true }
       ]
     },
     {
-      name: 'Harmony',
-      description: 'For teams requiring collaboration and advanced security.',
-      price: { monthly: 79, yearly: 790 },
-      cta: 'Contact Sales',
+      name: 'Power',
+      description: 'For teams and heavy AI users who need maximum credits.',
+      price: { monthly: 50, yearly: 50 },
+      cta: 'Buy Credits',
       popular: false,
       features: [
-        { text: 'Everything in Flow', included: true },
-        { text: '5 Team seats included', included: true },
-        { text: 'Collaborative editing', included: true },
-        { text: 'Shared workspaces', included: true },
-        { text: 'SSO (SAML) & Security', included: true },
-        { text: 'Dedicated Success Manager', included: true },
-        { text: 'Custom webhook integrations', included: true }
+        { text: '10,000 AI Credits', included: true },
+        { text: 'Unlimited surveys & quizzes', included: true },
+        { text: 'Unlimited responses', included: true },
+        { text: 'Advanced analytics', included: true },
+        { text: 'Priority email support', included: true },
+        { text: 'Export to Excel', included: true },
+        { text: 'Best for heavy usage', included: true }
       ]
     }
   ];
 
   const faqs = [
     {
-      question: 'Can I cancel my subscription at any time?',
+      question: 'What are AI Credits used for?',
       answer:
-        "Absolutely. You can downgrade or cancel your plan at any time from your dashboard. If you cancel, you'll still have access to your premium features until the end of your billing cycle."
+        'AI Credits power our AI-generated surveys and quizzes. Each AI generation (creating questions, analyzing responses, etc.) costs 20 credits. You get 200 free credits when you sign up!'
     },
     {
-      question: 'What happens if I go over my response limit?',
+      question: 'Do credits expire?',
       answer:
-        "On the Free plan, we'll notify you when you approach the limit. We won't close your surveys immediately, but you won't be able to view new responses until the next month or unless you upgrade."
+        "No! Your credits never expire. Once purchased, they're yours to use whenever you need them. Use them at your own pace."
     },
     {
-      question: 'Do you offer a discount for non-profits?',
+      question: 'Can I get a refund?',
       answer:
-        'Yes! We love supporting organizations that do good. Contact our support team with proof of your non-profit status and we\'ll set you up with a 20% discount on all paid plans.'
+        'Since credits are digital goods and can be used immediately, we cannot offer refunds. However, if you face any issues, please contact our support team.'
     },
     {
-      question: 'Is my data secure?',
+      question: 'Is my payment secure?',
       answer:
-        'Security is our top priority. We use industry-standard encryption for data in transit and at rest. Our Harmony plan also offers advanced security features like SSO.'
+        'Absolutely! We use industry-standard encryption and secure payment gateways to process all transactions. Your payment information is never stored on our servers.'
     }
   ];
 
@@ -241,40 +222,23 @@ const App = () => {
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 mb-6">
-              Simple pricing for{' '}
-              <span className="text-indigo-600">mindful</span> data.
+              Buy{' '}
+              <span className="text-indigo-600">AI Credits</span>
             </h1>
             <p className="text-xl text-slate-500 max-w-2xl mx-auto mb-10">
-              Start for free, upgrade when you need more power. No hidden fees,
-              no credit card required to start.
+              Power your AI-generated surveys and quizzes. Start with 200 free credits,
+              buy more when you need them.
             </p>
 
-            {/* Billing Toggle */}
-            <div className="flex items-center justify-center gap-4 mb-16">
-              <span
-                className={`text-sm font-medium ${
-                  !isYearly ? 'text-slate-900' : 'text-slate-500'
-                }`}
-              >
-                Monthly
-              </span>
-              <Switch enabled={isYearly} setEnabled={setIsYearly} />
-              <span
-                className={`text-sm font-medium ${
-                  isYearly ? 'text-slate-900' : 'text-slate-500'
-                }`}
-              >
-                Yearly{' '}
-                <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full text-xs ml-1 font-bold">
-                  SAVE 20%
-                </span>
-              </span>
+            {/* AI Credits Info */}
+            <div className="inline-flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-full mb-12">
+              <span className="text-indigo-600 font-semibold">20 credits = 1 AI generation</span>
             </div>
 
             {/* Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto px-2">
               {plans.map((plan, index) => (
-                <PricingCard key={index} plan={plan} isYearly={isYearly} />
+                <PricingCard key={index} plan={plan} />
               ))}
             </div>
           </div>
