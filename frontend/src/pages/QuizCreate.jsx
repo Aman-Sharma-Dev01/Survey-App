@@ -328,6 +328,8 @@ const QuizQuestionEditor = ({ question, index, updateQuestion, removeQuestion })
 const QuizCreatePage = ({ navigate }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [classesInput, setClassesInput] = useState('');
+    const [classes, setClasses] = useState([]);
     const [questions, setQuestions] = useState([]);
     const [settings, setSettings] = useState({
         timeLimit: 0,
@@ -342,6 +344,25 @@ const QuizCreatePage = ({ navigate }) => {
     const [showSettings, setShowSettings] = useState(false);
     const [status, setStatus] = useState('');
     const [loading, setLoading] = useState(false);
+
+    const addClass = () => {
+        const trimmed = classesInput.trim();
+        if (trimmed && !classes.includes(trimmed)) {
+            setClasses([...classes, trimmed]);
+            setClassesInput('');
+        }
+    };
+
+    const removeClass = (classToRemove) => {
+        setClasses(classes.filter(c => c !== classToRemove));
+    };
+
+    const handleClassKeyDown = (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            addClass();
+        }
+    };
 
     const addQuestion = () => {
         const newQuestion = {
@@ -397,6 +418,7 @@ const QuizCreatePage = ({ navigate }) => {
             await createQuiz({
                 title,
                 description,
+                classes,
                 questions: cleanQuestions,
                 settings
             });
@@ -443,6 +465,49 @@ const QuizCreatePage = ({ navigate }) => {
                             className="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
                             placeholder="Brief description of the quiz..."
                         />
+                    </div>
+
+                    {/* Classes/Sections Input */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Classes/Sections <span className="text-gray-400">(optional - for student grouping)</span>
+                        </label>
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                value={classesInput}
+                                onChange={(e) => setClassesInput(e.target.value)}
+                                onKeyDown={handleClassKeyDown}
+                                className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
+                                placeholder="e.g., CSE 5A (press Enter to add)"
+                            />
+                            <button
+                                type="button"
+                                onClick={addClass}
+                                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
+                            >
+                                Add
+                            </button>
+                        </div>
+                        {classes.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {classes.map((cls, idx) => (
+                                    <span
+                                        key={idx}
+                                        className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm"
+                                    >
+                                        {cls}
+                                        <button
+                                            type="button"
+                                            onClick={() => removeClass(cls)}
+                                            className="ml-1 text-emerald-600 hover:text-red-500"
+                                        >
+                                            ×
+                                        </button>
+                                    </span>
+                                ))}
+                            </div>
+                        )}
                     </div>
                     
                     {/* Total Points Display */}

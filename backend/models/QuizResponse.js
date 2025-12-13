@@ -14,6 +14,7 @@ const quizResponseSchema = mongoose.Schema(
         quiz: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'Quiz' },
         participantName: { type: String, default: 'Anonymous' },
         participantEmail: { type: String },
+        participantClass: { type: String }, // Selected class/section
         answers: [quizAnswerSchema],
         score: { type: Number, default: 0 }, // Total points earned
         totalPoints: { type: Number, default: 0 }, // Maximum possible points

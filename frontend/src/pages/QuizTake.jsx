@@ -24,6 +24,7 @@ const QuizTakePage = ({ quizId }) => {
     const [timeLeft, setTimeLeft] = useState(null);
     const [startedAt] = useState(new Date());
     const [participantName, setParticipantName] = useState('');
+    const [participantClass, setParticipantClass] = useState('');
     const [hasStarted, setHasStarted] = useState(false);
 
     const timerRef = useRef(null);
@@ -121,6 +122,7 @@ const QuizTakePage = ({ quizId }) => {
             const result = await submitQuizResponse(quizId, {
                 answers: formattedAnswers,
                 participantName: participantName || 'Anonymous',
+                participantClass: participantClass || '',
                 timeTaken,
                 startedAt: startedAt.toISOString()
             });
@@ -274,6 +276,22 @@ const QuizTakePage = ({ quizId }) => {
                             placeholder="Enter your name"
                         />
                     </div>
+
+                    {quiz.classes && quiz.classes.length > 0 && (
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Select Your Class</label>
+                            <select
+                                value={participantClass}
+                                onChange={(e) => setParticipantClass(e.target.value)}
+                                className="w-full max-w-xs mx-auto p-3 border border-gray-300 rounded-lg text-center bg-white"
+                            >
+                                <option value="">-- Select Class --</option>
+                                {quiz.classes.map((cls, idx) => (
+                                    <option key={idx} value={cls}>{cls}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     <button
                         onClick={() => setHasStarted(true)}

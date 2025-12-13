@@ -11,13 +11,14 @@ const router = express.Router();
 =========================================================== */
 router.post('/', protect, async (req, res) => {
     try {
-        const { title, description, questions, settings } = req.body;
+        const { title, description, questions, settings, classes } = req.body;
 
         const quiz = new Quiz({
             title,
             description,
             questions,
             settings,
+            classes: classes || [],
             creator: req.user._id,
         });
 
@@ -64,6 +65,7 @@ router.get('/public/:id', async (req, res) => {
             _id: quiz._id,
             title: quiz.title,
             description: quiz.description,
+            classes: quiz.classes || [], // Include classes for selection
             questions: quiz.questions.map(q => ({
                 _id: q._id,
                 questionText: q.questionText,
@@ -96,7 +98,7 @@ router.get('/public/:id', async (req, res) => {
 =========================================================== */
 router.post('/submit/:id', async (req, res) => {
     try {
-        const { answers, participantName, participantEmail, timeTaken, startedAt } = req.body;
+        const { answers, participantName, participantEmail, participantClass, timeTaken, startedAt } = req.body;
 
         const quiz = await Quiz.findById(req.params.id);
 
@@ -157,6 +159,7 @@ router.post('/submit/:id', async (req, res) => {
             quiz: quiz._id,
             participantName: participantName || 'Anonymous',
             participantEmail,
+            participantClass: participantClass || '',
             answers: gradedAnswers,
             score: totalScore,
             totalPoints,
@@ -246,10 +249,29 @@ router.get('/analytics/:id', protect, async (req, res) => {
             };
         });
 
+        // Get unique classes from responses
+        const classesFromResponses = [...new Set(responses.map(r => r.participantClass).filter(Boolean))];
+
+        // Class-wise analytics
+        const classStats = classesFromResponses.map(className => {
+            const classResponses = responses.filter(r => r.participantClass === className);
+            const classPassed = classResponses.filter(r => r.passed).length;
+            const classAvgScore = classResponses.length > 0
+                ? Math.round(classResponses.reduce((sum, r) => sum + r.percentage, 0) / classResponses.length)
+                : 0;
+            return {
+                className,
+                totalResponses: classResponses.length,
+                passedCount: classPassed,
+                avgScore: classAvgScore
+            };
+        });
+
         res.json({
             quiz: {
                 _id: quiz._id,
                 title: quiz.title,
+                classes: quiz.classes || [],
                 totalPoints: quiz.questions.reduce((sum, q) => sum + (q.points || 1), 0)
             },
             analytics: {
@@ -260,10 +282,12 @@ router.get('/analytics/:id', protect, async (req, res) => {
                 avgScore,
                 avgTime
             },
+            classStats,
             questionStats,
-            recentResponses: responses.slice(0, 20).map(r => ({
+            recentResponses: responses.map(r => ({
                 _id: r._id,
                 participantName: r.participantName,
+                participantClass: r.participantClass || '',
                 score: r.score,
                 totalPoints: r.totalPoints,
                 percentage: r.percentage,
@@ -315,13 +339,14 @@ router.put('/:id', protect, async (req, res) => {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        const { title, description, questions, settings, isPublished } = req.body;
+        const { title, description, questions, settings, isPublished, classes } = req.body;
 
         if (title) quiz.title = title;
         if (description !== undefined) quiz.description = description;
         if (questions) quiz.questions = questions;
         if (settings) quiz.settings = { ...quiz.settings, ...settings };
         if (isPublished !== undefined) quiz.isPublished = isPublished;
+        if (classes !== undefined) quiz.classes = classes;
 
         const updatedQuiz = await quiz.save();
         res.json(updatedQuiz);
