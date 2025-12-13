@@ -8,6 +8,7 @@ import responseRoutes from './routes/responseRoutes.js';
 import aiRouter from './routes/ai.js';
 import quizRoutes from './routes/quizRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -46,6 +47,7 @@ app.use('/api/responses', responseRoutes);
 app.use('/api/ai', aiRouter);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Error Handling Middleware (Basic example)
 app.use((err, req, res, next) => {

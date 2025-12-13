@@ -1,12 +1,190 @@
 import React, { useState } from 'react';
-import { Check, X, Minus, Plus } from 'lucide-react';
+import { Check, X, Minus, Plus, ExternalLink, Copy, CheckCircle, Clock, XCircle } from 'lucide-react';
 import LandingFooter from './LandingFooter';
 import LandingNavbar from './LandingNavbar';
+import { useAuth } from '../context/AuthContext.jsx';
+import { getPaymentLink, submitPayment } from '../services/paymentService';
 
+// Payment Modal Component
+const PaymentModal = ({ isOpen, onClose, plan, onSuccess }) => {
+  const [step, setStep] = useState(1); // 1: Instructions, 2: Enter Transaction ID
+  const [transactionId, setTransactionId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { user } = useAuth();
 
+  const handleGetPaymentLink = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const info = await getPaymentLink(plan.id);
+      window.open(info.paymentLink, '_blank');
+      setStep(2);
+    } catch (err) {
+      setError(err.message || 'Failed to get payment link');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-const PricingCard = ({ plan }) => {
-  const price = plan.price.monthly;
+  const handleSubmitTransaction = async () => {
+    if (!transactionId.trim()) {
+      setError('Please enter the transaction ID');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setError('');
+      await submitPayment(transactionId.trim(), plan.id);
+      onSuccess();
+      onClose();
+    } catch (err) {
+      setError(err.message || 'Failed to submit payment');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyEmail = () => {
+    navigator.clipboard.writeText(user?.email || '');
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 relative">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+        >
+          <X size={24} />
+        </button>
+
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">
+          Buy {plan.name} Plan
+        </h2>
+        <p className="text-slate-500 mb-6">
+          ₹{plan.price} for {plan.credits.toLocaleString()} AI Credits
+        </p>
+
+        {error && (
+          <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
+            {error}
+          </div>
+        )}
+
+        {step === 1 && (
+          <div className="space-y-4">
+            <div className="bg-indigo-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-indigo-900 mb-2">Instructions:</h3>
+              <ol className="text-sm text-indigo-700 space-y-2 list-decimal list-inside">
+                <li>Click the button below to open payment page</li>
+                <li>Complete the payment of ₹{plan.price}</li>
+                <li>Add your email in the payment note: <span className="font-mono bg-indigo-100 px-1 rounded">{user?.email}</span>
+                  <button onClick={copyEmail} className="ml-1 text-indigo-600 hover:text-indigo-800">
+                    <Copy size={14} className="inline" />
+                  </button>
+                </li>
+                <li>Note down the Transaction ID</li>
+                <li>Come back and enter the Transaction ID</li>
+              </ol>
+            </div>
+
+            <button
+              onClick={handleGetPaymentLink}
+              disabled={loading}
+              className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition flex items-center justify-center gap-2"
+            >
+              {loading ? 'Loading...' : (
+                <>
+                  Pay ₹{plan.price} with UROPay <ExternalLink size={18} />
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={() => setStep(2)}
+              className="w-full py-2 text-indigo-600 text-sm hover:underline"
+            >
+              Already paid? Enter Transaction ID
+            </button>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Transaction ID / UTR Number
+              </label>
+              <input
+                type="text"
+                value={transactionId}
+                onChange={(e) => setTransactionId(e.target.value)}
+                placeholder="Enter your transaction ID"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                You can find this in your UPI app or bank statement
+              </p>
+            </div>
+
+            <button
+              onClick={handleSubmitTransaction}
+              disabled={loading}
+              className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition"
+            >
+              {loading ? 'Submitting...' : 'Submit for Verification'}
+            </button>
+
+            <button
+              onClick={() => setStep(1)}
+              className="w-full py-2 text-slate-600 text-sm hover:underline"
+            >
+              ← Back to payment instructions
+            </button>
+
+            <div className="bg-amber-50 p-3 rounded-lg text-sm text-amber-700">
+              <strong>Note:</strong> Credits will be added to your account within 24 hours after verification.
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Success Modal
+const SuccessModal = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl max-w-sm w-full p-6 text-center">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <CheckCircle size={32} className="text-green-600" />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900 mb-2">
+          Payment Submitted!
+        </h2>
+        <p className="text-slate-500 mb-6">
+          Your payment has been submitted for verification. Credits will be added to your account within 24 hours.
+        </p>
+        <button
+          onClick={onClose}
+          className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition"
+        >
+          Got it!
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const PricingCard = ({ plan, onBuyClick, isLoggedIn }) => {
+  const price = plan.price;
 
   return (
     <div
@@ -50,13 +228,17 @@ const PricingCard = ({ plan }) => {
       </div>
 
       <button
+        onClick={() => plan.id && onBuyClick && onBuyClick(plan)}
+        disabled={!plan.id}
         className={`w-full py-3 px-4 rounded-xl font-semibold transition-all ${
           plan.popular
             ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md hover:shadow-lg'
-            : 'bg-slate-100 text-slate-900 hover:bg-indigo-50 hover:text-indigo-700'
+            : plan.id 
+              ? 'bg-slate-100 text-slate-900 hover:bg-indigo-50 hover:text-indigo-700'
+              : 'bg-slate-100 text-slate-400 cursor-default'
         }`}
       >
-        {plan.cta}
+        {!isLoggedIn && plan.id ? 'Login to Buy' : plan.cta}
       </button>
 
       <div className="mt-8 flex-1">
@@ -136,12 +318,19 @@ const FaqItem = ({ question, answer }) => {
 // --- Main App Component ---
 
 const App = () => {
+  const { isAuthenticated } = useAuth();
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
   const plans = [
     {
+      id: null, // No purchase for free plan
       name: 'Starter',
       description: 'Perfect for trying out AI-powered surveys and quizzes.',
-      price: { monthly: 0, yearly: 0 },
-      cta: 'Start Free',
+      price: 0,
+      credits: 200,
+      cta: 'Free with Signup',
       popular: false,
       features: [
         { text: '200 AI Credits included', included: true },
@@ -154,9 +343,11 @@ const App = () => {
       ]
     },
     {
+      id: 'pro',
       name: 'Pro',
       description: 'For power users who need more AI generations.',
-      price: { monthly: 10, yearly: 10 },
+      price: 10,
+      credits: 1000,
       cta: 'Buy Credits',
       popular: true,
       features: [
@@ -170,9 +361,11 @@ const App = () => {
       ]
     },
     {
+      id: 'power',
       name: 'Power',
       description: 'For teams and heavy AI users who need maximum credits.',
-      price: { monthly: 50, yearly: 50 },
+      price: 50,
+      credits: 10000,
       cta: 'Buy Credits',
       popular: false,
       features: [
@@ -186,6 +379,20 @@ const App = () => {
       ]
     }
   ];
+
+  const handleBuyClick = (plan) => {
+    if (!isAuthenticated) {
+      window.location.href = '/login';
+      return;
+    }
+    setSelectedPlan(plan);
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPaymentModal(false);
+    setShowSuccessModal(true);
+  };
 
   const faqs = [
     {
@@ -214,6 +421,22 @@ const App = () => {
     <div className="min-h-screen bg-white font-sans text-slate-900">
 <LandingNavbar />
 
+      {/* Payment Modal */}
+      {selectedPlan && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          plan={selectedPlan}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+      />
+
       <main>
         {/* Hero Section */}
         <div className="relative pt-12 pb-20 sm:pt-16 sm:pb-32 overflow-hidden">
@@ -238,7 +461,12 @@ const App = () => {
             {/* Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto px-2">
               {plans.map((plan, index) => (
-                <PricingCard key={index} plan={plan} />
+                <PricingCard 
+                  key={index} 
+                  plan={plan} 
+                  onBuyClick={handleBuyClick}
+                  isLoggedIn={isAuthenticated}
+                />
               ))}
             </div>
           </div>
