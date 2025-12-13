@@ -32,6 +32,10 @@ import QuizAnalytics from './pages/QuizAnalytics.jsx';
 
 // ⭐ Payment Admin
 import PaymentAdmin from './pages/PaymentAdmin.jsx';
+import PaymentHistory from './pages/PaymentHistory.jsx';
+
+// Admin email
+const ADMIN_EMAIL = 'support@surveyzen.live';
 
 // === Components ===
 import Navbar from './components/Navbar';
@@ -68,7 +72,7 @@ const App = () => {
 
   // Protect private pages
   useEffect(() => {
-    const protectedPaths = ['dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-analytics', 'payment-admin'];
+    const protectedPaths = ['dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-analytics', 'payment-admin', 'payment-history'];
     const [pathSegment] = getPathSegments(currentPath);
 
     if (protectedPaths.includes(pathSegment) && !authState.isAuthenticated) {
@@ -189,7 +193,10 @@ const App = () => {
 
       // ⭐ Payment Admin (only for you)
       case 'payment-admin':
-        return <PaymentAdmin onBack={() => navigate('dashboard')} />;
+        return <PaymentAdmin onBack={() => navigate('dashboard')} navigate={navigate} />;
+
+      case 'payment-history':
+        return <PaymentHistory onBack={() => navigate('payment-admin')} navigate={navigate} />;
 
       default:
         return <LandingPage navigate={navigate} />;

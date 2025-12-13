@@ -132,6 +132,31 @@ router.get('/history', protect, async (req, res) => {
     }
 });
 
+// @desc    Get all payments history (Admin)
+// @route   GET /api/payments/all
+// @access  Private (Admin only)
+router.get('/all', protect, isAdmin, async (req, res) => {
+    try {
+        const payments = await Payment.find({})
+            .populate('user', 'name email')
+            .sort({ createdAt: -1 });
+        
+        // Calculate stats
+        const stats = {
+            total: payments.length,
+            pending: payments.filter(p => p.status === 'pending').length,
+            verified: payments.filter(p => p.status === 'verified').length,
+            rejected: payments.filter(p => p.status === 'rejected').length,
+            totalRevenue: payments.filter(p => p.status === 'verified').reduce((sum, p) => sum + p.amount, 0),
+            totalCreditsGiven: payments.filter(p => p.status === 'verified').reduce((sum, p) => sum + p.credits, 0)
+        };
+        
+        res.json({ payments, stats });
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching all payments' });
+    }
+});
+
 // @desc    Get pending payments (Admin)
 // @route   GET /api/payments/pending
 // @access  Private (Admin only)

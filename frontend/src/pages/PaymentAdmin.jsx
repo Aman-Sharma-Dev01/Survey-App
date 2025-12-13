@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Clock, RefreshCw, ArrowLeft, ShieldX } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, RefreshCw, ArrowLeft, ShieldX, History } from 'lucide-react';
 import { getPendingPayments, approvePayment, rejectPayment } from '../services/paymentService';
 import { useAuth } from '../context/AuthContext.jsx';
 
 // Admin email allowed to access this page
 const ADMIN_EMAIL = 'support@surveyzen.live';
 
-const PaymentAdmin = ({ onBack }) => {
+const PaymentAdmin = ({ onBack, navigate }) => {
     const { user } = useAuth();
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -115,14 +115,23 @@ const PaymentAdmin = ({ onBack }) => {
                         </button>
                         <h1 className="text-2xl font-bold text-gray-900">Payment Admin</h1>
                     </div>
-                    <button
-                        onClick={fetchPayments}
-                        disabled={loading}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-                    >
-                        <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-                        Refresh
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => navigate('payment-history')}
+                            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                        >
+                            <History size={18} />
+                            History
+                        </button>
+                        <button
+                            onClick={fetchPayments}
+                            disabled={loading}
+                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+                        >
+                            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+                            Refresh
+                        </button>
+                    </div>
                 </div>
 
                 {message.text && (

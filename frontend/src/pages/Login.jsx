@@ -6,6 +6,9 @@ import { loginCreator, googleAuth } from '../services/authService';
 // Google Client ID
 const GOOGLE_CLIENT_ID = '776337724732-4j8psg32dgr5upg1jajekjflrfc25on7.apps.googleusercontent.com';
 
+// Admin email - redirects to admin page instead of dashboard
+const ADMIN_EMAIL = 'support@surveyzen.live';
+
 // Simple SVG Icons components to keep the file self-contained
 const MailIcon = () => (
   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
@@ -37,6 +40,21 @@ const LoginPage = ({ navigate }) => {
     const [googleLoading, setGoogleLoading] = useState(false);
     const { login } = useAuth();
 
+    const handleGoogleCallback = async (response) => {
+        setGoogleLoading(true);
+        setError('');
+        try {
+            const data = await googleAuth(response.credential);
+            login({ email: data.email, name: data.name, avatar: data.avatar }, data.token);
+            // Redirect admin to admin page, others to dashboard
+            navigate(data.email === ADMIN_EMAIL ? 'payment-admin' : 'dashboard');
+        } catch (err) {
+            setError(err.message || 'Google sign-in failed. Please try again.');
+        } finally {
+            setGoogleLoading(false);
+        }
+    };
+
     // Initialize Google Sign-In
     useEffect(() => {
         if (window.google) {
@@ -45,21 +63,8 @@ const LoginPage = ({ navigate }) => {
                 callback: handleGoogleCallback,
             });
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    const handleGoogleCallback = async (response) => {
-        setGoogleLoading(true);
-        setError('');
-        try {
-            const data = await googleAuth(response.credential);
-            login({ email: data.email, name: data.name }, data.token);
-            navigate('dashboard');
-        } catch (err) {
-            setError(err.message || 'Google sign-in failed. Please try again.');
-        } finally {
-            setGoogleLoading(false);
-        }
-    };
 
     const handleGoogleClick = () => {
         if (window.google) {
@@ -76,8 +81,9 @@ const LoginPage = ({ navigate }) => {
 
         try {
             const data = await loginCreator({ email, password });
-            login({ email: data.email, name: data.name }, data.token);
-            navigate('dashboard');
+            login({ email: data.email, name: data.name, avatar: data.avatar }, data.token);
+            // Redirect admin to admin page, others to dashboard
+            navigate(data.email === ADMIN_EMAIL ? 'payment-admin' : 'dashboard');
         } catch (err) {
             const msg = err.message || 'Login failed. Check your credentials.';
             setError(msg);

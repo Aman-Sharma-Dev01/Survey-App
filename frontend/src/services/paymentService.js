@@ -20,6 +20,11 @@ export const getPaymentHistory = async () => {
     return fetchApi('/payments/history', 'GET', null, true);
 };
 
+// Admin: Get all payments history
+export const getAllPayments = async () => {
+    return fetchApi('/payments/all', 'GET', null, true);
+};
+
 // Admin: Get pending payments
 export const getPendingPayments = async () => {
     return fetchApi('/payments/pending', 'GET', null, true);
