@@ -5,6 +5,17 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+// Admin email(s) allowed to access admin routes
+const ADMIN_EMAILS = ['support@surveyzen.live'];
+
+// Middleware to check if user is admin
+const isAdmin = (req, res, next) => {
+    if (!ADMIN_EMAILS.includes(req.user.email)) {
+        return res.status(403).json({ message: 'Access denied. Admin only.' });
+    }
+    next();
+};
+
 // Payment plans configuration
 const PLANS = {
     pro: {
@@ -123,8 +134,8 @@ router.get('/history', protect, async (req, res) => {
 
 // @desc    Get pending payments (Admin)
 // @route   GET /api/payments/pending
-// @access  Private (Admin only - add admin check in production)
-router.get('/pending', protect, async (req, res) => {
+// @access  Private (Admin only)
+router.get('/pending', protect, isAdmin, async (req, res) => {
     try {
         const payments = await Payment.find({ status: 'pending' })
             .populate('user', 'name email')
@@ -137,8 +148,8 @@ router.get('/pending', protect, async (req, res) => {
 
 // @desc    Approve payment and add credits (Admin)
 // @route   POST /api/payments/approve/:paymentId
-// @access  Private (Admin only - add admin check in production)
-router.post('/approve/:paymentId', protect, async (req, res) => {
+// @access  Private (Admin only)
+router.post('/approve/:paymentId', protect, isAdmin, async (req, res) => {
     try {
         const payment = await Payment.findById(req.params.paymentId);
         
@@ -174,8 +185,8 @@ router.post('/approve/:paymentId', protect, async (req, res) => {
 
 // @desc    Reject payment (Admin)
 // @route   POST /api/payments/reject/:paymentId
-// @access  Private (Admin only - add admin check in production)
-router.post('/reject/:paymentId', protect, async (req, res) => {
+// @access  Private (Admin only)
+router.post('/reject/:paymentId', protect, isAdmin, async (req, res) => {
     try {
         const payment = await Payment.findById(req.params.paymentId);
         
@@ -204,7 +215,7 @@ router.post('/reject/:paymentId', protect, async (req, res) => {
 // @desc    Quick verify by transaction ID (Admin convenience)
 // @route   POST /api/payments/quick-approve
 // @access  Private (Admin only)
-router.post('/quick-approve', protect, async (req, res) => {
+router.post('/quick-approve', protect, isAdmin, async (req, res) => {
     try {
         const { transactionId } = req.body;
         

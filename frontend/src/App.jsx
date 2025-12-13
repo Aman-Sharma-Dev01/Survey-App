@@ -30,6 +30,9 @@ import QuizDashboard from './pages/QuizDashboard.jsx';
 import QuizTake from './pages/QuizTake.jsx';
 import QuizAnalytics from './pages/QuizAnalytics.jsx';
 
+// ⭐ Payment Admin
+import PaymentAdmin from './pages/PaymentAdmin.jsx';
+
 // === Components ===
 import Navbar from './components/Navbar';
 
@@ -65,7 +68,7 @@ const App = () => {
 
   // Protect private pages
   useEffect(() => {
-    const protectedPaths = ['dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-analytics'];
+    const protectedPaths = ['dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-analytics', 'payment-admin'];
     const [pathSegment] = getPathSegments(currentPath);
 
     if (protectedPaths.includes(pathSegment) && !authState.isAuthenticated) {
@@ -183,6 +186,10 @@ const App = () => {
             <p className="text-gray-500">Please use a valid quiz link to participate.</p>
           </div>
         );
+
+      // ⭐ Payment Admin (only for you)
+      case 'payment-admin':
+        return <PaymentAdmin onBack={() => navigate('dashboard')} />;
 
       default:
         return <LandingPage navigate={navigate} />;
