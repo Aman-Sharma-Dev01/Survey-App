@@ -178,6 +178,7 @@ const SurveyCreatePage = ({ handleNavigate }) => {
       <ChatWidget
         survey={{ title, description, questions }}
         onImportQuestions={onImportQuestions}
+        navigate={handleNavigate}
       />
     </div>
   );

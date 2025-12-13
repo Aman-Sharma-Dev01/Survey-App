@@ -1,9 +1,10 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { MessageCircle, X, Send, Copy, Download } from 'lucide-react';
+import { MessageCircle, X, Send, Copy, Download, Coins, AlertTriangle } from 'lucide-react';
 import { chatAI } from '../services/ai';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { generateTempId } from '../services/api';
+import { useAuth } from '../context/AuthContext.jsx';
 
 // -------- JSON-first extractor (```json ... ```) -----------------------------
 function extractJsonQuestionsFromMessage(content) {
@@ -114,15 +115,17 @@ function parseQuestionsFromMarkdown(md) {
 }
 // ---------------------------------------------------------------------------
 
-export default function ChatWidget({ survey, onImportQuestions }) {
+export default function ChatWidget({ survey, onImportQuestions, navigate }) {
+  const { credits, useCredits: deductCredits } = useAuth();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showCreditWarning, setShowCreditWarning] = useState(false);
   const [thread, setThread] = useState([
     {
       role: 'assistant',
       content:
-        'Hi! I can help you write questions, pick presets, or improve wording. I will include a JSON block you can import.',
+        'Hi! I can help you write questions, pick presets, or improve wording. I will include a JSON block you can import. Each AI generation uses 20 credits.',
     },
   ]);
   const listRef = useRef(null);
@@ -145,12 +148,29 @@ export default function ChatWidget({ survey, onImportQuestions }) {
     const text = input.trim();
     if (!text) return;
 
+    // Check if user has enough credits
+    if (credits < 20) {
+      setShowCreditWarning(true);
+      return;
+    }
+
     const newThread = [...thread, { role: 'user', content: text }];
     setThread(newThread);
     setInput('');
     setLoading(true);
 
     try {
+      // Deduct credits first
+      const creditResult = await deductCredits(20);
+      if (!creditResult.success) {
+        if (creditResult.needsPurchase) {
+          setShowCreditWarning(true);
+          setThread((t) => t.slice(0, -1)); // Remove the user message
+          return;
+        }
+        throw new Error(creditResult.message);
+      }
+
       const { content } = await chatAI({
         messages: newThread.map((m) => ({ role: m.role, content: m.content })),
         context,
@@ -224,6 +244,39 @@ export default function ChatWidget({ survey, onImportQuestions }) {
 
   return (
     <>
+      {/* Credit Warning Modal */}
+      {showCreditWarning && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md mx-4 text-center">
+            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Coins size={32} className="text-yellow-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Insufficient Credits</h2>
+            <p className="text-gray-600 mb-4">
+              You need at least 20 credits to use the AI assistant. Your current balance is <span className="font-bold text-yellow-600">{credits}</span> credits.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => setShowCreditWarning(false)}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowCreditWarning(false);
+                  setOpen(false);
+                  navigate && navigate('pricing');
+                }}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2"
+              >
+                <Coins size={16} /> Buy Credits
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* FAB */}
       {!open && (
         <button
@@ -237,9 +290,15 @@ export default function ChatWidget({ survey, onImportQuestions }) {
 
       {/* Panel */}
       {open && (
-        <div className="fixed bottom-6 right-6 w-96 max-w-[92vw] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden">
+        <div className="fixed bottom-6 right-6 w-96 max-w-[92vw] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden z-40">
           <div className="px-4 py-3 bg-indigo-600 text-white flex items-center justify-between">
-            <div className="font-semibold">Survey Assistant</div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">Survey Assistant</span>
+              <div className="flex items-center bg-indigo-700 px-2 py-0.5 rounded text-xs">
+                <Coins size={12} className="text-yellow-400 mr-1" />
+                <span className="text-yellow-400">{credits}</span>
+              </div>
+            </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"

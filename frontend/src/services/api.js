@@ -1,5 +1,10 @@
 // Replace with your backend server URL
-export const BASE_URL = 'https://survey-app-e5xz.onrender.com/api'; 
+// export const BASE_URL = 'https://survey-app-e5xz.onrender.com/api'; 
+
+
+
+ export const BASE_URL = 'https://survey-app-egj3.onrender.com/api';
+
 // export const BASE_URL = 'http://localhost:5000/api'; 
 // Helper to access token storage directly (AuthContext stores token in localStorage)
 const getAuthToken = () => localStorage.getItem('token');

@@ -8,6 +8,7 @@ const userSchema = mongoose.Schema(
         email: { type: String, required: true, unique: true },
         password: { type: String, required: true },
         isVerified: { type: Boolean, default: false },
+        credits: { type: Number, default: 200 }, // AI credits for survey generation
 
         verificationToken: String,
         resetPasswordToken: String,

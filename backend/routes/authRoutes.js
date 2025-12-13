@@ -1,6 +1,7 @@
 import express from 'express';
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
+import { protect } from '../middleware/authMiddleware.js';
 // import { sendRegistrationEmail } from '../utils/notificationService.js'; // Removed SMS import
 // import { sendRegistrationEmail } from '../utils/emailService.js';
 import { sendVerificationEmail, sendResetPasswordEmail ,sendRegistrationEmail } from '../utils/emailService.js';
@@ -54,12 +55,78 @@ router.post('/login', async (req, res) => {
             name: user.name,
             email: user.email,
             token: generateToken(user._id),
+            credits: user.credits,
         });
     } else {
         res.status(401).json({ message: 'Invalid email or password' });
     }
 });
 
+// @desc    Get user profile
+// @route   GET /api/auth/profile
+// @access  Private
+router.get('/profile', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('-password');
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            credits: user.credits,
+            createdAt: user.createdAt
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching profile' });
+    }
+});
+
+// @desc    Use credits (deduct for AI features)
+// @route   POST /api/auth/use-credits
+// @access  Private
+router.post('/use-credits', protect, async (req, res) => {
+    try {
+        const { amount = 10 } = req.body;
+        const user = await User.findById(req.user._id);
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        if (user.credits < amount) {
+            return res.status(403).json({ 
+                message: 'Insufficient credits', 
+                credits: user.credits,
+                required: amount 
+            });
+        }
+        
+        user.credits -= amount;
+        await user.save();
+        
+        res.json({ 
+            success: true, 
+            credits: user.credits,
+            deducted: amount 
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error using credits' });
+    }
+});
+
+// @desc    Get current credits
+// @route   GET /api/auth/credits
+// @access  Private
+router.get('/credits', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('credits');
+        res.json({ credits: user.credits });
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching credits' });
+    }
+});
 
 export default router;
 
