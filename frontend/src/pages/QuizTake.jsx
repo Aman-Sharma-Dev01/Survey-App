@@ -305,23 +305,33 @@ const QuizTakePage = ({ quizId }) => {
                     </div>
 
                     <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Your Name (optional)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Your Name {quiz.classes && quiz.classes.length > 0 ? <span className="text-red-500">*</span> : '(optional)'}
+                        </label>
                         <input
                             type="text"
                             value={participantName}
                             onChange={(e) => setParticipantName(e.target.value)}
-                            className="w-full max-w-xs mx-auto p-3 border border-gray-300 rounded-lg text-center"
+                            className={`w-full max-w-xs mx-auto p-3 border rounded-lg text-center ${
+                                quiz.classes && quiz.classes.length > 0 && !participantName.trim() 
+                                    ? 'border-orange-300' 
+                                    : 'border-gray-300'
+                            }`}
                             placeholder="Enter your name"
                         />
                     </div>
 
                     {quiz.classes && quiz.classes.length > 0 && (
                         <div className="mb-6">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Select Your Class</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Select Your Class <span className="text-red-500">*</span>
+                            </label>
                             <select
                                 value={participantClass}
                                 onChange={(e) => setParticipantClass(e.target.value)}
-                                className="w-full max-w-xs mx-auto p-3 border border-gray-300 rounded-lg text-center bg-white"
+                                className={`w-full max-w-xs mx-auto p-3 border rounded-lg text-center bg-white ${
+                                    !participantClass ? 'border-orange-300' : 'border-gray-300'
+                                }`}
                             >
                                 <option value="">-- Select Class --</option>
                                 {quiz.classes.map((cls, idx) => (
@@ -333,7 +343,9 @@ const QuizTakePage = ({ quizId }) => {
 
                     {quiz.classes && quiz.classes.length > 0 && (
                         <div className="mb-6">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Roll Number</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Roll Number <span className="text-red-500">*</span>
+                            </label>
                             <input
                                 type="text"
                                 value={participantRollNo}
@@ -342,7 +354,11 @@ const QuizTakePage = ({ quizId }) => {
                                     setRollNoError(''); // Clear error when typing
                                 }}
                                 className={`w-full max-w-xs mx-auto p-3 border rounded-lg text-center ${
-                                    rollNoError ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                    rollNoError 
+                                        ? 'border-red-500 bg-red-50' 
+                                        : !participantRollNo.trim() 
+                                            ? 'border-orange-300' 
+                                            : 'border-gray-300'
                                 }`}
                                 placeholder="Enter your roll number"
                             />
@@ -352,8 +368,31 @@ const QuizTakePage = ({ quizId }) => {
                         </div>
                     )}
 
+                    {/* Validation message */}
+                    {quiz.classes && quiz.classes.length > 0 && (!participantName.trim() || !participantClass || !participantRollNo.trim()) && (
+                        <p className="text-orange-600 text-sm mb-4">
+                            Please fill all required fields marked with <span className="text-red-500">*</span>
+                        </p>
+                    )}
+
                     <button
                         onClick={async () => {
+                            // Validate required fields when classes exist
+                            if (quiz.classes && quiz.classes.length > 0) {
+                                if (!participantName.trim()) {
+                                    alert('Please enter your name');
+                                    return;
+                                }
+                                if (!participantClass) {
+                                    alert('Please select your class');
+                                    return;
+                                }
+                                if (!participantRollNo.trim()) {
+                                    alert('Please enter your roll number');
+                                    return;
+                                }
+                            }
+
                             // Check if roll number exists before starting (only if setting is enabled)
                             if (quiz?.settings?.preventDuplicateRollNo && participantRollNo && participantRollNo.trim()) {
                                 setCheckingRollNo(true);
@@ -372,7 +411,7 @@ const QuizTakePage = ({ quizId }) => {
                             }
                             setHasStarted(true);
                         }}
-                        disabled={checkingRollNo}
+                        disabled={checkingRollNo || (quiz.classes && quiz.classes.length > 0 && (!participantName.trim() || !participantClass || !participantRollNo.trim()))}
                         className="px-8 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {checkingRollNo ? 'Checking...' : 'Start Quiz'}
