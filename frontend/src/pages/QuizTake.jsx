@@ -86,9 +86,9 @@ const QuizTakePage = ({ quizId }) => {
         return () => clearInterval(timerRef.current);
     }, [hasStarted, isSubmitted]);
 
-    // Tab switch detection
+    // Tab switch detection - only if enabled in quiz settings
     useEffect(() => {
-        if (!hasStarted || isSubmitted) return;
+        if (!hasStarted || isSubmitted || !quiz?.settings?.tabSwitchingEnabled) return;
 
         const handleVisibilityChange = () => {
             if (document.hidden) {
@@ -112,7 +112,7 @@ const QuizTakePage = ({ quizId }) => {
         return () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
-    }, [hasStarted, isSubmitted]);
+    }, [hasStarted, isSubmitted, quiz?.settings?.tabSwitchingEnabled]);
 
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
@@ -382,7 +382,7 @@ const QuizTakePage = ({ quizId }) => {
             )}
 
             {/* Tab Switch Warning Banner */}
-            {tabSwitchCount > 0 && !showTabWarning && (
+            {quiz?.settings?.tabSwitchingEnabled && tabSwitchCount > 0 && !showTabWarning && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-center justify-between">
                     <div className="flex items-center">
                         <AlertTriangle size={20} className="text-red-600 mr-2" />

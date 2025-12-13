@@ -81,7 +81,8 @@ router.get('/public/:id', async (req, res) => {
             settings: {
                 timeLimit: quiz.settings.timeLimit,
                 shuffleQuestions: quiz.settings.shuffleQuestions,
-                shuffleOptions: quiz.settings.shuffleOptions
+                shuffleOptions: quiz.settings.shuffleOptions,
+                tabSwitchingEnabled: quiz.settings.tabSwitchingEnabled
             },
             totalPoints: quiz.questions.reduce((sum, q) => sum + (q.points || 1), 0)
         };

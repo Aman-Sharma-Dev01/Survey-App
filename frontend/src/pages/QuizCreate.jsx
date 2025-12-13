@@ -339,7 +339,8 @@ const QuizCreatePage = ({ navigate }) => {
         showExplanations: true,
         passingScore: 60,
         allowRetake: true,
-        maxAttempts: 0
+        maxAttempts: 0,
+        tabSwitchingEnabled: false
     });
     const [showSettings, setShowSettings] = useState(false);
     const [status, setStatus] = useState('');
@@ -597,6 +598,19 @@ const QuizCreatePage = ({ navigate }) => {
                                     className="mr-2"
                                 />
                                 <label htmlFor="showExplanations" className="text-sm text-gray-700">Show Explanations</label>
+                            </div>
+                            <div className="flex items-center border-t pt-3 mt-2">
+                                <input
+                                    type="checkbox"
+                                    id="tabSwitchingEnabled"
+                                    checked={settings.tabSwitchingEnabled}
+                                    onChange={(e) => setSettings(s => ({ ...s, tabSwitchingEnabled: e.target.checked }))}
+                                    className="mr-2"
+                                />
+                                <label htmlFor="tabSwitchingEnabled" className="text-sm text-gray-700">
+                                    Enable Tab Switch Detection
+                                    <span className="text-xs text-gray-500 block">Auto-submits quiz after 3 tab switches</span>
+                                </label>
                             </div>
                         </div>
                     )}
