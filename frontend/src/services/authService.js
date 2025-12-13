@@ -39,3 +39,11 @@ export const forgotPassword = async (email) => {
 export const resetPassword = async (token, newPassword) => {
     return fetchApi(`/auth/reset-password/${token}`, 'POST', { password: newPassword }, false);
 };
+
+/**
+ * Google OAuth login/register
+ * POST /auth/google
+ */
+export const googleAuth = async (credential) => {
+    return fetchApi('/auth/google', 'POST', { credential }, false);
+};

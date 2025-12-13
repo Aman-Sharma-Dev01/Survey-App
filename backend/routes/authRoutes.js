@@ -62,6 +62,77 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// @desc    Google OAuth login/register
+// @route   POST /api/auth/google
+// @access  Public
+router.post('/google', async (req, res) => {
+    try {
+        const { credential } = req.body;
+
+        if (!credential) {
+            return res.status(400).json({ message: 'Google credential is required' });
+        }
+
+        // Verify the Google ID token
+        const { OAuth2Client } = await import('google-auth-library');
+        const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+        
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        
+        const payload = ticket.getPayload();
+        const { sub: googleId, email, name, picture } = payload;
+
+        if (!email) {
+            return res.status(400).json({ message: 'Email not provided by Google' });
+        }
+
+        // Check if user exists by googleId or email
+        let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+        if (user) {
+            // If user exists but doesn't have googleId, link the account
+            if (!user.googleId) {
+                user.googleId = googleId;
+                user.avatar = picture;
+                user.isVerified = true; // Google accounts are verified
+                await user.save();
+            }
+        } else {
+            // Create new user
+            user = new User({
+                name: name || email.split('@')[0], // Use email prefix if name not provided
+                email,
+                googleId,
+                avatar: picture,
+                isVerified: true, // Google accounts are pre-verified
+            });
+            await user.save();
+
+            // Send welcome email for new users
+            try {
+                await sendRegistrationEmail(email, name || email.split('@')[0]);
+            } catch (emailError) {
+                console.error('Failed to send welcome email:', emailError);
+            }
+        }
+
+        res.json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            avatar: user.avatar,
+            token: generateToken(user._id),
+            credits: user.credits,
+        });
+    } catch (error) {
+        console.error('Google auth error:', error);
+        res.status(401).json({ message: 'Google authentication failed' });
+    }
+});
+
 // @desc    Get user profile
 // @route   GET /api/auth/profile
 // @access  Private

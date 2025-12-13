@@ -6,9 +6,13 @@ const userSchema = mongoose.Schema(
     {
         name: { type: String, required: true },
         email: { type: String, required: true, unique: true },
-        password: { type: String, required: true },
+        password: { type: String, required: function() { return !this.googleId; } }, // Not required for Google auth
         isVerified: { type: Boolean, default: false },
         credits: { type: Number, default: 200 }, // AI credits for survey generation
+        
+        // Google OAuth
+        googleId: { type: String, unique: true, sparse: true },
+        avatar: { type: String }, // Google profile picture
 
         verificationToken: String,
         resetPasswordToken: String,
@@ -19,7 +23,7 @@ const userSchema = mongoose.Schema(
 
 // Hash password
 userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) return next();
+    if (!this.isModified('password') || !this.password) return next();
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
     next();
