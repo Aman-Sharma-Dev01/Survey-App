@@ -22,13 +22,13 @@ const PLANS = {
         amount: 10,
         credits: 1000,
         name: 'Pro',
-        paymentLink: 'https://urpy.link/Yv2F3F'
+        paymentLink: 'https://urpy.link/Yv2F3F@'
     },
     power: {
         amount: 50,
         credits: 10000,
         name: 'Power',
-        paymentLink: 'https://urpy.link/Lt0Yh4'
+        paymentLink: 'https://urpy.link/Lt0Yh4@'
     }
 };
 
