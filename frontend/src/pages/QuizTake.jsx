@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Clock, CheckCircle, XCircle, AlertCircle, ChevronRight } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, AlertTriangle } from 'lucide-react';
 import { getPublicQuiz, submitQuizResponse } from '../services/quizService';
 
 // Shuffle array helper
@@ -25,7 +25,13 @@ const QuizTakePage = ({ quizId }) => {
     const [startedAt] = useState(new Date());
     const [participantName, setParticipantName] = useState('');
     const [participantClass, setParticipantClass] = useState('');
+    const [participantRollNo, setParticipantRollNo] = useState('');
     const [hasStarted, setHasStarted] = useState(false);
+    
+    // Tab switch detection
+    const [tabSwitchCount, setTabSwitchCount] = useState(0);
+    const [showTabWarning, setShowTabWarning] = useState(false);
+    const tabSwitchRef = useRef(0);
 
     const timerRef = useRef(null);
 
@@ -80,6 +86,34 @@ const QuizTakePage = ({ quizId }) => {
         return () => clearInterval(timerRef.current);
     }, [hasStarted, isSubmitted]);
 
+    // Tab switch detection
+    useEffect(() => {
+        if (!hasStarted || isSubmitted) return;
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                // User switched away from tab
+                tabSwitchRef.current += 1;
+                setTabSwitchCount(tabSwitchRef.current);
+
+                if (tabSwitchRef.current >= 3) {
+                    // Auto-submit after 3 tab switches
+                    setShowTabWarning(false);
+                    handleSubmit(true);
+                } else {
+                    // Show warning
+                    setShowTabWarning(true);
+                }
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [hasStarted, isSubmitted]);
+
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -123,6 +157,7 @@ const QuizTakePage = ({ quizId }) => {
                 answers: formattedAnswers,
                 participantName: participantName || 'Anonymous',
                 participantClass: participantClass || '',
+                participantRollNo: participantRollNo || '',
                 timeTaken,
                 startedAt: startedAt.toISOString()
             });
@@ -293,6 +328,19 @@ const QuizTakePage = ({ quizId }) => {
                         </div>
                     )}
 
+                    {quiz.classes && quiz.classes.length > 0 && (
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Roll Number (optional)</label>
+                            <input
+                                type="text"
+                                value={participantRollNo}
+                                onChange={(e) => setParticipantRollNo(e.target.value)}
+                                className="w-full max-w-xs mx-auto p-3 border border-gray-300 rounded-lg text-center"
+                                placeholder="Enter your roll number"
+                            />
+                        </div>
+                    )}
+
                     <button
                         onClick={() => setHasStarted(true)}
                         className="px-8 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium text-lg shadow-lg"
@@ -307,6 +355,44 @@ const QuizTakePage = ({ quizId }) => {
     // Quiz Taking Screen
     return (
         <div className="max-w-3xl mx-auto p-4 sm:p-6 lg:p-8">
+            {/* Tab Switch Warning Modal */}
+            {showTabWarning && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md mx-4 text-center animate-pulse">
+                        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <AlertTriangle size={40} className="text-red-600" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-red-600 mb-2">Warning!</h2>
+                        <p className="text-gray-700 mb-4">
+                            Tab switching detected! You have switched tabs <span className="font-bold text-red-600">{tabSwitchCount}</span> time{tabSwitchCount > 1 ? 's' : ''}.
+                        </p>
+                        <p className="text-gray-600 mb-6">
+                            {3 - tabSwitchCount > 0 
+                                ? `Your quiz will be auto-submitted after ${3 - tabSwitchCount} more switch${3 - tabSwitchCount > 1 ? 'es' : ''}.`
+                                : 'Your quiz is being submitted...'}
+                        </p>
+                        <button
+                            onClick={() => setShowTabWarning(false)}
+                            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
+                        >
+                            I Understand, Continue Quiz
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Tab Switch Warning Banner */}
+            {tabSwitchCount > 0 && !showTabWarning && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-center justify-between">
+                    <div className="flex items-center">
+                        <AlertTriangle size={20} className="text-red-600 mr-2" />
+                        <span className="text-red-700 text-sm font-medium">
+                            Tab switches: {tabSwitchCount}/3 - Quiz will auto-submit after 3 switches
+                        </span>
+                    </div>
+                </div>
+            )}
+
             {/* Header with Timer and Progress */}
             <div className="bg-white rounded-xl shadow-lg p-4 mb-6 sticky top-0 z-10">
                 <div className="flex items-center justify-between mb-2">

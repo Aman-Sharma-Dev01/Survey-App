@@ -280,6 +280,9 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
                                     {availableClasses.length > 0 && (
                                         <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Class</th>
                                     )}
+                                    {availableClasses.length > 0 && (
+                                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Roll No</th>
+                                    )}
                                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Score</th>
                                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Percentage</th>
                                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Status</th>
@@ -294,6 +297,11 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
                                         {availableClasses.length > 0 && (
                                             <td className="py-3 px-4 text-gray-600">
                                                 {response.participantClass || '-'}
+                                            </td>
+                                        )}
+                                        {availableClasses.length > 0 && (
+                                            <td className="py-3 px-4 text-gray-600">
+                                                {response.participantRollNo || '-'}
                                             </td>
                                         )}
                                         <td className="py-3 px-4 text-gray-800">

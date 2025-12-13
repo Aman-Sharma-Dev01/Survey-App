@@ -98,7 +98,7 @@ router.get('/public/:id', async (req, res) => {
 =========================================================== */
 router.post('/submit/:id', async (req, res) => {
     try {
-        const { answers, participantName, participantEmail, participantClass, timeTaken, startedAt } = req.body;
+        const { answers, participantName, participantEmail, participantClass, participantRollNo, timeTaken, startedAt } = req.body;
 
         const quiz = await Quiz.findById(req.params.id);
 
@@ -160,6 +160,7 @@ router.post('/submit/:id', async (req, res) => {
             participantName: participantName || 'Anonymous',
             participantEmail,
             participantClass: participantClass || '',
+            participantRollNo: participantRollNo || '',
             answers: gradedAnswers,
             score: totalScore,
             totalPoints,
@@ -288,6 +289,7 @@ router.get('/analytics/:id', protect, async (req, res) => {
                 _id: r._id,
                 participantName: r.participantName,
                 participantClass: r.participantClass || '',
+                participantRollNo: r.participantRollNo || '',
                 score: r.score,
                 totalPoints: r.totalPoints,
                 percentage: r.percentage,
