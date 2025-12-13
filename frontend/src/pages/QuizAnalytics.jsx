@@ -106,19 +106,19 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
                 >
                     ← Back to Dashboard
                 </button>
-                <h1 className="text-3xl font-extrabold text-emerald-800">{quiz.title}</h1>
+                <h1 className="text-xl sm:text-3xl font-extrabold text-emerald-800">{quiz.title}</h1>
                 <p className="text-gray-600">Quiz Analytics & Responses</p>
             </div>
 
             {/* Class Filter */}
             {availableClasses.length > 0 && (
-                <div className="mb-6 flex items-center gap-3">
+                <div className="mb-6 flex flex-wrap items-center gap-2 sm:gap-3">
                     <Filter size={20} className="text-gray-500" />
                     <label className="text-sm font-medium text-gray-700">Filter by Class:</label>
                     <select
                         value={selectedClass}
                         onChange={(e) => setSelectedClass(e.target.value)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base"
                     >
                         <option value="">All Classes</option>
                         {availableClasses.map((cls) => (
