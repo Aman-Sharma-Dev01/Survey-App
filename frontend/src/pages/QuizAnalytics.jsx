@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { BarChart3, Users, CheckCircle, XCircle, Clock, TrendingUp, Loader, Filter, Trophy } from 'lucide-react';
+import { BarChart3, Users, CheckCircle, XCircle, Clock, TrendingUp, Loader, Filter, Trophy, Download } from 'lucide-react';
 import { getQuizAnalytics } from '../services/quizService';
 
 const QuizAnalyticsPage = ({ quizId, navigate }) => {
@@ -78,6 +78,63 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
         return sorted[0];
     }, [filteredResponses]);
 
+    // Export responses to Excel (CSV format)
+    const exportToExcel = () => {
+        if (filteredResponses.length === 0) {
+            alert('No responses to export');
+            return;
+        }
+
+        // Define headers
+        const headers = [
+            'Participant Name',
+            'Class',
+            'Roll No',
+            'Score',
+            'Total Points',
+            'Percentage',
+            'Status',
+            'Time Taken',
+            'Submitted At'
+        ];
+
+        // Create rows
+        const rows = filteredResponses.map(response => [
+            response.participantName || 'Anonymous',
+            response.participantClass || '-',
+            response.participantRollNo || '-',
+            response.score,
+            response.totalPoints,
+            `${response.percentage}%`,
+            response.passed ? 'Passed' : 'Failed',
+            response.timeTaken ? `${Math.floor(response.timeTaken / 60)}m ${response.timeTaken % 60}s` : '-',
+            new Date(response.submittedAt).toLocaleString()
+        ]);
+
+        // Create CSV content
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        ].join('\n');
+
+        // Add BOM for Excel UTF-8 compatibility
+        const BOM = '\uFEFF';
+        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+        
+        // Create download link
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        const fileName = `${quiz.title.replace(/[^a-z0-9]/gi, '_')}_responses${selectedClass ? `_${selectedClass.replace(/[^a-z0-9]/gi, '_')}` : ''}.csv`;
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', fileName);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
@@ -110,31 +167,46 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
                 <p className="text-gray-600">Quiz Analytics & Responses</p>
             </div>
 
-            {/* Class Filter */}
-            {availableClasses.length > 0 && (
-                <div className="mb-6 flex flex-wrap items-center gap-2 sm:gap-3">
-                    <Filter size={20} className="text-gray-500" />
-                    <label className="text-sm font-medium text-gray-700">Filter by Class:</label>
-                    <select
-                        value={selectedClass}
-                        onChange={(e) => setSelectedClass(e.target.value)}
-                        className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base"
-                    >
-                        <option value="">All Classes</option>
-                        {availableClasses.map((cls) => (
-                            <option key={cls} value={cls}>{cls}</option>
-                        ))}
-                    </select>
-                    {selectedClass && (
-                        <button
-                            onClick={() => setSelectedClass('')}
-                            className="text-sm text-emerald-600 hover:text-emerald-700 underline"
-                        >
-                            Clear filter
-                        </button>
+            {/* Class Filter and Export */}
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    {availableClasses.length > 0 && (
+                        <>
+                            <Filter size={20} className="text-gray-500" />
+                            <label className="text-sm font-medium text-gray-700">Filter by Class:</label>
+                            <select
+                                value={selectedClass}
+                                onChange={(e) => setSelectedClass(e.target.value)}
+                                className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base"
+                            >
+                                <option value="">All Classes</option>
+                                {availableClasses.map((cls) => (
+                                    <option key={cls} value={cls}>{cls}</option>
+                                ))}
+                            </select>
+                            {selectedClass && (
+                                <button
+                                    onClick={() => setSelectedClass('')}
+                                    className="text-sm text-emerald-600 hover:text-emerald-700 underline"
+                                >
+                                    Clear filter
+                                </button>
+                            )}
+                        </>
                     )}
                 </div>
-            )}
+                
+                {/* Export Button */}
+                <button
+                    onClick={exportToExcel}
+                    disabled={filteredResponses.length === 0}
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                >
+                    <Download size={18} />
+                    Export to Excel
+                    {selectedClass && <span className="text-emerald-200">({selectedClass})</span>}
+                </button>
+            </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
