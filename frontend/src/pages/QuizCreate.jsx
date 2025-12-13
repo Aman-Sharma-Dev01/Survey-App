@@ -340,7 +340,8 @@ const QuizCreatePage = ({ navigate }) => {
         passingScore: 60,
         allowRetake: true,
         maxAttempts: 0,
-        tabSwitchingEnabled: false
+        tabSwitchingEnabled: false,
+        preventDuplicateRollNo: false
     });
     const [showSettings, setShowSettings] = useState(false);
     const [status, setStatus] = useState('');
@@ -610,6 +611,19 @@ const QuizCreatePage = ({ navigate }) => {
                                 <label htmlFor="tabSwitchingEnabled" className="text-sm text-gray-700">
                                     Enable Tab Switch Detection
                                     <span className="text-xs text-gray-500 block">Auto-submits quiz after 3 tab switches</span>
+                                </label>
+                            </div>
+                            <div className="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    id="preventDuplicateRollNo"
+                                    checked={settings.preventDuplicateRollNo}
+                                    onChange={(e) => setSettings(s => ({ ...s, preventDuplicateRollNo: e.target.checked }))}
+                                    className="mr-2"
+                                />
+                                <label htmlFor="preventDuplicateRollNo" className="text-sm text-gray-700">
+                                    Prevent Duplicate Roll Numbers
+                                    <span className="text-xs text-gray-500 block">Same roll number can only submit once</span>
                                 </label>
                             </div>
                         </div>

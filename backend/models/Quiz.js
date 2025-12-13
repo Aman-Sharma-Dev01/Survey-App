@@ -42,7 +42,8 @@ const quizSchema = mongoose.Schema(
             passingScore: { type: Number, default: 60 }, // Percentage needed to pass
             allowRetake: { type: Boolean, default: true },
             maxAttempts: { type: Number, default: 0 }, // 0 = unlimited
-            tabSwitchingEnabled: { type: Boolean, default: false } // Enable tab switch detection (3 switches = auto-submit)
+            tabSwitchingEnabled: { type: Boolean, default: false }, // Enable tab switch detection (3 switches = auto-submit)
+            preventDuplicateRollNo: { type: Boolean, default: false } // Prevent same roll number from submitting twice
         },
         isPublished: { type: Boolean, default: false },
         attemptCount: { type: Number, default: 0 }

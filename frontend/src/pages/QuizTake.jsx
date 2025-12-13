@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, AlertTriangle } from 'lucide-react';
-import { getPublicQuiz, submitQuizResponse } from '../services/quizService';
+import { getPublicQuiz, submitQuizResponse, checkRollNoExists } from '../services/quizService';
 
 // Shuffle array helper
 const shuffleArray = (array) => {
@@ -27,6 +27,8 @@ const QuizTakePage = ({ quizId }) => {
     const [participantClass, setParticipantClass] = useState('');
     const [participantRollNo, setParticipantRollNo] = useState('');
     const [hasStarted, setHasStarted] = useState(false);
+    const [rollNoError, setRollNoError] = useState('');
+    const [checkingRollNo, setCheckingRollNo] = useState(false);
     
     // Tab switch detection
     const [tabSwitchCount, setTabSwitchCount] = useState(0);
@@ -331,22 +333,49 @@ const QuizTakePage = ({ quizId }) => {
 
                     {quiz.classes && quiz.classes.length > 0 && (
                         <div className="mb-6">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Roll Number (optional)</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Roll Number</label>
                             <input
                                 type="text"
                                 value={participantRollNo}
-                                onChange={(e) => setParticipantRollNo(e.target.value)}
-                                className="w-full max-w-xs mx-auto p-3 border border-gray-300 rounded-lg text-center"
+                                onChange={(e) => {
+                                    setParticipantRollNo(e.target.value);
+                                    setRollNoError(''); // Clear error when typing
+                                }}
+                                className={`w-full max-w-xs mx-auto p-3 border rounded-lg text-center ${
+                                    rollNoError ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                                }`}
                                 placeholder="Enter your roll number"
                             />
+                            {rollNoError && (
+                                <p className="text-red-600 text-sm mt-2 font-medium">{rollNoError}</p>
+                            )}
                         </div>
                     )}
 
                     <button
-                        onClick={() => setHasStarted(true)}
-                        className="px-8 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium text-lg shadow-lg"
+                        onClick={async () => {
+                            // Check if roll number exists before starting (only if setting is enabled)
+                            if (quiz?.settings?.preventDuplicateRollNo && participantRollNo && participantRollNo.trim()) {
+                                setCheckingRollNo(true);
+                                setRollNoError('');
+                                try {
+                                    const result = await checkRollNoExists(quizId, participantRollNo.trim());
+                                    if (result.exists) {
+                                        setRollNoError(result.message);
+                                        setCheckingRollNo(false);
+                                        return;
+                                    }
+                                } catch (err) {
+                                    console.error('Error checking roll number:', err);
+                                }
+                                setCheckingRollNo(false);
+                            }
+                            setHasStarted(true);
+                        }}
+                        disabled={checkingRollNo}
+                        className="px-8 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Start Quiz
+                        {checkingRollNo ? 'Checking...' : 'Start Quiz'}
                     </button>
                 </div>
             </div>

@@ -82,7 +82,8 @@ router.get('/public/:id', async (req, res) => {
                 timeLimit: quiz.settings.timeLimit,
                 shuffleQuestions: quiz.settings.shuffleQuestions,
                 shuffleOptions: quiz.settings.shuffleOptions,
-                tabSwitchingEnabled: quiz.settings.tabSwitchingEnabled
+                tabSwitchingEnabled: quiz.settings.tabSwitchingEnabled,
+                preventDuplicateRollNo: quiz.settings.preventDuplicateRollNo
             },
             totalPoints: quiz.questions.reduce((sum, q) => sum + (q.points || 1), 0)
         };
@@ -90,6 +91,42 @@ router.get('/public/:id', async (req, res) => {
         res.json(publicQuiz);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching quiz' });
+    }
+});
+
+/* ===========================================================
+   CHECK IF ROLL NUMBER EXISTS FOR QUIZ
+   POST /api/quizzes/check-rollno/:id (Public)
+=========================================================== */
+router.post('/check-rollno/:id', async (req, res) => {
+    try {
+        const { rollNo } = req.body;
+
+        if (!rollNo || !rollNo.trim()) {
+            return res.json({ exists: false });
+        }
+
+        // Get quiz to check if preventDuplicateRollNo is enabled
+        const quiz = await Quiz.findById(req.params.id);
+        if (!quiz || !quiz.settings?.preventDuplicateRollNo) {
+            return res.json({ exists: false });
+        }
+
+        const existingResponse = await QuizResponse.findOne({
+            quiz: req.params.id,
+            participantRollNo: rollNo.trim()
+        });
+
+        if (existingResponse) {
+            return res.json({ 
+                exists: true, 
+                message: `Response already recorded for roll no "${rollNo}"`
+            });
+        }
+
+        res.json({ exists: false });
+    } catch (error) {
+        res.status(500).json({ message: 'Error checking roll number' });
     }
 });
 
@@ -109,6 +146,21 @@ router.post('/submit/:id', async (req, res) => {
 
         if (!quiz.isPublished) {
             return res.status(403).json({ message: 'This quiz is not available' });
+        }
+
+        // Check if roll number already exists for this quiz (only if setting is enabled)
+        if (quiz.settings?.preventDuplicateRollNo && participantRollNo && participantRollNo.trim()) {
+            const existingResponse = await QuizResponse.findOne({
+                quiz: req.params.id,
+                participantRollNo: participantRollNo.trim()
+            });
+            
+            if (existingResponse) {
+                return res.status(400).json({ 
+                    message: `Response already recorded for roll no "${participantRollNo}"`,
+                    rollNoExists: true
+                });
+            }
         }
 
         // Grade the quiz

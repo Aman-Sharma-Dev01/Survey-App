@@ -43,6 +43,11 @@ export const getPublicQuiz = async (quizId) => {
     return fetchApi(`/quizzes/public/${quizId}`, 'GET', null, false);
 };
 
+// Check if roll number already exists for a quiz
+export const checkRollNoExists = async (quizId, rollNo) => {
+    return fetchApi(`/quizzes/check-rollno/${quizId}`, 'POST', { rollNo }, false);
+};
+
 // Submit quiz answers
 export const submitQuizResponse = async (quizId, responseData) => {
     return fetchApi(`/quizzes/submit/${quizId}`, 'POST', responseData, false);
