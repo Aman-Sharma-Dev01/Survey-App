@@ -382,7 +382,7 @@ const App = () => {
 
   const handleBuyClick = (plan) => {
     if (!isAuthenticated) {
-      window.location.href = '/login';
+      window.location.hash = 'login';
       return;
     }
     setSelectedPlan(plan);

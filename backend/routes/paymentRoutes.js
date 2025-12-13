@@ -28,7 +28,7 @@ const PLANS = {
         amount: 50,
         credits: 10000,
         name: 'Power',
-        paymentLink: '' // Add your power plan link here
+        paymentLink: 'https://urpy.link/Lt0Yh4'
     }
 };
 
