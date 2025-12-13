@@ -1,6 +1,41 @@
 import React, { useState } from 'react';
-import { LogOut, PlusCircle, LayoutDashboard, HelpCircle, Menu, X, Coins, User, ShoppingCart } from 'lucide-react';
+import { LogOut, PlusCircle, LayoutDashboard, HelpCircle, Menu, X, Coins, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
+
+// Avatar component - shows Google avatar or initials
+const ProfileAvatar = ({ user, size = 'sm' }) => {
+    const sizeClasses = {
+        sm: 'w-7 h-7 text-xs',
+        md: 'w-10 h-10 text-sm',
+        lg: 'w-12 h-12 text-base'
+    };
+
+    const getInitials = (name) => {
+        if (!name) return '?';
+        const parts = name.trim().split(' ').filter(Boolean);
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        }
+        return name.slice(0, 2).toUpperCase();
+    };
+
+    if (user?.avatar) {
+        return (
+            <img 
+                src={user.avatar} 
+                alt={user.name || 'Profile'} 
+                className={`${sizeClasses[size]} rounded-full object-cover border-2 border-indigo-400`}
+                referrerPolicy="no-referrer"
+            />
+        );
+    }
+
+    return (
+        <div className={`${sizeClasses[size]} rounded-full bg-indigo-500 flex items-center justify-center font-semibold text-white border-2 border-indigo-400`}>
+            {getInitials(user?.name)}
+        </div>
+    );
+};
 
 const NavButton = ({ Icon, label, target, onClick, current, mobile = false }) => {
     const isActive = current === target;
@@ -54,17 +89,20 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                             <div className="relative">
                                 <button
                                     onClick={() => setProfileDropdown(!profileDropdown)}
-                                    className="flex items-center px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition"
+                                    className="flex items-center gap-2 px-2 py-1 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition"
                                 >
-                                    <User size={18} className="mr-1" />
+                                    <ProfileAvatar user={user} size="sm" />
                                     <span className="hidden lg:inline">{user?.name || 'Profile'}</span>
                                 </button>
                                 
                                 {profileDropdown && (
                                     <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
-                                        <div className="px-4 py-3 border-b border-gray-100">
-                                            <p className="text-sm font-semibold text-gray-800">{user?.name}</p>
-                                            <p className="text-xs text-gray-500">{user?.email}</p>
+                                        <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
+                                            <ProfileAvatar user={user} size="md" />
+                                            <div>
+                                                <p className="text-sm font-semibold text-gray-800">{user?.name}</p>
+                                                <p className="text-xs text-gray-500">{user?.email}</p>
+                                            </div>
                                         </div>
                                         <div className="px-4 py-3 border-b border-gray-100">
                                             <div className="flex items-center justify-between">
@@ -155,7 +193,13 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                                     <ShoppingCart size={18} className="mr-2" /> Buy Credits
                                 </button>
                                 <div className="pt-2 border-t border-indigo-600">
-                                    <p className="text-indigo-300 text-sm mb-2">Welcome, {user?.name || 'Creator'}</p>
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <ProfileAvatar user={user} size="md" />
+                                        <div>
+                                            <p className="text-white text-sm font-medium">{user?.name || 'Creator'}</p>
+                                            <p className="text-indigo-300 text-xs">{user?.email}</p>
+                                        </div>
+                                    </div>
                                     <button
                                         onClick={() => { logout(); setMobileMenuOpen(false); }}
                                         className="w-full px-3 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition flex items-center"

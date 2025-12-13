@@ -54,6 +54,7 @@ router.post('/login', async (req, res) => {
             _id: user._id,
             name: user.name,
             email: user.email,
+            avatar: user.avatar,
             token: generateToken(user._id),
             credits: user.credits,
         });
@@ -146,6 +147,7 @@ router.get('/profile', protect, async (req, res) => {
             _id: user._id,
             name: user.name,
             email: user.email,
+            avatar: user.avatar,
             credits: user.credits,
             createdAt: user.createdAt
         });
