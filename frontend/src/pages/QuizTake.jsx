@@ -99,7 +99,7 @@ const QuizTakePage = ({ quizId }) => {
                 if (tabSwitchRef.current >= 3) {
                     // Auto-submit after 3 tab switches
                     setShowTabWarning(false);
-                    handleSubmit(true);
+                    handleSubmit(true, true); // autoSubmit=true, dueToTabSwitch=true
                 } else {
                     // Show warning
                     setShowTabWarning(true);
@@ -137,7 +137,7 @@ const QuizTakePage = ({ quizId }) => {
         });
     };
 
-    const handleSubmit = async (autoSubmit = false) => {
+    const handleSubmit = async (autoSubmit = false, dueToTabSwitch = false) => {
         if (!autoSubmit && !window.confirm('Submit your quiz? You cannot change answers after submission.')) {
             return;
         }
@@ -159,7 +159,8 @@ const QuizTakePage = ({ quizId }) => {
                 participantClass: participantClass || '',
                 participantRollNo: participantRollNo || '',
                 timeTaken,
-                startedAt: startedAt.toISOString()
+                startedAt: startedAt.toISOString(),
+                autoSubmittedDueToTabSwitch: dueToTabSwitch
             });
 
             setResults(result);

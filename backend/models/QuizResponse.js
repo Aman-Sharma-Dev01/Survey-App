@@ -23,7 +23,8 @@ const quizResponseSchema = mongoose.Schema(
         passed: { type: Boolean, default: false },
         timeTaken: { type: Number }, // Time taken in seconds
         startedAt: { type: Date },
-        submittedAt: { type: Date, default: Date.now }
+        submittedAt: { type: Date, default: Date.now },
+        autoSubmittedDueToTabSwitch: { type: Boolean, default: false } // True if quiz was auto-submitted due to tab switching
     },
     { timestamps: true }
 );

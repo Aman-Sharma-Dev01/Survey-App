@@ -99,7 +99,7 @@ router.get('/public/:id', async (req, res) => {
 =========================================================== */
 router.post('/submit/:id', async (req, res) => {
     try {
-        const { answers, participantName, participantEmail, participantClass, participantRollNo, timeTaken, startedAt } = req.body;
+        const { answers, participantName, participantEmail, participantClass, participantRollNo, timeTaken, startedAt, autoSubmittedDueToTabSwitch } = req.body;
 
         const quiz = await Quiz.findById(req.params.id);
 
@@ -168,7 +168,8 @@ router.post('/submit/:id', async (req, res) => {
             percentage,
             passed,
             timeTaken,
-            startedAt: startedAt ? new Date(startedAt) : new Date()
+            startedAt: startedAt ? new Date(startedAt) : new Date(),
+            autoSubmittedDueToTabSwitch: autoSubmittedDueToTabSwitch || false
         });
 
         await quizResponse.save();
@@ -296,7 +297,8 @@ router.get('/analytics/:id', protect, async (req, res) => {
                 percentage: r.percentage,
                 passed: r.passed,
                 timeTaken: r.timeTaken,
-                submittedAt: r.submittedAt
+                submittedAt: r.submittedAt,
+                autoSubmittedDueToTabSwitch: r.autoSubmittedDueToTabSwitch || false
             }))
         });
     } catch (error) {

@@ -95,7 +95,8 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
             'Percentage',
             'Status',
             'Time Taken',
-            'Submitted At'
+            'Submitted At',
+            'Tab Switch Violation'
         ];
 
         // Create rows
@@ -106,9 +107,10 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
             response.score,
             response.totalPoints,
             `${response.percentage}%`,
-            response.passed ? 'Passed' : 'Failed',
+            response.autoSubmittedDueToTabSwitch ? 'Caught (Tab Switch)' : (response.passed ? 'Passed' : 'Failed'),
             response.timeTaken ? `${Math.floor(response.timeTaken / 60)}m ${response.timeTaken % 60}s` : '-',
-            new Date(response.submittedAt).toLocaleString()
+            new Date(response.submittedAt).toLocaleString(),
+            response.autoSubmittedDueToTabSwitch ? 'Yes' : 'No'
         ]);
 
         // Create CSV content
@@ -364,26 +366,43 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
                             </thead>
                             <tbody>
                                 {filteredResponses.map((response) => (
-                                    <tr key={response._id} className="border-b border-gray-100 hover:bg-gray-50">
-                                        <td className="py-3 px-4 text-gray-800">{response.participantName}</td>
+                                    <tr 
+                                        key={response._id} 
+                                        className={`border-b border-gray-100 ${
+                                            response.autoSubmittedDueToTabSwitch 
+                                                ? 'bg-red-50 hover:bg-red-100' 
+                                                : 'hover:bg-gray-50'
+                                        }`}
+                                        title={response.autoSubmittedDueToTabSwitch ? 'Auto-submitted due to tab switching' : ''}
+                                    >
+                                        <td className={`py-3 px-4 ${response.autoSubmittedDueToTabSwitch ? 'text-red-700 font-medium' : 'text-gray-800'}`}>
+                                            {response.participantName}
+                                            {response.autoSubmittedDueToTabSwitch && (
+                                                <span className="ml-2 text-xs bg-red-200 text-red-800 px-2 py-0.5 rounded">Tab Switch</span>
+                                            )}
+                                        </td>
                                         {availableClasses.length > 0 && (
-                                            <td className="py-3 px-4 text-gray-600">
+                                            <td className={`py-3 px-4 ${response.autoSubmittedDueToTabSwitch ? 'text-red-600' : 'text-gray-600'}`}>
                                                 {response.participantClass || '-'}
                                             </td>
                                         )}
                                         {availableClasses.length > 0 && (
-                                            <td className="py-3 px-4 text-gray-600">
+                                            <td className={`py-3 px-4 ${response.autoSubmittedDueToTabSwitch ? 'text-red-600' : 'text-gray-600'}`}>
                                                 {response.participantRollNo || '-'}
                                             </td>
                                         )}
-                                        <td className="py-3 px-4 text-gray-800">
+                                        <td className={`py-3 px-4 ${response.autoSubmittedDueToTabSwitch ? 'text-red-700' : 'text-gray-800'}`}>
                                             {response.score} / {response.totalPoints}
                                         </td>
                                         <td className="py-3 px-4">
-                                            <span className="font-medium text-emerald-600">{response.percentage}%</span>
+                                            <span className={`font-medium ${response.autoSubmittedDueToTabSwitch ? 'text-red-600' : 'text-emerald-600'}`}>{response.percentage}%</span>
                                         </td>
                                         <td className="py-3 px-4">
-                                            {response.passed ? (
+                                            {response.autoSubmittedDueToTabSwitch ? (
+                                                <span className="flex items-center text-red-600">
+                                                    <XCircle size={16} className="mr-1" /> Caught
+                                                </span>
+                                            ) : response.passed ? (
                                                 <span className="flex items-center text-emerald-600">
                                                     <CheckCircle size={16} className="mr-1" /> Passed
                                                 </span>
@@ -393,12 +412,12 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="py-3 px-4 text-gray-600">
+                                        <td className={`py-3 px-4 ${response.autoSubmittedDueToTabSwitch ? 'text-red-600' : 'text-gray-600'}`}>
                                             {response.timeTaken 
                                                 ? `${Math.floor(response.timeTaken / 60)}m ${response.timeTaken % 60}s`
                                                 : '-'}
                                         </td>
-                                        <td className="py-3 px-4 text-gray-600">
+                                        <td className={`py-3 px-4 ${response.autoSubmittedDueToTabSwitch ? 'text-red-600' : 'text-gray-600'}`}>
                                             {new Date(response.submittedAt).toLocaleDateString()}
                                         </td>
                                     </tr>
