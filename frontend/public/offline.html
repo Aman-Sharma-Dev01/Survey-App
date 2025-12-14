@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You're Offline - SurveyZen</title>
+    <link rel="icon" href="/favicon.ico" sizes="48x48" type="image/x-icon" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0fdf4 100%);
+            padding: 20px;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 500px;
+            padding: 40px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .offline-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+        
+        .offline-icon svg {
+            width: 60px;
+            height: 60px;
+            color: #64748b;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+        
+        p {
+            font-size: 16px;
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+        
+        .retry-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+        }
+        
+        .retry-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        .retry-btn:active {
+            transform: translateY(0);
+        }
+        
+        .retry-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .tips {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .tips h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 12px;
+        }
+        
+        .tips ul {
+            list-style: none;
+            text-align: left;
+        }
+        
+        .tips li {
+            font-size: 14px;
+            color: #64748b;
+            padding: 6px 0;
+            padding-left: 24px;
+            position: relative;
+        }
+        
+        .tips li::before {
+            content: "•";
+            position: absolute;
+            left: 8px;
+            color: #10b981;
+            font-weight: bold;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #fef2f2;
+            border-radius: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: blink 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        
+        .status-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: #dc2626;
+        }
+        
+        /* Online detection - auto redirect */
+        .online-detected {
+            display: none;
+            padding: 12px 24px;
+            background: #f0fdf4;
+            border-radius: 12px;
+            margin-top: 16px;
+        }
+        
+        .online-detected.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .online-detected p {
+            color: #16a34a;
+            margin: 0;
+            font-weight: 500;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <svg class="logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="40" height="40" rx="10" fill="url(#gradient)"/>
+                <path d="M12 20L17 25L28 14" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <defs>
+                    <linearGradient id="gradient" x1="0" y1="0" x2="40" y2="40">
+                        <stop offset="0%" stop-color="#10b981"/>
+                        <stop offset="100%" stop-color="#059669"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <span class="logo-text">SurveyZen</span>
+        </div>
+        
+        <div class="status-indicator">
+            <span class="status-dot"></span>
+            <span class="status-text">No Internet Connection</span>
+        </div>
+        
+        <div class="offline-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a5 5 0 01-1.414-3.536 5 5 0 011.414-3.536m0 7.072L5.636 18.364M8.464 8.464a5 5 0 00-1.414 3.536 5 5 0 001.414 3.536m0-7.072L5.636 5.636M3 3l18 18" />
+            </svg>
+        </div>
+        
+        <h1>You're Offline</h1>
+        <p>It looks like you've lost your internet connection. Please check your network settings and try again.</p>
+        
+        <button class="retry-btn" onclick="retryConnection()">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Try Again
+        </button>
+        
+        <div id="onlineMessage" class="online-detected">
+            <p>🎉 You're back online! Redirecting...</p>
+        </div>
+        
+        <div class="tips">
+            <h3>Things you can try:</h3>
+            <ul>
+                <li>Check if your Wi-Fi or mobile data is turned on</li>
+                <li>Move closer to your router</li>
+                <li>Try turning airplane mode off and on</li>
+                <li>Restart your device</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        function retryConnection() {
+            window.location.reload();
+        }
+        
+        // Auto-detect when connection is restored
+        window.addEventListener('online', function() {
+            document.getElementById('onlineMessage').classList.add('show');
+            setTimeout(function() {
+                window.location.reload();
+            }, 1500);
+        });
+        
+        // Also check periodically
+        setInterval(function() {
+            if (navigator.onLine) {
+                fetch('/', { method: 'HEAD', cache: 'no-store' })
+                    .then(function() {
+                        document.getElementById('onlineMessage').classList.add('show');
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1500);
+                    })
+                    .catch(function() {
+                        // Still offline
+                    });
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
