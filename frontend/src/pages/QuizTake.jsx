@@ -355,8 +355,18 @@ const QuizTakePage = ({ quizId }) => {
             });
         }
 
+        // Debounce flag to prevent multiple rapid detections
+        let isProcessingViolation = false;
+        let lastViolationTime = 0;
+
         const handleResize = () => {
             if (!initialViewport) return;
+            
+            // Debounce: only process once every 3 seconds
+            const now = Date.now();
+            if (isProcessingViolation || (now - lastViolationTime) < 3000) {
+                return;
+            }
 
             const currentWidth = window.innerWidth;
             const currentHeight = window.innerHeight;
@@ -374,6 +384,9 @@ const QuizTakePage = ({ quizId }) => {
                                        (currentHeight < initialViewport.height * 0.7);
 
             if (isSplitScreen || shrunkFromInitial) {
+                isProcessingViolation = true;
+                lastViolationTime = now;
+                
                 splitScreenRef.current += 1;
                 setSplitScreenCount(splitScreenRef.current);
 
@@ -385,21 +398,26 @@ const QuizTakePage = ({ quizId }) => {
                     // Show warning
                     setShowSplitScreenWarning(true);
                 }
+                
+                // Reset processing flag after delay
+                setTimeout(() => {
+                    isProcessingViolation = false;
+                }, 3000);
             }
         };
 
         // Check periodically for split screen (some devices don't fire resize on split)
         const resizeInterval = setInterval(() => {
-            if (initialViewport) {
+            if (initialViewport && !showSplitScreenWarning && !isProcessingViolation) {
                 const currentWidth = window.innerWidth;
                 const widthRatio = currentWidth / initialViewport.screenWidth;
                 
                 // Only check if window is significantly smaller than screen
-                if (widthRatio < 0.75 && !showSplitScreenWarning) {
+                if (widthRatio < 0.75) {
                     handleResize();
                 }
             }
-        }, 2000);
+        }, 5000); // Check every 5 seconds instead of 2
 
         window.addEventListener('resize', handleResize);
 
