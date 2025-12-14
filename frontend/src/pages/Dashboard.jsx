@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { PlusCircle, Loader, Settings, AlertTriangle, MessageSquare } from 'lucide-react';
+import { PlusCircle, Loader, Settings, AlertTriangle, MessageSquare, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { fetchApi, deleteSurvey } from '../services/api'; 
 import SurveyCard from '../components/SurveyCard';
@@ -14,6 +14,7 @@ const DashboardPage = ({ navigate }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [isRefreshing, setIsRefreshing] = useState(false); // New state for refreshing
+    const [searchQuery, setSearchQuery] = useState('');
 
     /**
      * Fetches all surveys for the current user.
@@ -118,7 +119,7 @@ const DashboardPage = ({ navigate }) => {
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
             
             {/* Header */}
-            <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8 pb-4">
+            <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 pb-4">
                 <h1 className="text-2xl sm:text-4xl font-extrabold text-indigo-900 tracking-tight">
                     Your Surveys <span className="text-indigo-500">({surveys.length})</span>
                 </h1>
@@ -138,33 +139,95 @@ const DashboardPage = ({ navigate }) => {
                 </div>
             </header>
 
-            {/* Empty State */}
-            {surveys.length === 0 ? (
-                <div className="text-center p-20 mt-10 bg-white rounded-2xl shadow-xl border border-indigo-200">
-                    <MessageSquare size={64} className="text-indigo-500 mx-auto mb-6" />
-                    <p className="text-2xl text-gray-700 font-bold">
-                        Ready to gather insights?
-                    </p>
-                    <p className="text-gray-500 mt-3 text-lg">
-                        You haven't created any surveys yet. Click 'Create New' to start building your first questionnaire.
-                    </p>
+            {/* Search Bar */}
+            <div className="mb-6">
+                <div className="relative max-w-md">
+                    <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <input
+                        type="text"
+                        placeholder="Search surveys by title or description..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                    />
+                    {searchQuery && (
+                        <button
+                            onClick={() => setSearchQuery('')}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl"
+                        >
+                            ×
+                        </button>
+                    )}
                 </div>
-            ) : (
-                // Survey Grid
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {surveys.map((survey) => (
-                        <SurveyCard
-                            key={survey._id}
-                            survey={survey}
-                            onAnalyze={() => navigate(`analysis/${survey._id}`)}
-                            onPublish={(s) => handlePublish(s, true)}
-                            onUnpublish={(s) => handlePublish(s, false)}
-                            onDelete={handleDelete}
-                            navigate={navigate} // Pass navigate for edit/view links within the card
-                        />
-                    ))}
-                </div>
-            )}
+            </div>
+
+            {(() => {
+                const filteredSurveys = surveys.filter(survey => {
+                    const query = searchQuery.toLowerCase().trim();
+                    if (!query) return true;
+                    return (
+                        survey.title?.toLowerCase().includes(query) ||
+                        survey.description?.toLowerCase().includes(query)
+                    );
+                });
+
+                if (surveys.length === 0) {
+                    return (
+                        <div className="text-center p-20 mt-10 bg-white rounded-2xl shadow-xl border border-indigo-200">
+                            <MessageSquare size={64} className="text-indigo-500 mx-auto mb-6" />
+                            <p className="text-2xl text-gray-700 font-bold">
+                                Ready to gather insights?
+                            </p>
+                            <p className="text-gray-500 mt-3 text-lg">
+                                You haven't created any surveys yet. Click 'Create New' to start building your first questionnaire.
+                            </p>
+                        </div>
+                    );
+                }
+
+                if (filteredSurveys.length === 0) {
+                    return (
+                        <div className="text-center p-20 mt-10 bg-white rounded-2xl shadow-xl border border-indigo-200">
+                            <Search size={64} className="text-indigo-500 mx-auto mb-6" />
+                            <p className="text-2xl text-gray-700 font-bold">
+                                No surveys found
+                            </p>
+                            <p className="text-gray-500 mt-3 text-lg">
+                                No surveys match "{searchQuery}"
+                            </p>
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                className="mt-4 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                            >
+                                Clear Search
+                            </button>
+                        </div>
+                    );
+                }
+
+                return (
+                    <>
+                        {searchQuery && (
+                            <p className="text-sm text-gray-500 mb-4">
+                                Showing {filteredSurveys.length} of {surveys.length} surveys
+                            </p>
+                        )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {filteredSurveys.map((survey) => (
+                                <SurveyCard
+                                    key={survey._id}
+                                    survey={survey}
+                                    onAnalyze={() => navigate(`analysis/${survey._id}`)}
+                                    onPublish={(s) => handlePublish(s, true)}
+                                    onUnpublish={(s) => handlePublish(s, false)}
+                                    onDelete={handleDelete}
+                                    navigate={navigate}
+                                />
+                            ))}
+                        </div>
+                    </>
+                );
+            })()}
         </div>
     );
 };

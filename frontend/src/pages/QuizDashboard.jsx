@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { PlusCircle, Loader, Trash2, BarChart3, Link, Play, Eye, EyeOff, Edit } from 'lucide-react';
+import { PlusCircle, Loader, Trash2, BarChart3, Link, Play, Eye, EyeOff, Edit, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getCreatorQuizzes, deleteQuiz, updateQuizPublishStatus } from '../services/quizService';
 
@@ -96,6 +96,7 @@ const QuizDashboardPage = ({ navigate }) => {
     const [quizzes, setQuizzes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
 
     const fetchQuizzes = useCallback(async () => {
         setLoading(true);
@@ -154,7 +155,7 @@ const QuizDashboardPage = ({ navigate }) => {
 
     return (
         <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
                 <div>
                     <h1 className="text-2xl sm:text-3xl font-extrabold text-emerald-800">Quiz Dashboard</h1>
                     <p className="text-gray-600 mt-1">Create and manage your quizzes</p>
@@ -167,36 +168,96 @@ const QuizDashboardPage = ({ navigate }) => {
                 </button>
             </div>
 
+            {/* Search Bar */}
+            <div className="mb-6">
+                <div className="relative max-w-md">
+                    <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <input
+                        type="text"
+                        placeholder="Search quizzes by name or description..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                    />
+                    {searchQuery && (
+                        <button
+                            onClick={() => setSearchQuery('')}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                            ×
+                        </button>
+                    )}
+                </div>
+            </div>
+
             {error && (
                 <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">{error}</div>
             )}
 
-            {quizzes.length === 0 ? (
-                <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-                    <Play size={48} className="mx-auto text-gray-400 mb-4" />
-                    <h2 className="text-xl font-semibold text-gray-700 mb-2">No quizzes yet</h2>
-                    <p className="text-gray-500 mb-4">Create your first quiz to get started</p>
-                    <button
-                        onClick={() => navigate('quiz-create')}
-                        className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
-                    >
-                        Create Your First Quiz
-                    </button>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {quizzes.map(quiz => (
-                        <QuizCard
-                            key={quiz._id}
-                            quiz={quiz}
-                            onPublish={handlePublish}
-                            onDelete={handleDelete}
-                            onEdit={handleEdit}
-                            onAnalytics={handleAnalytics}
-                        />
-                    ))}
-                </div>
-            )}
+            {(() => {
+                const filteredQuizzes = quizzes.filter(quiz => {
+                    const query = searchQuery.toLowerCase().trim();
+                    if (!query) return true;
+                    return (
+                        quiz.title?.toLowerCase().includes(query) ||
+                        quiz.description?.toLowerCase().includes(query)
+                    );
+                });
+
+                if (quizzes.length === 0) {
+                    return (
+                        <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                            <Play size={48} className="mx-auto text-gray-400 mb-4" />
+                            <h2 className="text-xl font-semibold text-gray-700 mb-2">No quizzes yet</h2>
+                            <p className="text-gray-500 mb-4">Create your first quiz to get started</p>
+                            <button
+                                onClick={() => navigate('quiz-create')}
+                                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
+                            >
+                                Create Your First Quiz
+                            </button>
+                        </div>
+                    );
+                }
+
+                if (filteredQuizzes.length === 0) {
+                    return (
+                        <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                            <Search size={48} className="mx-auto text-gray-400 mb-4" />
+                            <h2 className="text-xl font-semibold text-gray-700 mb-2">No quizzes found</h2>
+                            <p className="text-gray-500 mb-4">No quizzes match "{searchQuery}"</p>
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                            >
+                                Clear Search
+                            </button>
+                        </div>
+                    );
+                }
+
+                return (
+                    <>
+                        {searchQuery && (
+                            <p className="text-sm text-gray-500 mb-4">
+                                Showing {filteredQuizzes.length} of {quizzes.length} quizzes
+                            </p>
+                        )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {filteredQuizzes.map(quiz => (
+                                <QuizCard
+                                    key={quiz._id}
+                                    quiz={quiz}
+                                    onPublish={handlePublish}
+                                    onDelete={handleDelete}
+                                    onEdit={handleEdit}
+                                    onAnalytics={handleAnalytics}
+                                />
+                            ))}
+                        </div>
+                    </>
+                );
+            })()}
         </div>
     );
 };
