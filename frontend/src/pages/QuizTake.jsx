@@ -193,6 +193,54 @@ const QuizTakePage = ({ quizId }) => {
         return () => clearInterval(timerRef.current);
     }, [hasStarted, isSubmitted]);
 
+    // Disable right-click and keyboard shortcuts to prevent inspect element
+    useEffect(() => {
+        if (!hasStarted || isSubmitted) return;
+
+        // Disable right-click context menu
+        const handleContextMenu = (e) => {
+            e.preventDefault();
+            return false;
+        };
+
+        // Disable keyboard shortcuts for developer tools
+        const handleKeyDown = (e) => {
+            // F12
+            if (e.key === 'F12') {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+Shift+I (Inspect)
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+Shift+J (Console)
+            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+Shift+C (Element selector)
+            if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+U (View source)
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+                return false;
+            }
+        };
+
+        document.addEventListener('contextmenu', handleContextMenu);
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.removeEventListener('contextmenu', handleContextMenu);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [hasStarted, isSubmitted]);
+
     // Tab switch detection - only if enabled in quiz settings
     useEffect(() => {
         if (!hasStarted || isSubmitted || !quiz?.settings?.tabSwitchingEnabled) return;
