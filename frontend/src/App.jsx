@@ -34,6 +34,7 @@ import QuizEdit from './pages/QuizEdit.jsx';
 // ⭐ Payment Admin
 import PaymentAdmin from './pages/PaymentAdmin.jsx';
 import PaymentHistory from './pages/PaymentHistory.jsx';
+import PlanAdmin from './pages/PlanAdmin.jsx';
 
 // ⭐ Certificate Verification
 import CertificateVerify from './pages/CertificateVerify.jsx';
@@ -78,7 +79,7 @@ const App = () => {
 
   // Protect private pages
   useEffect(() => {
-    const protectedPaths = ['dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-edit', 'quiz-analytics', 'payment-admin', 'payment-history', 'certificate-admin'];
+    const protectedPaths = ['dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-edit', 'quiz-analytics', 'payment-admin', 'payment-history', 'certificate-admin', 'plan-admin'];
     const [pathSegment] = getPathSegments(currentPath);
 
     if (protectedPaths.includes(pathSegment) && !authState.isAuthenticated) {
@@ -211,6 +212,10 @@ const App = () => {
 
       case 'payment-history':
         return <PaymentHistory onBack={() => navigate('payment-admin')} navigate={navigate} />;
+
+      // ⭐ Plan Admin (manually grant premium plans)
+      case 'plan-admin':
+        return <PlanAdmin onBack={() => navigate('dashboard')} />;
 
       // ⭐ Certificate Verification (Public route for QR scanning)
       case 'verify-certificate':

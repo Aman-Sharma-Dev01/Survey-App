@@ -304,4 +304,109 @@ router.post('/quick-approve', protect, isAdmin, async (req, res) => {
     }
 });
 
+// @desc    Get all users with premium plans (Admin)
+// @route   GET /api/payments/premium-users
+// @access  Private (Admin only)
+router.get('/premium-users', protect, isAdmin, async (req, res) => {
+    try {
+        const users = await User.find({
+            plan: { $in: ['pro', 'power'] }
+        }).select('name email plan planActivatedAt planExpiresAt credits').sort({ planActivatedAt: -1 });
+        
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching premium users' });
+    }
+});
+
+// @desc    Grant power plan to a user by email (Admin)
+// @route   POST /api/payments/grant-plan
+// @access  Private (Admin only)
+router.post('/grant-plan', protect, isAdmin, async (req, res) => {
+    try {
+        const { email, plan = 'power', durationMonths } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required' });
+        }
+        
+        if (!['pro', 'power'].includes(plan)) {
+            return res.status(400).json({ message: 'Invalid plan. Must be pro or power.' });
+        }
+        
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found with this email' });
+        }
+        
+        // Get plan details
+        const planDetails = PLANS[plan];
+        const months = durationMonths || planDetails.durationMonths;
+        
+        // Set subscription plan
+        user.plan = plan;
+        user.planActivatedAt = new Date();
+        
+        // Calculate expiration date
+        const expirationDate = new Date();
+        expirationDate.setMonth(expirationDate.getMonth() + months);
+        user.planExpiresAt = expirationDate;
+        
+        await user.save();
+        
+        res.json({
+            message: `${planDetails.name} plan granted to ${email} until ${expirationDate.toLocaleDateString()}`,
+            user: {
+                email: user.email,
+                name: user.name,
+                plan: user.plan,
+                planActivatedAt: user.planActivatedAt,
+                planExpiresAt: user.planExpiresAt
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error granting plan' });
+    }
+});
+
+// @desc    Revoke plan from a user by email (Admin)
+// @route   POST /api/payments/revoke-plan
+// @access  Private (Admin only)
+router.post('/revoke-plan', protect, isAdmin, async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required' });
+        }
+        
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found with this email' });
+        }
+        
+        const previousPlan = user.plan;
+        
+        // Reset to free plan
+        user.plan = 'free';
+        user.planActivatedAt = null;
+        user.planExpiresAt = null;
+        
+        await user.save();
+        
+        res.json({
+            message: `Plan revoked from ${email}. Changed from ${previousPlan} to free.`,
+            user: {
+                email: user.email,
+                name: user.name,
+                plan: user.plan
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error revoking plan' });
+    }
+});
+
 export default router;

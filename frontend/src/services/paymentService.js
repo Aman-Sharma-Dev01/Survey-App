@@ -44,3 +44,18 @@ export const rejectPayment = async (paymentId) => {
 export const quickApprovePayment = async (transactionId) => {
     return fetchApi('/payments/quick-approve', 'POST', { transactionId }, true);
 };
+
+// Admin: Get all premium users
+export const getPremiumUsers = async () => {
+    return fetchApi('/payments/premium-users', 'GET', null, true);
+};
+
+// Admin: Grant plan to user by email
+export const grantPlan = async (email, plan = 'power', durationMonths = null) => {
+    return fetchApi('/payments/grant-plan', 'POST', { email, plan, durationMonths }, true);
+};
+
+// Admin: Revoke plan from user by email
+export const revokePlan = async (email) => {
+    return fetchApi('/payments/revoke-plan', 'POST', { email }, true);
+};
