@@ -1,7 +1,7 @@
 import { BASE_URL } from "./api";
 
 export async function chatQuizAI({ messages, context, model, temperature }) {
-  const r = await fetch(`${BASE_URL}/api/quiz-ai/chat`, {
+  const r = await fetch(`${BASE_URL}/quiz-ai/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
