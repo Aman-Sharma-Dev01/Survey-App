@@ -342,7 +342,8 @@ const QuizCreatePage = ({ navigate }) => {
         allowRetake: true,
         maxAttempts: 0,
         tabSwitchingEnabled: false,
-        preventDuplicateRollNo: false
+        preventDuplicateRollNo: false,
+        requireSequentialAnswering: false
     });
     const [showSettings, setShowSettings] = useState(false);
     const [status, setStatus] = useState('');
@@ -652,6 +653,19 @@ const QuizCreatePage = ({ navigate }) => {
                                 <label htmlFor="preventDuplicateRollNo" className="text-sm text-gray-700">
                                     Prevent Duplicate Roll Numbers
                                     <span className="text-xs text-gray-500 block">Same roll number can only submit once</span>
+                                </label>
+                            </div>
+                            <div className="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    id="requireSequentialAnswering"
+                                    checked={settings.requireSequentialAnswering}
+                                    onChange={(e) => setSettings(s => ({ ...s, requireSequentialAnswering: e.target.checked }))}
+                                    className="mr-2"
+                                />
+                                <label htmlFor="requireSequentialAnswering" className="text-sm text-gray-700">
+                                    Require Sequential Answering
+                                    <span className="text-xs text-gray-500 block">Must answer current question before moving to next</span>
                                 </label>
                             </div>
                         </div>

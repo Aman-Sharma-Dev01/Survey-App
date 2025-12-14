@@ -83,7 +83,8 @@ router.get('/public/:id', async (req, res) => {
                 shuffleQuestions: quiz.settings.shuffleQuestions,
                 shuffleOptions: quiz.settings.shuffleOptions,
                 tabSwitchingEnabled: quiz.settings.tabSwitchingEnabled,
-                preventDuplicateRollNo: quiz.settings.preventDuplicateRollNo
+                preventDuplicateRollNo: quiz.settings.preventDuplicateRollNo,
+                requireSequentialAnswering: quiz.settings.requireSequentialAnswering
             },
             totalPoints: quiz.questions.reduce((sum, q) => sum + (q.points || 1), 0)
         };

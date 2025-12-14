@@ -43,7 +43,8 @@ const quizSchema = mongoose.Schema(
             allowRetake: { type: Boolean, default: true },
             maxAttempts: { type: Number, default: 0 }, // 0 = unlimited
             tabSwitchingEnabled: { type: Boolean, default: false }, // Enable tab switch detection (3 switches = auto-submit)
-            preventDuplicateRollNo: { type: Boolean, default: false } // Prevent same roll number from submitting twice
+            preventDuplicateRollNo: { type: Boolean, default: false }, // Prevent same roll number from submitting twice
+            requireSequentialAnswering: { type: Boolean, default: false } // Must answer current question before moving to next
         },
         isPublished: { type: Boolean, default: false },
         attemptCount: { type: Number, default: 0 }

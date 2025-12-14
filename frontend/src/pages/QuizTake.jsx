@@ -565,26 +565,46 @@ const QuizTakePage = ({ quizId }) => {
                 </button>
 
                 <div className="flex space-x-2">
-                    {questions.map((_, idx) => (
-                        <button
-                            key={idx}
-                            onClick={() => setCurrentIndex(idx)}
-                            className={`w-8 h-8 rounded-full text-sm font-medium transition ${
-                                idx === currentIndex 
-                                    ? 'bg-emerald-600 text-white' 
-                                    : answers[questions[idx]._id] 
-                                        ? 'bg-emerald-100 text-emerald-700' 
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
-                        >
-                            {idx + 1}
-                        </button>
-                    ))}
+                    {questions.map((_, idx) => {
+                        // Check if this question can be accessed based on sequential answering setting
+                        const canAccess = !quiz?.settings?.requireSequentialAnswering || 
+                            idx <= currentIndex || 
+                            // Can access if all previous questions are answered
+                            questions.slice(0, idx).every(q => answers[q._id] && answers[q._id].length > 0);
+                        
+                        return (
+                            <button
+                                key={idx}
+                                onClick={() => canAccess && setCurrentIndex(idx)}
+                                disabled={!canAccess}
+                                className={`w-8 h-8 rounded-full text-sm font-medium transition ${
+                                    idx === currentIndex 
+                                        ? 'bg-emerald-600 text-white' 
+                                        : answers[questions[idx]._id] 
+                                            ? 'bg-emerald-100 text-emerald-700' 
+                                            : canAccess
+                                                ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+                                }`}
+                                title={!canAccess ? 'Answer the current question first' : `Go to question ${idx + 1}`}
+                            >
+                                {idx + 1}
+                            </button>
+                        );
+                    })}
                 </div>
 
                 {currentIndex < questions.length - 1 ? (
                     <button
-                        onClick={() => setCurrentIndex(prev => prev + 1)}
+                        onClick={() => {
+                            // Check if sequential answering is required and current question is unanswered
+                            if (quiz?.settings?.requireSequentialAnswering && 
+                                (!answers[currentQuestion._id] || answers[currentQuestion._id].length === 0)) {
+                                alert('Please answer the current question before moving to the next one.');
+                                return;
+                            }
+                            setCurrentIndex(prev => prev + 1);
+                        }}
                         className="px-4 py-2 rounded-lg font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition flex items-center"
                     >
                         Next <ChevronRight size={20} />
