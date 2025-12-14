@@ -1,15 +1,68 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, AlertTriangle, Maximize } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, AlertTriangle, Maximize, RefreshCw } from 'lucide-react';
 import { getPublicQuiz, submitQuizResponse, checkRollNoExists } from '../services/quizService';
 
-// Shuffle array helper
-const shuffleArray = (array) => {
+// Shuffle array helper with seed for consistency
+const shuffleArray = (array, seed = null) => {
     const arr = [...array];
-    for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
+    // If seed provided, use seeded shuffle for consistency
+    if (seed) {
+        const seededRandom = (s) => {
+            const x = Math.sin(s++) * 10000;
+            return x - Math.floor(x);
+        };
+        let seedNum = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(seededRandom(seedNum + i) * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+    } else {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
     }
     return arr;
+};
+
+// Helper to generate storage key for quiz state
+const getQuizStorageKey = (quizId, rollNo) => `quiz_state_${quizId}_${rollNo}`;
+
+// Helper to save quiz state to localStorage
+const saveQuizState = (quizId, rollNo, state) => {
+    try {
+        const key = getQuizStorageKey(quizId, rollNo);
+        localStorage.setItem(key, JSON.stringify({
+            ...state,
+            savedAt: new Date().toISOString()
+        }));
+    } catch (err) {
+        console.error('Failed to save quiz state:', err);
+    }
+};
+
+// Helper to load quiz state from localStorage
+const loadQuizState = (quizId, rollNo) => {
+    try {
+        const key = getQuizStorageKey(quizId, rollNo);
+        const saved = localStorage.getItem(key);
+        if (saved) {
+            return JSON.parse(saved);
+        }
+    } catch (err) {
+        console.error('Failed to load quiz state:', err);
+    }
+    return null;
+};
+
+// Helper to clear quiz state from localStorage
+const clearQuizState = (quizId, rollNo) => {
+    try {
+        const key = getQuizStorageKey(quizId, rollNo);
+        localStorage.removeItem(key);
+    } catch (err) {
+        console.error('Failed to clear quiz state:', err);
+    }
 };
 
 const QuizTakePage = ({ quizId }) => {
@@ -22,13 +75,17 @@ const QuizTakePage = ({ quizId }) => {
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [results, setResults] = useState(null);
     const [timeLeft, setTimeLeft] = useState(null);
-    const [startedAt] = useState(new Date());
+    const [startedAt, setStartedAt] = useState(new Date());
     const [participantName, setParticipantName] = useState('');
     const [participantClass, setParticipantClass] = useState('');
     const [participantRollNo, setParticipantRollNo] = useState('');
     const [hasStarted, setHasStarted] = useState(false);
     const [rollNoError, setRollNoError] = useState('');
     const [checkingRollNo, setCheckingRollNo] = useState(false);
+    
+    // Session restore state
+    const [restoredSession, setRestoredSession] = useState(null);
+    const [showResumePrompt, setShowResumePrompt] = useState(false);
     
     // Tab switch detection
     const [tabSwitchCount, setTabSwitchCount] = useState(0);
@@ -51,18 +108,8 @@ const QuizTakePage = ({ quizId }) => {
                 const data = await getPublicQuiz(quizId);
                 setQuiz(data);
                 
-                // Process questions (shuffle if needed)
-                let processedQuestions = data.questions;
-                if (data.settings?.shuffleQuestions) {
-                    processedQuestions = shuffleArray(processedQuestions);
-                }
-                if (data.settings?.shuffleOptions) {
-                    processedQuestions = processedQuestions.map(q => ({
-                        ...q,
-                        options: shuffleArray(q.options)
-                    }));
-                }
-                setQuestions(processedQuestions);
+                // Don't process questions yet - will be done when starting or resuming
+                setQuestions(data.questions);
                 
                 // Set timer if time limit exists
                 if (data.settings?.timeLimit > 0) {
@@ -76,6 +123,58 @@ const QuizTakePage = ({ quizId }) => {
         };
         fetchQuiz();
     }, [quizId]);
+
+    // Save quiz state periodically when quiz is in progress
+    useEffect(() => {
+        if (!hasStarted || isSubmitted || !participantRollNo) return;
+
+        const saveState = () => {
+            saveQuizState(quizId, participantRollNo, {
+                answers,
+                currentIndex,
+                timeLeft,
+                startedAt: startedAt.toISOString(),
+                participantName,
+                participantClass,
+                participantRollNo,
+                tabSwitchCount: tabSwitchRef.current,
+                fullscreenExitCount: fullscreenExitRef.current,
+                questionsOrder: questions.map(q => q._id) // Save question order for consistency
+            });
+        };
+
+        // Save immediately when state changes
+        saveState();
+
+        // Also save periodically every 5 seconds
+        const interval = setInterval(saveState, 5000);
+
+        return () => clearInterval(interval);
+    }, [hasStarted, isSubmitted, answers, currentIndex, timeLeft, participantName, participantClass, participantRollNo, quizId, questions, startedAt]);
+
+    // Check for saved session when roll number changes
+    useEffect(() => {
+        if (!quiz || !participantRollNo.trim() || hasStarted) return;
+
+        const savedState = loadQuizState(quizId, participantRollNo.trim());
+        
+        if (savedState && savedState.timeLeft > 0) {
+            // Check if the saved session is still valid (not expired - within 24 hours)
+            const savedTime = new Date(savedState.savedAt);
+            const hoursSinceSave = (new Date() - savedTime) / (1000 * 60 * 60);
+            
+            if (hoursSinceSave < 24) {
+                setRestoredSession(savedState);
+                setShowResumePrompt(true);
+            } else {
+                // Clear expired session
+                clearQuizState(quizId, participantRollNo.trim());
+            }
+        } else {
+            setRestoredSession(null);
+            setShowResumePrompt(false);
+        }
+    }, [participantRollNo, quiz, quizId, hasStarted]);
 
     // Timer countdown
     useEffect(() => {
@@ -254,11 +353,84 @@ const QuizTakePage = ({ quizId }) => {
 
             setResults(result);
             setIsSubmitted(true);
+            
+            // Clear saved state after successful submission
+            if (participantRollNo) {
+                clearQuizState(quizId, participantRollNo);
+            }
         } catch (err) {
             setError(err.message || 'Failed to submit quiz');
         } finally {
             setLoading(false);
         }
+    };
+
+    // Function to process questions with shuffling
+    const processQuestions = (quizData, savedOrder = null) => {
+        let processedQuestions = quizData.questions;
+        
+        if (savedOrder && savedOrder.length > 0) {
+            // Restore saved question order
+            const orderMap = new Map(savedOrder.map((id, idx) => [id, idx]));
+            processedQuestions = [...processedQuestions].sort((a, b) => 
+                (orderMap.get(a._id) ?? 999) - (orderMap.get(b._id) ?? 999)
+            );
+        } else if (quizData.settings?.shuffleQuestions) {
+            // Shuffle with seed for new session
+            const seed = participantRollNo || Date.now().toString();
+            processedQuestions = shuffleArray(processedQuestions, seed);
+        }
+        
+        if (quizData.settings?.shuffleOptions && !savedOrder) {
+            // Only shuffle options for new sessions
+            const seed = participantRollNo || Date.now().toString();
+            processedQuestions = processedQuestions.map((q, idx) => ({
+                ...q,
+                options: shuffleArray(q.options, seed + idx)
+            }));
+        }
+        
+        return processedQuestions;
+    };
+
+    // Function to resume from saved session
+    const resumeSession = () => {
+        if (!restoredSession) return;
+        
+        // Restore all state from saved session
+        setAnswers(restoredSession.answers || {});
+        setCurrentIndex(restoredSession.currentIndex || 0);
+        setTimeLeft(restoredSession.timeLeft);
+        setStartedAt(new Date(restoredSession.startedAt));
+        setParticipantName(restoredSession.participantName || '');
+        setParticipantClass(restoredSession.participantClass || '');
+        
+        // Restore violation counts
+        tabSwitchRef.current = restoredSession.tabSwitchCount || 0;
+        setTabSwitchCount(restoredSession.tabSwitchCount || 0);
+        fullscreenExitRef.current = restoredSession.fullscreenExitCount || 0;
+        setFullscreenExitCount(restoredSession.fullscreenExitCount || 0);
+        
+        // Process questions with saved order
+        const processedQuestions = processQuestions(quiz, restoredSession.questionsOrder);
+        setQuestions(processedQuestions);
+        
+        setShowResumePrompt(false);
+        setHasStarted(true);
+        
+        // Enter fullscreen if required
+        if (quiz?.settings?.fullscreenModeEnabled) {
+            enterFullscreen();
+        }
+    };
+
+    // Function to start fresh (discard saved session)
+    const startFresh = () => {
+        if (participantRollNo) {
+            clearQuizState(quizId, participantRollNo);
+        }
+        setRestoredSession(null);
+        setShowResumePrompt(false);
     };
 
     const currentQuestion = questions[currentIndex];
@@ -462,6 +634,29 @@ const QuizTakePage = ({ quizId }) => {
                         </p>
                     )}
 
+                    {/* Resume Session Prompt */}
+                    {showResumePrompt && restoredSession && (
+                        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className="flex items-center justify-center text-blue-700 mb-2">
+                                <RefreshCw size={20} className="mr-2" />
+                                <span className="font-medium">Previous Session Found!</span>
+                            </div>
+                            <p className="text-blue-600 text-sm mb-3">
+                                You have an incomplete quiz session with {formatTime(restoredSession.timeLeft)} remaining 
+                                and {Object.keys(restoredSession.answers || {}).length} question(s) answered.
+                            </p>
+                            <div className="flex justify-center">
+                                <button
+                                    onClick={resumeSession}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm flex items-center"
+                                >
+                                    <RefreshCw size={16} className="mr-1" />
+                                    Resume Quiz
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Fullscreen Mode Notice */}
                     {quiz?.settings?.fullscreenModeEnabled && (
                         <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
@@ -475,54 +670,61 @@ const QuizTakePage = ({ quizId }) => {
                         </div>
                     )}
 
-                    <button
-                        onClick={async () => {
-                            // Validate required fields when classes exist
-                            if (quiz.classes && quiz.classes.length > 0) {
-                                if (!participantName.trim()) {
-                                    alert('Please enter your name');
-                                    return;
-                                }
-                                if (!participantClass) {
-                                    alert('Please select your class');
-                                    return;
-                                }
-                                if (!participantRollNo.trim()) {
-                                    alert('Please enter your roll number');
-                                    return;
-                                }
-                            }
-
-                            // Check if roll number exists before starting (only if setting is enabled)
-                            if (quiz?.settings?.preventDuplicateRollNo && participantRollNo && participantRollNo.trim()) {
-                                setCheckingRollNo(true);
-                                setRollNoError('');
-                                try {
-                                    const result = await checkRollNoExists(quizId, participantRollNo.trim());
-                                    if (result.exists) {
-                                        setRollNoError(result.message);
-                                        setCheckingRollNo(false);
+                    {/* Start/Resume Button - hide if resume prompt is shown */}
+                    {!showResumePrompt && (
+                        <button
+                            onClick={async () => {
+                                // Validate required fields when classes exist
+                                if (quiz.classes && quiz.classes.length > 0) {
+                                    if (!participantName.trim()) {
+                                        alert('Please enter your name');
                                         return;
                                     }
-                                } catch (err) {
-                                    console.error('Error checking roll number:', err);
+                                    if (!participantClass) {
+                                        alert('Please select your class');
+                                        return;
+                                    }
+                                    if (!participantRollNo.trim()) {
+                                        alert('Please enter your roll number');
+                                        return;
+                                    }
                                 }
-                                setCheckingRollNo(false);
-                            }
 
-                            // Enter fullscreen if required
-                            if (quiz?.settings?.fullscreenModeEnabled) {
-                                await enterFullscreen();
-                            }
+                                // Check if roll number exists before starting (only if setting is enabled)
+                                if (quiz?.settings?.preventDuplicateRollNo && participantRollNo && participantRollNo.trim()) {
+                                    setCheckingRollNo(true);
+                                    setRollNoError('');
+                                    try {
+                                        const result = await checkRollNoExists(quizId, participantRollNo.trim());
+                                        if (result.exists) {
+                                            setRollNoError(result.message);
+                                            setCheckingRollNo(false);
+                                            return;
+                                        }
+                                    } catch (err) {
+                                        console.error('Error checking roll number:', err);
+                                    }
+                                    setCheckingRollNo(false);
+                                }
 
-                            setHasStarted(true);
-                        }}
-                        disabled={checkingRollNo || (quiz.classes && quiz.classes.length > 0 && (!participantName.trim() || !participantClass || !participantRollNo.trim()))}
-                        className="px-8 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mx-auto"
-                    >
-                        {quiz?.settings?.fullscreenModeEnabled && <Maximize size={20} className="mr-2" />}
-                        {checkingRollNo ? 'Checking...' : quiz?.settings?.fullscreenModeEnabled ? 'Enter Fullscreen & Start Quiz' : 'Start Quiz'}
-                    </button>
+                                // Process questions for new session
+                                const processedQuestions = processQuestions(quiz);
+                                setQuestions(processedQuestions);
+
+                                // Enter fullscreen if required
+                                if (quiz?.settings?.fullscreenModeEnabled) {
+                                    await enterFullscreen();
+                                }
+
+                                setHasStarted(true);
+                            }}
+                            disabled={checkingRollNo || (quiz.classes && quiz.classes.length > 0 && (!participantName.trim() || !participantClass || !participantRollNo.trim()))}
+                            className="px-8 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mx-auto"
+                        >
+                            {quiz?.settings?.fullscreenModeEnabled && <Maximize size={20} className="mr-2" />}
+                            {checkingRollNo ? 'Checking...' : quiz?.settings?.fullscreenModeEnabled ? 'Enter Fullscreen & Start Quiz' : 'Start Quiz'}
+                        </button>
+                    )}
                 </div>
             </div>
         );
