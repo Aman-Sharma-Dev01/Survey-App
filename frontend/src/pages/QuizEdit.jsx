@@ -349,7 +349,11 @@ const QuizEditPage = ({ quizId, navigate }) => {
                 setTitle(quiz.title || '');
                 setDescription(quiz.description || '');
                 setClasses(quiz.classes || []);
-                setSettings(quiz.settings || settings);
+                // Merge quiz settings with defaults to ensure new fields are included
+                setSettings(prevSettings => ({
+                    ...prevSettings,
+                    ...(quiz.settings || {})
+                }));
                 // Add tempId to each question for editing
                 setQuestions(quiz.questions?.map(q => ({
                     ...q,
