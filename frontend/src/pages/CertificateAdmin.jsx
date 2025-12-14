@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext.jsx';
+import { ShieldX } from 'lucide-react';
 import {
     getAllCertificates,
     createCertificate,
@@ -11,11 +13,18 @@ import {
     getVerificationUrl
 } from '../services/certificateService';
 
+// Admin email(s) allowed to access this page (must match backend)
+const ADMIN_EMAILS = ['support@surveyzen.live'];
+
 const CertificateAdmin = ({ navigate }) => {
+    const { user, isLoading: authLoading } = useAuth();
     const [certificates, setCertificates] = useState([]);
     const [stats, setStats] = useState({ total: 0, valid: 0, revoked: 0, thisMonth: 0 });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    
+    // Check if user is admin
+    const isAdmin = user && ADMIN_EMAILS.includes(user.email);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -189,6 +198,41 @@ const CertificateAdmin = ({ navigate }) => {
             day: 'numeric'
         });
     };
+
+    // Show loading while checking auth
+    if (authLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-2 border-indigo-500 border-t-transparent mx-auto"></div>
+                    <p className="text-gray-500 mt-4">Loading...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Show access denied for non-admin users
+    if (!isAdmin) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+                <div className="text-center max-w-md">
+                    <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <ShieldX size={40} className="text-red-500" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
+                    <p className="text-gray-600 mb-6">
+                        This page is restricted to administrators only. You don't have permission to view this content.
+                    </p>
+                    <button
+                        onClick={() => navigate?.('dashboard')}
+                        className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                    >
+                        ← Go to Dashboard
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-8">
