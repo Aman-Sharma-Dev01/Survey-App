@@ -530,28 +530,29 @@ const QuizTakePage = ({ quizId }) => {
 
     // Quiz Taking Screen
     return (
-        <div className="max-w-3xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div className="max-w-3xl mx-auto p-2 sm:p-4 md:p-6 lg:p-8 min-h-screen flex flex-col">
             {/* Tab Switch Warning Modal */}
             {showTabWarning && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md mx-4 text-center animate-pulse">
-                        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <AlertTriangle size={40} className="text-red-600" />
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl p-4 sm:p-8 max-w-md w-full text-center">
+                        <div className="w-14 h-14 sm:w-20 sm:h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                            <AlertTriangle size={28} className="text-red-600 sm:hidden" />
+                            <AlertTriangle size={40} className="text-red-600 hidden sm:block" />
                         </div>
-                        <h2 className="text-2xl font-bold text-red-600 mb-2">Warning!</h2>
-                        <p className="text-gray-700 mb-4">
-                            Tab switching detected! You have switched tabs <span className="font-bold text-red-600">{tabSwitchCount}</span> time{tabSwitchCount > 1 ? 's' : ''}.
+                        <h2 className="text-xl sm:text-2xl font-bold text-red-600 mb-2">Warning!</h2>
+                        <p className="text-sm sm:text-base text-gray-700 mb-3 sm:mb-4">
+                            Tab switching detected! Switches: <span className="font-bold text-red-600">{tabSwitchCount}/3</span>
                         </p>
-                        <p className="text-gray-600 mb-6">
+                        <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">
                             {3 - tabSwitchCount > 0 
-                                ? `Your quiz will be auto-submitted after ${3 - tabSwitchCount} more switch${3 - tabSwitchCount > 1 ? 'es' : ''}.`
-                                : 'Your quiz is being submitted...'}
+                                ? `Auto-submit after ${3 - tabSwitchCount} more.`
+                                : 'Submitting...'}
                         </p>
                         <button
                             onClick={() => setShowTabWarning(false)}
-                            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
+                            className="px-4 sm:px-6 py-2 sm:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium text-sm sm:text-base"
                         >
-                            I Understand, Continue Quiz
+                            Continue Quiz
                         </button>
                     </div>
                 </div>
@@ -559,40 +560,39 @@ const QuizTakePage = ({ quizId }) => {
 
             {/* Tab Switch Warning Banner */}
             {quiz?.settings?.tabSwitchingEnabled && tabSwitchCount > 0 && !showTabWarning && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 flex items-center justify-between">
-                    <div className="flex items-center">
-                        <AlertTriangle size={20} className="text-red-600 mr-2" />
-                        <span className="text-red-700 text-sm font-medium">
-                            Tab switches: {tabSwitchCount}/3 - Quiz will auto-submit after 3 switches
-                        </span>
-                    </div>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-2 sm:p-3 mb-2 sm:mb-4 flex items-center">
+                    <AlertTriangle size={16} className="text-red-600 mr-2 flex-shrink-0" />
+                    <span className="text-red-700 text-xs sm:text-sm font-medium">
+                        Tab switches: {tabSwitchCount}/3
+                    </span>
                 </div>
             )}
 
             {/* Fullscreen Exit Warning Modal */}
             {showFullscreenWarning && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md mx-4 text-center">
-                        <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Maximize size={40} className="text-orange-600" />
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl p-4 sm:p-8 max-w-md w-full text-center">
+                        <div className="w-14 h-14 sm:w-20 sm:h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                            <Maximize size={28} className="text-orange-600 sm:hidden" />
+                            <Maximize size={40} className="text-orange-600 hidden sm:block" />
                         </div>
-                        <h2 className="text-2xl font-bold text-orange-600 mb-2">Fullscreen Required!</h2>
-                        <p className="text-gray-700 mb-4">
-                            You have exited fullscreen mode <span className="font-bold text-orange-600">{fullscreenExitCount}</span> time{fullscreenExitCount > 1 ? 's' : ''}.
+                        <h2 className="text-xl sm:text-2xl font-bold text-orange-600 mb-2">Fullscreen Required!</h2>
+                        <p className="text-sm sm:text-base text-gray-700 mb-3 sm:mb-4">
+                            Fullscreen exits: <span className="font-bold text-orange-600">{fullscreenExitCount}/3</span>
                         </p>
-                        <p className="text-gray-600 mb-6">
+                        <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">
                             {3 - fullscreenExitCount > 0 
-                                ? `Your quiz will be auto-submitted after ${3 - fullscreenExitCount} more exit${3 - fullscreenExitCount > 1 ? 's' : ''}.`
-                                : 'Your quiz is being submitted...'}
+                                ? `Auto-submit after ${3 - fullscreenExitCount} more exit${3 - fullscreenExitCount > 1 ? 's' : ''}.`
+                                : 'Submitting...'}
                         </p>
                         <button
                             onClick={() => {
                                 setShowFullscreenWarning(false);
                                 enterFullscreen();
                             }}
-                            className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium flex items-center justify-center mx-auto"
+                            className="px-4 sm:px-6 py-2 sm:py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium flex items-center justify-center mx-auto text-sm sm:text-base"
                         >
-                            <Maximize size={18} className="mr-2" />
+                            <Maximize size={16} className="mr-2" />
                             Return to Fullscreen
                         </button>
                     </div>
@@ -601,40 +601,41 @@ const QuizTakePage = ({ quizId }) => {
 
             {/* Fullscreen Prompt Banner */}
             {quiz?.settings?.fullscreenModeEnabled && !isFullscreen && !showFullscreenWarning && fullscreenExitCount > 0 && (
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4 flex items-center justify-between">
-                    <div className="flex items-center">
-                        <Maximize size={20} className="text-orange-600 mr-2" />
-                        <span className="text-orange-700 text-sm font-medium">
-                            Fullscreen exits: {fullscreenExitCount}/3 - Quiz will auto-submit after 3 exits
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-2 sm:p-3 mb-2 sm:mb-4 flex items-center justify-between gap-2">
+                    <div className="flex items-center flex-1 min-w-0">
+                        <Maximize size={16} className="text-orange-600 mr-2 flex-shrink-0" />
+                        <span className="text-orange-700 text-xs sm:text-sm font-medium truncate">
+                            Exits: {fullscreenExitCount}/3
                         </span>
                     </div>
                     <button
                         onClick={enterFullscreen}
-                        className="px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition"
+                        className="px-2 sm:px-3 py-1 bg-orange-600 text-white rounded text-xs sm:text-sm hover:bg-orange-700 transition flex-shrink-0"
                     >
-                        Re-enter Fullscreen
+                        Fullscreen
                     </button>
                 </div>
             )}
 
             {/* Header with Timer and Progress */}
-            <div className="bg-white rounded-xl shadow-lg p-4 mb-6 sticky top-0 z-10">
-                <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600">
-                        Question {currentIndex + 1} of {questions.length}
+            <div className="bg-white rounded-xl shadow-lg p-2 sm:p-4 mb-3 sm:mb-6 sticky top-0 z-10 flex-shrink-0">
+                <div className="flex items-center justify-between mb-1 sm:mb-2">
+                    <span className="text-xs sm:text-sm font-medium text-gray-600">
+                        Q {currentIndex + 1}/{questions.length}
                     </span>
                     {timeLeft !== null && (
-                        <div className={`flex items-center font-mono text-lg font-bold ${
+                        <div className={`flex items-center font-mono text-sm sm:text-lg font-bold ${
                             timeLeft < 60 ? 'text-red-600' : 'text-emerald-600'
                         }`}>
-                            <Clock size={20} className="mr-1" />
+                            <Clock size={16} className="mr-1 sm:hidden" />
+                            <Clock size={20} className="mr-1 hidden sm:block" />
                             {formatTime(timeLeft)}
                         </div>
                     )}
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2">
                     <div 
-                        className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
+                        className="bg-emerald-600 h-1.5 sm:h-2 rounded-full transition-all duration-300"
                         style={{ width: `${progress}%` }}
                     />
                 </div>
@@ -642,34 +643,34 @@ const QuizTakePage = ({ quizId }) => {
 
             {/* Question Card */}
             {currentQuestion && (
-                <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-                    <div className="flex justify-between items-start mb-4">
-                        <h2 className="text-xl font-semibold text-gray-800">
+                <div className="bg-white rounded-xl shadow-lg p-3 sm:p-6 mb-3 sm:mb-6 flex-1 overflow-y-auto">
+                    <div className="flex justify-between items-start mb-2 sm:mb-4 gap-2">
+                        <h2 className="text-base sm:text-xl font-semibold text-gray-800 flex-1">
                             {currentQuestion.questionText}
                         </h2>
-                        <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-sm font-medium">
+                        <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs sm:text-sm font-medium flex-shrink-0">
                             {currentQuestion.points} pts
                         </span>
                     </div>
 
                     {/* Question Image */}
                     {currentQuestion.questionImage?.url && (
-                        <div className="mb-4">
+                        <div className="mb-3 sm:mb-4">
                             <img 
                                 src={currentQuestion.questionImage.url} 
                                 alt="Question diagram" 
-                                className="max-w-full max-h-64 rounded-lg border border-gray-200 object-contain mx-auto"
+                                className="max-w-full max-h-40 sm:max-h-64 rounded-lg border border-gray-200 object-contain mx-auto"
                             />
                         </div>
                     )}
 
-                    <p className="text-sm text-gray-500 mb-4">
+                    <p className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-4">
                         {currentQuestion.questionType === 'MULTIPLE' 
                             ? 'Select all that apply' 
                             : 'Select one answer'}
                     </p>
 
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                         {currentQuestion.options.map((option, idx) => {
                             const isSelected = (answers[currentQuestion._id] || []).includes(option.optionText);
                             const isMultiple = currentQuestion.questionType === 'MULTIPLE';
@@ -678,26 +679,27 @@ const QuizTakePage = ({ quizId }) => {
                                 <button
                                     key={idx}
                                     onClick={() => handleOptionSelect(currentQuestion._id, option.optionText, isMultiple)}
-                                    className={`w-full p-4 text-left rounded-lg border-2 transition ${
+                                    className={`w-full p-2.5 sm:p-4 text-left rounded-lg border-2 transition ${
                                         isSelected 
                                             ? 'border-emerald-500 bg-emerald-50 text-emerald-800' 
                                             : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
                                     }`}
                                 >
                                     <div className="flex items-center">
-                                        <div className={`w-5 h-5 mr-3 rounded-${isMultiple ? 'md' : 'full'} border-2 flex items-center justify-center flex-shrink-0 ${
+                                        <div className={`w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 rounded-${isMultiple ? 'md' : 'full'} border-2 flex items-center justify-center flex-shrink-0 ${
                                             isSelected ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'
                                         }`}>
-                                            {isSelected && <CheckCircle size={14} className="text-white" />}
+                                            {isSelected && <CheckCircle size={10} className="text-white sm:hidden" />}
+                                            {isSelected && <CheckCircle size={14} className="text-white hidden sm:block" />}
                                         </div>
                                         <div className="flex-1">
-                                            <span>{option.optionText}</span>
+                                            <span className="text-sm sm:text-base">{option.optionText}</span>
                                             {/* Option Image */}
                                             {option.optionImage?.url && (
                                                 <img 
                                                     src={option.optionImage.url} 
                                                     alt={`Option ${idx + 1}`} 
-                                                    className="mt-2 max-w-full max-h-32 rounded border border-gray-200 object-contain"
+                                                    className="mt-2 max-w-full max-h-20 sm:max-h-32 rounded border border-gray-200 object-contain"
                                                 />
                                             )}
                                         </div>
@@ -710,16 +712,17 @@ const QuizTakePage = ({ quizId }) => {
             )}
 
             {/* Navigation */}
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center gap-2 pb-2 sm:pb-0 flex-shrink-0 bg-gray-50 sm:bg-transparent -mx-2 sm:mx-0 px-2 sm:px-0 py-2 sm:py-0 sticky bottom-0 sm:static">
                 <button
                     onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
                     disabled={currentIndex === 0}
-                    className="px-4 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
+                    className="px-3 sm:px-4 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 text-gray-700 hover:bg-gray-200 transition text-sm sm:text-base"
                 >
-                    Previous
+                    Prev
                 </button>
 
-                <div className="flex space-x-2">
+                {/* Question indicators - hidden on small mobile, scrollable on larger screens */}
+                <div className="hidden sm:flex space-x-1 sm:space-x-2 overflow-x-auto max-w-[40%] scrollbar-hide">
                     {questions.map((_, idx) => {
                         // Check if this question can be accessed based on sequential answering setting
                         const canAccess = !quiz?.settings?.requireSequentialAnswering || 
@@ -732,7 +735,7 @@ const QuizTakePage = ({ quizId }) => {
                                 key={idx}
                                 onClick={() => canAccess && setCurrentIndex(idx)}
                                 disabled={!canAccess}
-                                className={`w-8 h-8 rounded-full text-sm font-medium transition ${
+                                className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full text-xs sm:text-sm font-medium transition flex-shrink-0 ${
                                     idx === currentIndex 
                                         ? 'bg-emerald-600 text-white' 
                                         : answers[questions[idx]._id] 
@@ -749,6 +752,11 @@ const QuizTakePage = ({ quizId }) => {
                     })}
                 </div>
 
+                {/* Mobile: Show simple indicator instead of all buttons */}
+                <div className="sm:hidden text-xs text-gray-500 font-medium">
+                    {currentIndex + 1} / {questions.length}
+                </div>
+
                 {currentIndex < questions.length - 1 ? (
                     <button
                         onClick={() => {
@@ -760,17 +768,17 @@ const QuizTakePage = ({ quizId }) => {
                             }
                             setCurrentIndex(prev => prev + 1);
                         }}
-                        className="px-4 py-2 rounded-lg font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition flex items-center"
+                        className="px-3 sm:px-4 py-2 rounded-lg font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition flex items-center text-sm sm:text-base"
                     >
-                        Next <ChevronRight size={20} />
+                        Next <ChevronRight size={16} className="sm:hidden" /><ChevronRight size={20} className="hidden sm:block" />
                     </button>
                 ) : (
                     <button
                         onClick={() => handleSubmit(false)}
                         disabled={loading}
-                        className="px-6 py-2 rounded-lg font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition disabled:opacity-50"
+                        className="px-4 sm:px-6 py-2 rounded-lg font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition disabled:opacity-50 text-sm sm:text-base"
                     >
-                        {loading ? 'Submitting...' : 'Submit Quiz'}
+                        {loading ? 'Submitting...' : 'Submit'}
                     </button>
                 )}
             </div>
