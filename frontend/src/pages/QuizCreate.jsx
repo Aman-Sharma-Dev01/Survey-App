@@ -3,6 +3,7 @@ import { PlusCircle, Trash2, ChevronDown, ChevronUp, Check, Settings, Clock, Hel
 import { generateTempId } from '../services/api';
 import { createQuiz } from '../services/quizService';
 import { uploadImage, deleteImage } from '../services/uploadService';
+import QuizChatWidget from '../components/QuizChatWidget';
 
 // Image Upload Component
 const ImageUploader = ({ image, onUpload, onRemove, label }) => {
@@ -389,6 +390,33 @@ const QuizCreatePage = ({ navigate }) => {
         setQuestions(prev => prev.filter(q => q.tempId !== tempId));
     };
 
+    // Handler for AI-imported questions
+    const onImportQuestions = (newQs) => {
+        if (!Array.isArray(newQs) || newQs.length === 0) {
+            setStatus('Error: Nothing to import from AI.');
+            return;
+        }
+
+        // Normalize shape and ensure tempIds
+        const normalized = newQs.map((q) => ({
+            tempId: q.tempId || generateTempId(),
+            questionText: q.questionText?.trim() || '',
+            questionType: q.questionType || 'SINGLE',
+            options: Array.isArray(q.options) ? q.options.map((o, idx) => ({
+                optionText: typeof o === 'string' ? o : (o.optionText || `Option ${idx + 1}`),
+                isCorrect: typeof o === 'object' ? Boolean(o.isCorrect) : false
+            })) : [
+                { optionText: 'Option 1', isCorrect: false },
+                { optionText: 'Option 2', isCorrect: false }
+            ],
+            points: q.points || 1,
+            explanation: q.explanation || ''
+        }));
+
+        setQuestions((prev) => [...prev, ...normalized]);
+        setStatus(`Imported ${normalized.length} question${normalized.length > 1 ? 's' : ''} from AI.`);
+    };
+
     const validateQuiz = () => {
         if (!title.trim()) return 'Quiz title is required';
         if (questions.length === 0) return 'Add at least one question';
@@ -670,6 +698,13 @@ const QuizCreatePage = ({ navigate }) => {
                     {loading ? 'Creating Quiz...' : 'Create Quiz'}
                 </button>
             </form>
+
+            {/* AI Quiz Assistant */}
+            <QuizChatWidget
+                quiz={{ title, description, questions }}
+                onImportQuestions={onImportQuestions}
+                navigate={navigate}
+            />
         </div>
     );
 };
