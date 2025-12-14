@@ -36,6 +36,9 @@ import PaymentAdmin from './pages/PaymentAdmin.jsx';
 import PaymentHistory from './pages/PaymentHistory.jsx';
 import PlanAdmin from './pages/PlanAdmin.jsx';
 
+// ⭐ Admin Dashboard
+import AdminDashboard from './pages/AdminDashboard.jsx';
+
 // ⭐ Certificate Verification
 import CertificateVerify from './pages/CertificateVerify.jsx';
 import CertificateAdmin from './pages/CertificateAdmin.jsx';
@@ -79,7 +82,7 @@ const App = () => {
 
   // Protect private pages
   useEffect(() => {
-    const protectedPaths = ['dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-edit', 'quiz-analytics', 'payment-admin', 'payment-history', 'certificate-admin', 'plan-admin'];
+    const protectedPaths = ['dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-edit', 'quiz-analytics', 'payment-admin', 'payment-history', 'certificate-admin', 'plan-admin', 'admin-dashboard'];
     const [pathSegment] = getPathSegments(currentPath);
 
     if (protectedPaths.includes(pathSegment) && !authState.isAuthenticated) {
@@ -208,14 +211,18 @@ const App = () => {
 
       // ⭐ Payment Admin (only for you)
       case 'payment-admin':
-        return <PaymentAdmin onBack={() => navigate('dashboard')} navigate={navigate} />;
+        return <PaymentAdmin onBack={() => navigate('admin-dashboard')} navigate={navigate} />;
 
       case 'payment-history':
-        return <PaymentHistory onBack={() => navigate('payment-admin')} navigate={navigate} />;
+        return <PaymentHistory onBack={() => navigate('admin-dashboard')} navigate={navigate} />;
 
       // ⭐ Plan Admin (manually grant premium plans)
       case 'plan-admin':
-        return <PlanAdmin onBack={() => navigate('dashboard')} />;
+        return <PlanAdmin onBack={() => navigate('admin-dashboard')} />;
+
+      // ⭐ Admin Dashboard (admin only)
+      case 'admin-dashboard':
+        return <AdminDashboard navigate={navigate} />;
 
       // ⭐ Certificate Verification (Public route for QR scanning)
       case 'verify-certificate':

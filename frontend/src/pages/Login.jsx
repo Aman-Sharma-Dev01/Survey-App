@@ -46,8 +46,8 @@ const LoginPage = ({ navigate }) => {
         try {
             const data = await googleAuth(response.credential);
             login({ email: data.email, name: data.name, avatar: data.avatar }, data.token);
-            // Redirect admin to admin page, others to dashboard
-            navigate(data.email === ADMIN_EMAIL ? 'payment-admin' : 'dashboard');
+            // Redirect admin to admin dashboard, others to regular dashboard
+            navigate(data.email === ADMIN_EMAIL ? 'admin-dashboard' : 'dashboard');
         } catch (err) {
             setError(err.message || 'Google sign-in failed. Please try again.');
         } finally {
@@ -82,8 +82,8 @@ const LoginPage = ({ navigate }) => {
         try {
             const data = await loginCreator({ email, password });
             login({ email: data.email, name: data.name, avatar: data.avatar }, data.token);
-            // Redirect admin to admin page, others to dashboard
-            navigate(data.email === ADMIN_EMAIL ? 'payment-admin' : 'dashboard');
+            // Redirect admin to admin dashboard, others to regular dashboard
+            navigate(data.email === ADMIN_EMAIL ? 'admin-dashboard' : 'dashboard');
         } catch (err) {
             const msg = err.message || 'Login failed. Check your credentials.';
             setError(msg);

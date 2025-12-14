@@ -1,0 +1,221 @@
+import React from 'react';
+import { 
+    CreditCard, 
+    History, 
+    Crown, 
+    Award, 
+    LayoutDashboard, 
+    HelpCircle, 
+    PlusCircle,
+    Users,
+    Settings,
+    ShieldCheck
+} from 'lucide-react';
+import { useAuth } from '../context/AuthContext.jsx';
+
+// Admin email allowed to access this page
+const ADMIN_EMAIL = 'support@surveyzen.live';
+
+const AdminCard = ({ icon: Icon, title, description, color, onClick }) => {
+    const colorClasses = {
+        indigo: 'from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700',
+        purple: 'from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700',
+        amber: 'from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600',
+        green: 'from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700',
+        blue: 'from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700',
+        pink: 'from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700',
+        teal: 'from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700',
+    };
+
+    return (
+        <button
+            onClick={onClick}
+            className={`group relative bg-gradient-to-br ${colorClasses[color]} p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-white text-left w-full`}
+        >
+            <div className="flex items-start gap-4">
+                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm group-hover:bg-white/30 transition">
+                    <Icon size={28} className="text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-bold mb-1">{title}</h3>
+                    <p className="text-sm text-white/80">{description}</p>
+                </div>
+            </div>
+            <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition">
+                <Icon size={60} />
+            </div>
+        </button>
+    );
+};
+
+const AdminDashboard = ({ navigate }) => {
+    const { user } = useAuth();
+    
+    // Check if current user is admin
+    const isAdmin = user?.email === ADMIN_EMAIL;
+
+    // Access denied screen for non-admins
+    if (!isAdmin) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
+                    <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <ShieldCheck size={40} className="text-red-500" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-gray-800 mb-3">Access Denied</h1>
+                    <p className="text-gray-600 mb-6">
+                        This page is only accessible to administrators.
+                    </p>
+                    <button
+                        onClick={() => navigate('dashboard')}
+                        className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition"
+                    >
+                        Go to Dashboard
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const adminFeatures = [
+        {
+            icon: CreditCard,
+            title: 'Payment Verification',
+            description: 'Review and approve pending payment requests',
+            color: 'green',
+            route: 'payment-admin'
+        },
+        {
+            icon: History,
+            title: 'Payment History',
+            description: 'View all payment transactions and history',
+            color: 'purple',
+            route: 'payment-history'
+        },
+        {
+            icon: Crown,
+            title: 'Plan Management',
+            description: 'Manually grant or revoke premium plans',
+            color: 'amber',
+            route: 'plan-admin'
+        },
+        {
+            icon: Award,
+            title: 'Certificate Manager',
+            description: 'Create and manage quiz certificates',
+            color: 'blue',
+            route: 'certificate-admin'
+        }
+    ];
+
+    const quickLinks = [
+        {
+            icon: LayoutDashboard,
+            title: 'Surveys',
+            description: 'View and manage surveys',
+            color: 'indigo',
+            route: 'dashboard'
+        },
+        {
+            icon: HelpCircle,
+            title: 'Quizzes',
+            description: 'View and manage quizzes',
+            color: 'teal',
+            route: 'quiz-dashboard'
+        },
+        {
+            icon: PlusCircle,
+            title: 'Create Survey',
+            description: 'Create a new survey',
+            color: 'pink',
+            route: 'create'
+        }
+    ];
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
+            <div className="max-w-6xl mx-auto">
+                {/* Header */}
+                <div className="mb-8 text-center">
+                    <div className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                        <ShieldCheck size={18} />
+                        Admin Access
+                    </div>
+                    <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+                        Admin Dashboard
+                    </h1>
+                    <p className="text-gray-600">
+                        Welcome back, {user?.name}! Manage your platform from here.
+                    </p>
+                </div>
+
+                {/* Admin Features Grid */}
+                <div className="mb-10">
+                    <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <Settings size={22} className="text-gray-600" />
+                        Admin Tools
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {adminFeatures.map((feature, index) => (
+                            <AdminCard
+                                key={index}
+                                icon={feature.icon}
+                                title={feature.title}
+                                description={feature.description}
+                                color={feature.color}
+                                onClick={() => navigate(feature.route)}
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                {/* Quick Links */}
+                <div>
+                    <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <Users size={22} className="text-gray-600" />
+                        Quick Links
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        {quickLinks.map((link, index) => (
+                            <AdminCard
+                                key={index}
+                                icon={link.icon}
+                                title={link.title}
+                                description={link.description}
+                                color={link.color}
+                                onClick={() => navigate(link.route)}
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                {/* Stats Preview */}
+                <div className="mt-10 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                    <h2 className="text-lg font-bold text-gray-800 mb-4">Quick Stats</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="text-center p-4 bg-indigo-50 rounded-xl">
+                            <p className="text-2xl font-bold text-indigo-600">{user?.credits || 0}</p>
+                            <p className="text-sm text-gray-600">Your Credits</p>
+                        </div>
+                        <div className="text-center p-4 bg-green-50 rounded-xl">
+                            <p className="text-2xl font-bold text-green-600 capitalize">{user?.plan || 'Free'}</p>
+                            <p className="text-sm text-gray-600">Current Plan</p>
+                        </div>
+                        <div className="text-center p-4 bg-purple-50 rounded-xl">
+                            <p className="text-2xl font-bold text-purple-600">
+                                {user?.planExpiresAt ? new Date(user.planExpiresAt).toLocaleDateString() : 'N/A'}
+                            </p>
+                            <p className="text-sm text-gray-600">Plan Expires</p>
+                        </div>
+                        <div className="text-center p-4 bg-amber-50 rounded-xl">
+                            <p className="text-2xl font-bold text-amber-600">Admin</p>
+                            <p className="text-sm text-gray-600">Role</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default AdminDashboard;
