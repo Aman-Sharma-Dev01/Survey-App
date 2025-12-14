@@ -44,6 +44,7 @@ const ADMIN_EMAIL = 'support@surveyzen.live';
 
 // === Components ===
 import Navbar from './components/Navbar';
+import OfflineBanner from './components/OfflineBanner';
 
 // Helper for navigation (hash routing)
 const navigate = (path) => {
@@ -233,6 +234,9 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans w-full overflow-x-hidden">
+      {/* Offline Banner - shows when user is offline */}
+      <OfflineBanner />
+      
       {/* Show navbar on internal pages only */}
       {shouldShowNavbar && (
         <Navbar currentPage={pathRoot} handleNavigate={navigate} />
