@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:5000';
+import { BASE_URL } from "./api";
 
 export async function chatQuizAI({ messages, context, model, temperature }) {
   const r = await fetch(`${BASE_URL}/api/quiz-ai/chat`, {
