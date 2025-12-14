@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, AlertTriangle, Maximize } from 'lucide-react';
 import { getPublicQuiz, submitQuizResponse, checkRollNoExists } from '../services/quizService';
 
 // Shuffle array helper
@@ -34,6 +34,12 @@ const QuizTakePage = ({ quizId }) => {
     const [tabSwitchCount, setTabSwitchCount] = useState(0);
     const [showTabWarning, setShowTabWarning] = useState(false);
     const tabSwitchRef = useRef(0);
+
+    // Fullscreen mode detection
+    const [fullscreenExitCount, setFullscreenExitCount] = useState(0);
+    const [showFullscreenWarning, setShowFullscreenWarning] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const fullscreenExitRef = useRef(0);
 
     const timerRef = useRef(null);
 
@@ -116,6 +122,71 @@ const QuizTakePage = ({ quizId }) => {
         };
     }, [hasStarted, isSubmitted, quiz?.settings?.tabSwitchingEnabled]);
 
+    // Fullscreen utility functions
+    const enterFullscreen = useCallback(async () => {
+        try {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                await elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                await elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                await elem.msRequestFullscreen();
+            }
+            setIsFullscreen(true);
+        } catch (err) {
+            console.error('Failed to enter fullscreen:', err);
+        }
+    }, []);
+
+    const checkFullscreen = useCallback(() => {
+        return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+    }, []);
+
+    // Fullscreen mode enforcement - only if enabled in quiz settings
+    useEffect(() => {
+        if (!hasStarted || isSubmitted || !quiz?.settings?.fullscreenModeEnabled) return;
+
+        const handleFullscreenChange = () => {
+            const isCurrentlyFullscreen = checkFullscreen();
+            setIsFullscreen(isCurrentlyFullscreen);
+
+            if (!isCurrentlyFullscreen && hasStarted && !isSubmitted) {
+                // User exited fullscreen
+                fullscreenExitRef.current += 1;
+                setFullscreenExitCount(fullscreenExitRef.current);
+
+                if (fullscreenExitRef.current >= 3) {
+                    // Auto-submit after 3 fullscreen exits
+                    setShowFullscreenWarning(false);
+                    handleSubmit(true, false, true); // autoSubmit=true, dueToTabSwitch=false, dueToFullscreenExit=true
+                } else {
+                    // Show warning and prompt to re-enter fullscreen
+                    setShowFullscreenWarning(true);
+                }
+            }
+        };
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+        // Also detect escape key press which might exit fullscreen
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape' && checkFullscreen()) {
+                e.preventDefault();
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [hasStarted, isSubmitted, quiz?.settings?.fullscreenModeEnabled, checkFullscreen]);
+
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -139,9 +210,24 @@ const QuizTakePage = ({ quizId }) => {
         });
     };
 
-    const handleSubmit = async (autoSubmit = false, dueToTabSwitch = false) => {
+    const handleSubmit = async (autoSubmit = false, dueToTabSwitch = false, dueToFullscreenExit = false) => {
         if (!autoSubmit && !window.confirm('Submit your quiz? You cannot change answers after submission.')) {
             return;
+        }
+
+        // Exit fullscreen before submitting
+        if (checkFullscreen()) {
+            try {
+                if (document.exitFullscreen) {
+                    await document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    await document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    await document.msExitFullscreen();
+                }
+            } catch (err) {
+                console.error('Failed to exit fullscreen:', err);
+            }
         }
 
         clearInterval(timerRef.current);
@@ -162,7 +248,8 @@ const QuizTakePage = ({ quizId }) => {
                 participantRollNo: participantRollNo || '',
                 timeTaken,
                 startedAt: startedAt.toISOString(),
-                autoSubmittedDueToTabSwitch: dueToTabSwitch
+                autoSubmittedDueToTabSwitch: dueToTabSwitch,
+                autoSubmittedDueToFullscreenExit: dueToFullscreenExit
             });
 
             setResults(result);
@@ -375,6 +462,19 @@ const QuizTakePage = ({ quizId }) => {
                         </p>
                     )}
 
+                    {/* Fullscreen Mode Notice */}
+                    {quiz?.settings?.fullscreenModeEnabled && (
+                        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                            <div className="flex items-center justify-center text-amber-700">
+                                <Maximize size={20} className="mr-2" />
+                                <span className="font-medium">This quiz requires fullscreen mode</span>
+                            </div>
+                            <p className="text-amber-600 text-sm mt-1">
+                                You cannot exit fullscreen during the quiz. Exiting 3 times will auto-submit your quiz.
+                            </p>
+                        </div>
+                    )}
+
                     <button
                         onClick={async () => {
                             // Validate required fields when classes exist
@@ -409,12 +509,19 @@ const QuizTakePage = ({ quizId }) => {
                                 }
                                 setCheckingRollNo(false);
                             }
+
+                            // Enter fullscreen if required
+                            if (quiz?.settings?.fullscreenModeEnabled) {
+                                await enterFullscreen();
+                            }
+
                             setHasStarted(true);
                         }}
                         disabled={checkingRollNo || (quiz.classes && quiz.classes.length > 0 && (!participantName.trim() || !participantClass || !participantRollNo.trim()))}
-                        className="px-8 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-8 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mx-auto"
                     >
-                        {checkingRollNo ? 'Checking...' : 'Start Quiz'}
+                        {quiz?.settings?.fullscreenModeEnabled && <Maximize size={20} className="mr-2" />}
+                        {checkingRollNo ? 'Checking...' : quiz?.settings?.fullscreenModeEnabled ? 'Enter Fullscreen & Start Quiz' : 'Start Quiz'}
                     </button>
                 </div>
             </div>
@@ -459,6 +566,54 @@ const QuizTakePage = ({ quizId }) => {
                             Tab switches: {tabSwitchCount}/3 - Quiz will auto-submit after 3 switches
                         </span>
                     </div>
+                </div>
+            )}
+
+            {/* Fullscreen Exit Warning Modal */}
+            {showFullscreenWarning && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md mx-4 text-center">
+                        <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Maximize size={40} className="text-orange-600" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-orange-600 mb-2">Fullscreen Required!</h2>
+                        <p className="text-gray-700 mb-4">
+                            You have exited fullscreen mode <span className="font-bold text-orange-600">{fullscreenExitCount}</span> time{fullscreenExitCount > 1 ? 's' : ''}.
+                        </p>
+                        <p className="text-gray-600 mb-6">
+                            {3 - fullscreenExitCount > 0 
+                                ? `Your quiz will be auto-submitted after ${3 - fullscreenExitCount} more exit${3 - fullscreenExitCount > 1 ? 's' : ''}.`
+                                : 'Your quiz is being submitted...'}
+                        </p>
+                        <button
+                            onClick={() => {
+                                setShowFullscreenWarning(false);
+                                enterFullscreen();
+                            }}
+                            className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition font-medium flex items-center justify-center mx-auto"
+                        >
+                            <Maximize size={18} className="mr-2" />
+                            Return to Fullscreen
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Fullscreen Prompt Banner */}
+            {quiz?.settings?.fullscreenModeEnabled && !isFullscreen && !showFullscreenWarning && fullscreenExitCount > 0 && (
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4 flex items-center justify-between">
+                    <div className="flex items-center">
+                        <Maximize size={20} className="text-orange-600 mr-2" />
+                        <span className="text-orange-700 text-sm font-medium">
+                            Fullscreen exits: {fullscreenExitCount}/3 - Quiz will auto-submit after 3 exits
+                        </span>
+                    </div>
+                    <button
+                        onClick={enterFullscreen}
+                        className="px-3 py-1 bg-orange-600 text-white rounded text-sm hover:bg-orange-700 transition"
+                    >
+                        Re-enter Fullscreen
+                    </button>
                 </div>
             )}
 

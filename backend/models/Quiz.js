@@ -44,7 +44,8 @@ const quizSchema = mongoose.Schema(
             maxAttempts: { type: Number, default: 0 }, // 0 = unlimited
             tabSwitchingEnabled: { type: Boolean, default: false }, // Enable tab switch detection (3 switches = auto-submit)
             preventDuplicateRollNo: { type: Boolean, default: false }, // Prevent same roll number from submitting twice
-            requireSequentialAnswering: { type: Boolean, default: false } // Must answer current question before moving to next
+            requireSequentialAnswering: { type: Boolean, default: false }, // Must answer current question before moving to next
+            fullscreenModeEnabled: { type: Boolean, default: false } // Force fullscreen mode (3 exits = auto-submit)
         },
         isPublished: { type: Boolean, default: false },
         attemptCount: { type: Number, default: 0 }

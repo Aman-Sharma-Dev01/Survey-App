@@ -336,7 +336,8 @@ const QuizEditPage = ({ quizId, navigate }) => {
         maxAttempts: 0,
         tabSwitchingEnabled: false,
         preventDuplicateRollNo: false,
-        requireSequentialAnswering: false
+        requireSequentialAnswering: false,
+        fullscreenModeEnabled: false
     });
     const [showSettings, setShowSettings] = useState(false);
     const [status, setStatus] = useState('');
@@ -693,6 +694,19 @@ const QuizEditPage = ({ quizId, navigate }) => {
                                 <label htmlFor="requireSequentialAnswering" className="text-sm text-gray-700">
                                     Require Sequential Answering
                                     <span className="text-xs text-gray-500 block">Must answer current question before moving to next</span>
+                                </label>
+                            </div>
+                            <div className="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    id="fullscreenModeEnabled"
+                                    checked={settings.fullscreenModeEnabled}
+                                    onChange={(e) => setSettings(s => ({ ...s, fullscreenModeEnabled: e.target.checked }))}
+                                    className="mr-2"
+                                />
+                                <label htmlFor="fullscreenModeEnabled" className="text-sm text-gray-700">
+                                    Force Fullscreen Mode
+                                    <span className="text-xs text-gray-500 block">Quiz must be taken in fullscreen. Auto-submits after 3 exits</span>
                                 </label>
                             </div>
                         </div>
