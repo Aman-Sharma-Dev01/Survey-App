@@ -34,6 +34,10 @@ import QuizAnalytics from './pages/QuizAnalytics.jsx';
 import PaymentAdmin from './pages/PaymentAdmin.jsx';
 import PaymentHistory from './pages/PaymentHistory.jsx';
 
+// ⭐ Certificate Verification
+import CertificateVerify from './pages/CertificateVerify.jsx';
+import CertificateAdmin from './pages/CertificateAdmin.jsx';
+
 // Admin email
 const ADMIN_EMAIL = 'support@surveyzen.live';
 
@@ -72,7 +76,7 @@ const App = () => {
 
   // Protect private pages
   useEffect(() => {
-    const protectedPaths = ['dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-analytics', 'payment-admin', 'payment-history'];
+    const protectedPaths = ['dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-analytics', 'payment-admin', 'payment-history', 'certificate-admin'];
     const [pathSegment] = getPathSegments(currentPath);
 
     if (protectedPaths.includes(pathSegment) && !authState.isAuthenticated) {
@@ -99,6 +103,7 @@ const App = () => {
     'about',
     'blog',
     'quiz', // Public quiz taking page
+    'verify-certificate', // Public certificate verification page
   ];
 
   const shouldShowNavbar = !landingRoutes.includes(pathRoot);
@@ -197,6 +202,21 @@ const App = () => {
 
       case 'payment-history':
         return <PaymentHistory onBack={() => navigate('payment-admin')} navigate={navigate} />;
+
+      // ⭐ Certificate Verification (Public route for QR scanning)
+      case 'verify-certificate':
+        return pathId ? (
+          <CertificateVerify certificateId={pathId} navigate={navigate} />
+        ) : (
+          <div className="text-center p-10 mt-20">
+            <h1 className="text-2xl font-bold text-gray-800">🎓 Certificate Verification</h1>
+            <p className="text-gray-500">Please use a valid certificate link or scan the QR code on your certificate.</p>
+          </div>
+        );
+
+      // ⭐ Certificate Admin (Admin only)
+      case 'certificate-admin':
+        return <CertificateAdmin navigate={navigate} />;
 
       default:
         return <LandingPage navigate={navigate} />;
