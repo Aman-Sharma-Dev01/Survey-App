@@ -138,7 +138,7 @@ router.post('/check-rollno/:id', async (req, res) => {
 =========================================================== */
 router.post('/submit/:id', async (req, res) => {
     try {
-        const { answers, participantName, participantEmail, participantClass, participantRollNo, timeTaken, startedAt, autoSubmittedDueToTabSwitch } = req.body;
+        const { answers, participantName, participantEmail, participantClass, participantRollNo, timeTaken, startedAt, autoSubmittedDueToTabSwitch, autoSubmittedDueToFullscreenExit, autoSubmittedDueToSplitScreen } = req.body;
 
         const quiz = await Quiz.findById(req.params.id);
 
@@ -223,7 +223,9 @@ router.post('/submit/:id', async (req, res) => {
             passed,
             timeTaken,
             startedAt: startedAt ? new Date(startedAt) : new Date(),
-            autoSubmittedDueToTabSwitch: autoSubmittedDueToTabSwitch || false
+            autoSubmittedDueToTabSwitch: autoSubmittedDueToTabSwitch || false,
+            autoSubmittedDueToFullscreenExit: autoSubmittedDueToFullscreenExit || false,
+            autoSubmittedDueToSplitScreen: autoSubmittedDueToSplitScreen || false
         });
 
         await quizResponse.save();
@@ -352,7 +354,9 @@ router.get('/analytics/:id', protect, async (req, res) => {
                 passed: r.passed,
                 timeTaken: r.timeTaken,
                 submittedAt: r.submittedAt,
-                autoSubmittedDueToTabSwitch: r.autoSubmittedDueToTabSwitch || false
+                autoSubmittedDueToTabSwitch: r.autoSubmittedDueToTabSwitch || false,
+                autoSubmittedDueToFullscreenExit: r.autoSubmittedDueToFullscreenExit || false,
+                autoSubmittedDueToSplitScreen: r.autoSubmittedDueToSplitScreen || false
             }))
         });
     } catch (error) {

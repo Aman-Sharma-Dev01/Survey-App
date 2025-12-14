@@ -24,7 +24,9 @@ const quizResponseSchema = mongoose.Schema(
         timeTaken: { type: Number }, // Time taken in seconds
         startedAt: { type: Date },
         submittedAt: { type: Date, default: Date.now },
-        autoSubmittedDueToTabSwitch: { type: Boolean, default: false } // True if quiz was auto-submitted due to tab switching
+        autoSubmittedDueToTabSwitch: { type: Boolean, default: false }, // True if quiz was auto-submitted due to tab switching
+        autoSubmittedDueToFullscreenExit: { type: Boolean, default: false }, // True if quiz was auto-submitted due to fullscreen exit
+        autoSubmittedDueToSplitScreen: { type: Boolean, default: false } // True if quiz was auto-submitted due to split screen detection
     },
     { timestamps: true }
 );

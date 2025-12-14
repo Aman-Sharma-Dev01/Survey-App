@@ -98,6 +98,12 @@ const QuizTakePage = ({ quizId }) => {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const fullscreenExitRef = useRef(0);
 
+    // Split screen / window resize detection
+    const [initialViewport, setInitialViewport] = useState(null);
+    const [splitScreenCount, setSplitScreenCount] = useState(0);
+    const [showSplitScreenWarning, setShowSplitScreenWarning] = useState(false);
+    const splitScreenRef = useRef(0);
+
     const timerRef = useRef(null);
 
     // Fetch quiz
@@ -139,6 +145,7 @@ const QuizTakePage = ({ quizId }) => {
                 participantRollNo,
                 tabSwitchCount: tabSwitchRef.current,
                 fullscreenExitCount: fullscreenExitRef.current,
+                splitScreenCount: splitScreenRef.current,
                 questionsOrder: questions.map(q => q._id) // Save question order for consistency
             });
         };
@@ -334,6 +341,89 @@ const QuizTakePage = ({ quizId }) => {
         };
     }, [hasStarted, isSubmitted, quiz?.settings?.fullscreenModeEnabled, checkFullscreen]);
 
+    // Split screen / window resize detection - only if fullscreen mode is enabled
+    useEffect(() => {
+        if (!hasStarted || isSubmitted || !quiz?.settings?.fullscreenModeEnabled) return;
+
+        // Capture initial viewport when quiz starts
+        if (!initialViewport) {
+            setInitialViewport({
+                width: window.innerWidth,
+                height: window.innerHeight,
+                screenWidth: window.screen.availWidth,
+                screenHeight: window.screen.availHeight
+            });
+        }
+
+        const handleResize = () => {
+            if (!initialViewport) return;
+
+            const currentWidth = window.innerWidth;
+            const currentHeight = window.innerHeight;
+            
+            // Calculate the ratio of current size to initial/screen size
+            const widthRatio = currentWidth / initialViewport.screenWidth;
+            const heightRatio = currentHeight / initialViewport.screenHeight;
+            
+            // Detect split screen: if window takes less than 75% of screen width OR height
+            // This catches horizontal split, vertical split, and picture-in-picture modes
+            const isSplitScreen = widthRatio < 0.75 || heightRatio < 0.75;
+            
+            // Also detect significant window shrinking from initial size (more than 30% reduction)
+            const shrunkFromInitial = (currentWidth < initialViewport.width * 0.7) || 
+                                       (currentHeight < initialViewport.height * 0.7);
+
+            if (isSplitScreen || shrunkFromInitial) {
+                splitScreenRef.current += 1;
+                setSplitScreenCount(splitScreenRef.current);
+
+                if (splitScreenRef.current >= 3) {
+                    // Auto-submit after 3 split screen attempts
+                    setShowSplitScreenWarning(false);
+                    handleSubmit(true, false, false, true); // autoSubmit=true, dueToSplitScreen=true
+                } else {
+                    // Show warning
+                    setShowSplitScreenWarning(true);
+                }
+            }
+        };
+
+        // Check periodically for split screen (some devices don't fire resize on split)
+        const resizeInterval = setInterval(() => {
+            if (initialViewport) {
+                const currentWidth = window.innerWidth;
+                const widthRatio = currentWidth / initialViewport.screenWidth;
+                
+                // Only check if window is significantly smaller than screen
+                if (widthRatio < 0.75 && !showSplitScreenWarning) {
+                    handleResize();
+                }
+            }
+        }, 2000);
+
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            clearInterval(resizeInterval);
+        };
+    }, [hasStarted, isSubmitted, quiz?.settings?.fullscreenModeEnabled, initialViewport, showSplitScreenWarning]);
+
+    // Capture initial viewport when starting the quiz
+    useEffect(() => {
+        if (hasStarted && !initialViewport && quiz?.settings?.fullscreenModeEnabled) {
+            // Small delay to ensure fullscreen is active
+            setTimeout(() => {
+                setInitialViewport({
+                    width: window.innerWidth,
+                    height: window.innerHeight,
+                    screenWidth: window.screen.availWidth,
+                    screenHeight: window.screen.availHeight
+                });
+            }, 500);
+        }
+    }, [hasStarted, initialViewport, quiz?.settings?.fullscreenModeEnabled]);
+
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -357,7 +447,7 @@ const QuizTakePage = ({ quizId }) => {
         });
     };
 
-    const handleSubmit = async (autoSubmit = false, dueToTabSwitch = false, dueToFullscreenExit = false) => {
+    const handleSubmit = async (autoSubmit = false, dueToTabSwitch = false, dueToFullscreenExit = false, dueToSplitScreen = false) => {
         if (!autoSubmit && !window.confirm('Submit your quiz? You cannot change answers after submission.')) {
             return;
         }
@@ -396,7 +486,8 @@ const QuizTakePage = ({ quizId }) => {
                 timeTaken,
                 startedAt: startedAt.toISOString(),
                 autoSubmittedDueToTabSwitch: dueToTabSwitch,
-                autoSubmittedDueToFullscreenExit: dueToFullscreenExit
+                autoSubmittedDueToFullscreenExit: dueToFullscreenExit,
+                autoSubmittedDueToSplitScreen: dueToSplitScreen
             });
 
             setResults(result);
@@ -458,6 +549,8 @@ const QuizTakePage = ({ quizId }) => {
         setTabSwitchCount(restoredSession.tabSwitchCount || 0);
         fullscreenExitRef.current = restoredSession.fullscreenExitCount || 0;
         setFullscreenExitCount(restoredSession.fullscreenExitCount || 0);
+        splitScreenRef.current = restoredSession.splitScreenCount || 0;
+        setSplitScreenCount(restoredSession.splitScreenCount || 0);
         
         // Process questions with saved order
         const processedQuestions = processQuestions(quiz, restoredSession.questionsOrder);
@@ -864,6 +957,56 @@ const QuizTakePage = ({ quizId }) => {
                     >
                         Fullscreen
                     </button>
+                </div>
+            )}
+
+            {/* Split Screen / Window Resize Warning Modal */}
+            {showSplitScreenWarning && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl p-4 sm:p-8 max-w-md w-full text-center">
+                        <div className="w-14 h-14 sm:w-20 sm:h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                            <AlertTriangle size={28} className="text-red-600 sm:hidden" />
+                            <AlertTriangle size={40} className="text-red-600 hidden sm:block" />
+                        </div>
+                        <h2 className="text-xl sm:text-2xl font-bold text-red-600 mb-2">Split Screen Detected!</h2>
+                        <p className="text-sm sm:text-base text-gray-700 mb-3 sm:mb-4">
+                            Violations: <span className="font-bold text-red-600">{splitScreenCount}/3</span>
+                        </p>
+                        <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">
+                            Using split screen or resizing the window is not allowed during the quiz.
+                            {3 - splitScreenCount > 0 
+                                ? ` Auto-submit after ${3 - splitScreenCount} more violation${3 - splitScreenCount > 1 ? 's' : ''}.`
+                                : ' Submitting...'}
+                        </p>
+                        <p className="text-xs text-gray-500 mb-4">
+                            Please maximize your browser window to continue.
+                        </p>
+                        <button
+                            onClick={() => {
+                                setShowSplitScreenWarning(false);
+                                // Try to enter fullscreen again
+                                if (quiz?.settings?.fullscreenModeEnabled) {
+                                    enterFullscreen();
+                                }
+                            }}
+                            className="px-4 sm:px-6 py-2 sm:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium flex items-center justify-center mx-auto text-sm sm:text-base"
+                        >
+                            <Maximize size={16} className="mr-2" />
+                            I Understand, Continue
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Split Screen Warning Banner */}
+            {quiz?.settings?.fullscreenModeEnabled && splitScreenCount > 0 && !showSplitScreenWarning && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-2 sm:p-3 mb-2 sm:mb-4 flex items-center justify-between gap-2">
+                    <div className="flex items-center flex-1 min-w-0">
+                        <AlertTriangle size={16} className="text-red-600 mr-2 flex-shrink-0" />
+                        <span className="text-red-700 text-xs sm:text-sm font-medium truncate">
+                            Split screen violations: {splitScreenCount}/3
+                        </span>
+                    </div>
                 </div>
             )}
 
