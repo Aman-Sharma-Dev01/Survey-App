@@ -116,8 +116,6 @@ const PaymentAdmin = ({ onBack, navigate }) => {
                         <h1 className="text-2xl font-bold text-gray-900">Payment Admin</h1>
                     </div>
                 </div>
-                    </div>
-                </div>
 
                 {message.text && (
                     <div className={`mb-4 p-4 rounded-lg ${
