@@ -223,14 +223,33 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                                     onClick={() => handleMobileNavigate('pricing')}
                                     className="w-full px-3 py-2 text-left text-sm font-medium text-yellow-400 hover:bg-indigo-700 rounded-lg flex items-center"
                                 >
-                                    <ShoppingCart size={18} className="mr-2" /> Buy Credits
+                                    <ShoppingCart size={18} className="mr-2" /> 
+                                    {user?.isPlanActive && user?.plan !== 'free' ? 'Manage Plan' : 'Buy Credits'}
                                 </button>
                                 <div className="pt-2 border-t border-indigo-600">
                                     <div className="flex items-center gap-3 mb-3">
                                         <ProfileAvatar user={user} size="md" />
-                                        <div>
-                                            <p className="text-white text-sm font-medium">{user?.name || 'Creator'}</p>
-                                            <p className="text-indigo-300 text-xs">{user?.email}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <p className="text-white text-sm font-medium truncate">{user?.name || 'Creator'}</p>
+                                                {user?.isPlanActive && user?.plan && user?.plan !== 'free' && (
+                                                    <span className={`inline-flex items-center gap-0.5 text-xs font-bold px-1.5 py-0.5 rounded ${
+                                                        user.plan === 'power' 
+                                                            ? 'bg-gradient-to-r from-purple-400 to-indigo-400 text-white'
+                                                            : 'bg-gradient-to-r from-amber-400 to-orange-400 text-white'
+                                                    }`}>
+                                                        <Crown size={10} />
+                                                        {user.plan === 'power' ? 'POWER' : 'PRO'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-indigo-300 text-xs truncate">{user?.email}</p>
+                                            {user?.isPlanActive && user?.plan && user?.plan !== 'free' && user?.planExpiresAt && (
+                                                <p className="text-amber-300 text-xs mt-0.5 flex items-center gap-1">
+                                                    <Crown size={10} />
+                                                    Premium until {new Date(user.planExpiresAt).toLocaleDateString()}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                     <button
