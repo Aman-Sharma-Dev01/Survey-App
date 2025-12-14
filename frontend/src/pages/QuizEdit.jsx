@@ -4,6 +4,8 @@ import { generateTempId } from '../services/api';
 import { getQuizById, updateQuiz } from '../services/quizService';
 import { uploadImage, deleteImage } from '../services/uploadService';
 import QuizChatWidget from '../components/QuizChatWidget';
+import { useAuth } from '../context/AuthContext.jsx';
+import { PremiumSettingRow, PremiumUpgradeModal } from '../components/PremiumFeatureLock';
 
 // Image Upload Component
 const ImageUploader = ({ image, onUpload, onRemove, label }) => {
@@ -318,6 +320,9 @@ const QuizQuestionEditor = ({ question, index, updateQuestion, removeQuestion })
 };
 
 const QuizEditPage = ({ quizId, navigate }) => {
+    const { user } = useAuth();
+    const isPremiumUser = user?.isPlanActive || false;
+    
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [title, setTitle] = useState('');
@@ -341,6 +346,7 @@ const QuizEditPage = ({ quizId, navigate }) => {
     });
     const [showSettings, setShowSettings] = useState(false);
     const [status, setStatus] = useState('');
+    const [showPremiumModal, setShowPremiumModal] = useState(false);
 
     useEffect(() => {
         const fetchQuiz = async () => {
@@ -661,61 +667,70 @@ const QuizEditPage = ({ quizId, navigate }) => {
                                 />
                                 <label htmlFor="showExplanations" className="text-sm text-gray-700">Show Explanations</label>
                             </div>
-                            <div className="flex items-center border-t pt-3 mt-2">
-                                <input
-                                    type="checkbox"
-                                    id="tabSwitchingEnabled"
-                                    checked={settings.tabSwitchingEnabled}
-                                    onChange={(e) => setSettings(s => ({ ...s, tabSwitchingEnabled: e.target.checked }))}
-                                    className="mr-2"
-                                />
-                                <label htmlFor="tabSwitchingEnabled" className="text-sm text-gray-700">
-                                    Enable Tab Switch Detection
-                                    <span className="text-xs text-gray-500 block">Auto-submits quiz after 3 tab switches</span>
-                                </label>
-                            </div>
-                            <div className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    id="preventDuplicateRollNo"
-                                    checked={settings.preventDuplicateRollNo}
-                                    onChange={(e) => setSettings(s => ({ ...s, preventDuplicateRollNo: e.target.checked }))}
-                                    className="mr-2"
-                                />
-                                <label htmlFor="preventDuplicateRollNo" className="text-sm text-gray-700">
-                                    Prevent Duplicate Roll Numbers
-                                    <span className="text-xs text-gray-500 block">Same roll number can only submit once</span>
-                                </label>
-                            </div>
-                            <div className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    id="requireSequentialAnswering"
-                                    checked={settings.requireSequentialAnswering}
-                                    onChange={(e) => setSettings(s => ({ ...s, requireSequentialAnswering: e.target.checked }))}
-                                    className="mr-2"
-                                />
-                                <label htmlFor="requireSequentialAnswering" className="text-sm text-gray-700">
-                                    Require Sequential Answering
-                                    <span className="text-xs text-gray-500 block">Must answer current question before moving to next</span>
-                                </label>
-                            </div>
-                            <div className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    id="fullscreenModeEnabled"
-                                    checked={settings.fullscreenModeEnabled}
-                                    onChange={(e) => setSettings(s => ({ ...s, fullscreenModeEnabled: e.target.checked }))}
-                                    className="mr-2"
-                                />
-                                <label htmlFor="fullscreenModeEnabled" className="text-sm text-gray-700">
-                                    Force Fullscreen Mode
-                                    <span className="text-xs text-gray-500 block">Quiz must be taken in fullscreen. Auto-submits after 3 exits</span>
-                                </label>
+                            
+                            {/* Premium Features Section */}
+                            <div className="border-t pt-3 mt-2">
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    Anti-Cheating Features
+                                    {!isPremiumUser && (
+                                        <span className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full normal-case">
+                                            PRO
+                                        </span>
+                                    )}
+                                </p>
+                                
+                                <div className="space-y-2">
+                                    <PremiumSettingRow
+                                        id="tabSwitchingEnabled"
+                                        checked={settings.tabSwitchingEnabled}
+                                        onChange={(e) => setSettings(s => ({ ...s, tabSwitchingEnabled: e.target.checked }))}
+                                        label="Enable Tab Switch Detection"
+                                        description="Auto-submits quiz after 3 tab switches"
+                                        isPremiumUser={isPremiumUser}
+                                        onUpgradeClick={() => setShowPremiumModal(true)}
+                                    />
+                                    
+                                    <PremiumSettingRow
+                                        id="preventDuplicateRollNo"
+                                        checked={settings.preventDuplicateRollNo}
+                                        onChange={(e) => setSettings(s => ({ ...s, preventDuplicateRollNo: e.target.checked }))}
+                                        label="Prevent Duplicate Roll Numbers"
+                                        description="Same roll number can only submit once"
+                                        isPremiumUser={isPremiumUser}
+                                        onUpgradeClick={() => setShowPremiumModal(true)}
+                                    />
+                                    
+                                    <PremiumSettingRow
+                                        id="requireSequentialAnswering"
+                                        checked={settings.requireSequentialAnswering}
+                                        onChange={(e) => setSettings(s => ({ ...s, requireSequentialAnswering: e.target.checked }))}
+                                        label="Require Sequential Answering"
+                                        description="Must answer current question before moving to next"
+                                        isPremiumUser={isPremiumUser}
+                                        onUpgradeClick={() => setShowPremiumModal(true)}
+                                    />
+                                    
+                                    <PremiumSettingRow
+                                        id="fullscreenModeEnabled"
+                                        checked={settings.fullscreenModeEnabled}
+                                        onChange={(e) => setSettings(s => ({ ...s, fullscreenModeEnabled: e.target.checked }))}
+                                        label="Force Fullscreen Mode"
+                                        description="Quiz must be taken in fullscreen. Auto-submits after 3 exits. Includes split-screen detection."
+                                        isPremiumUser={isPremiumUser}
+                                        onUpgradeClick={() => setShowPremiumModal(true)}
+                                    />
+                                </div>
                             </div>
                         </div>
                     )}
                 </div>
+
+                {/* Premium Upgrade Modal */}
+                <PremiumUpgradeModal 
+                    isOpen={showPremiumModal} 
+                    onClose={() => setShowPremiumModal(false)}
+                    featureName="Anti-Cheating Features"
+                />
 
                 {/* Questions */}
                 <div className="space-y-4">

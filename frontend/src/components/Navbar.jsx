@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, PlusCircle, LayoutDashboard, HelpCircle, Menu, X, Coins, ShoppingCart } from 'lucide-react';
+import { LogOut, PlusCircle, LayoutDashboard, HelpCircle, Menu, X, Coins, ShoppingCart, Crown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 
 // Avatar component - shows Google avatar or initials
@@ -93,17 +93,50 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                                 >
                                     <ProfileAvatar user={user} size="sm" />
                                     <span className="hidden lg:inline">{user?.name || 'Profile'}</span>
+                                    {user?.isPlanActive && user?.plan && user?.plan !== 'free' && (
+                                        <span className={`hidden lg:inline-flex items-center gap-0.5 text-xs font-bold px-1.5 py-0.5 rounded ${
+                                            user.plan === 'power' 
+                                                ? 'bg-gradient-to-r from-purple-400 to-indigo-400 text-white'
+                                                : 'bg-gradient-to-r from-amber-400 to-orange-400 text-white'
+                                        }`}>
+                                            <Crown size={10} />
+                                            {user.plan === 'power' ? 'POWER' : 'PRO'}
+                                        </span>
+                                    )}
                                 </button>
                                 
                                 {profileDropdown && (
                                     <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
                                         <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
                                             <ProfileAvatar user={user} size="md" />
-                                            <div>
-                                                <p className="text-sm font-semibold text-gray-800">{user?.name}</p>
-                                                <p className="text-xs text-gray-500">{user?.email}</p>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <p className="text-sm font-semibold text-gray-800 truncate">{user?.name}</p>
+                                                    {user?.isPlanActive && user?.plan && user?.plan !== 'free' && (
+                                                        <span className={`inline-flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded ${
+                                                            user.plan === 'power' 
+                                                                ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white'
+                                                                : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                                                        }`}>
+                                                            <Crown size={10} />
+                                                            {user.plan.toUpperCase()}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                                             </div>
                                         </div>
+                                        {/* Plan Status */}
+                                        {user?.isPlanActive && user?.plan && user?.plan !== 'free' && user?.planExpiresAt && (
+                                            <div className="px-4 py-2 border-b border-gray-100 bg-gradient-to-r from-amber-50 to-orange-50">
+                                                <div className="flex items-center gap-2">
+                                                    <Crown size={14} className="text-amber-600" />
+                                                    <span className="text-xs text-amber-700 font-medium">
+                                                        Premium until {new Date(user.planExpiresAt).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
                                         <div className="px-4 py-3 border-b border-gray-100">
                                             <div className="flex items-center justify-between">
                                                 <span className="text-sm text-gray-600">AI Credits</span>
@@ -118,7 +151,7 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                                             onClick={() => { handleNavigate('pricing'); setProfileDropdown(false); }}
                                             className="w-full px-4 py-2 text-left text-sm text-indigo-600 hover:bg-indigo-50 flex items-center"
                                         >
-                                            <ShoppingCart size={16} className="mr-2" /> Buy Credits
+                                            <ShoppingCart size={16} className="mr-2" /> {user?.isPlanActive && user?.plan !== 'free' ? 'Manage Plan' : 'Upgrade to Pro'}
                                         </button>
                                         <button
                                             onClick={() => { logout(); setProfileDropdown(false); }}

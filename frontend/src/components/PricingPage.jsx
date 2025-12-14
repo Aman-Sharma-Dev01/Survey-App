@@ -225,6 +225,12 @@ const PricingCard = ({ plan, onBuyClick, isLoggedIn }) => {
         <p className="text-slate-400 text-xs mt-1 font-medium">
           {price === 0 ? 'Free forever' : 'One-time payment'}
         </p>
+        {plan.duration && (
+          <p className="text-indigo-600 text-sm mt-2 font-semibold flex items-center gap-1">
+            <Clock size={14} />
+            Premium features for {plan.duration}
+          </p>
+        )}
       </div>
 
       <button
@@ -249,8 +255,10 @@ const PricingCard = ({ plan, onBuyClick, isLoggedIn }) => {
           {plan.features.map((feature, idx) => (
             <li key={idx} className="flex items-start">
               {feature.included ? (
-                <div className="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center mt-0.5">
-                  <Check size={12} className="text-indigo-700" strokeWidth={3} />
+                <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${
+                  feature.highlight ? 'bg-gradient-to-br from-amber-100 to-orange-100' : 'bg-indigo-100'
+                }`}>
+                  <Check size={12} className={feature.highlight ? 'text-amber-600' : 'text-indigo-700'} strokeWidth={3} />
                 </div>
               ) : (
                 <div className="flex-shrink-0 w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center mt-0.5">
@@ -260,11 +268,18 @@ const PricingCard = ({ plan, onBuyClick, isLoggedIn }) => {
               <span
                 className={`ml-3 text-sm ${
                   feature.included
-                    ? 'text-slate-600'
+                    ? feature.highlight 
+                      ? 'text-amber-700 font-medium'
+                      : 'text-slate-600'
                     : 'text-slate-400 line-through'
                 }`}
               >
                 {feature.text}
+                {feature.highlight && (
+                  <span className="ml-1.5 inline-flex items-center bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold px-1.5 py-0.5 rounded">
+                    PRO
+                  </span>
+                )}
               </span>
             </li>
           ))}
@@ -330,6 +345,7 @@ const App = () => {
       description: 'Perfect for trying out AI-powered surveys and quizzes.',
       price: 0,
       credits: 200,
+      duration: null,
       cta: 'Free with Signup',
       popular: false,
       features: [
@@ -339,16 +355,19 @@ const App = () => {
         { text: 'Basic analytics', included: true },
         { text: 'Email support', included: true },
         { text: 'Export to Excel', included: true },
-        { text: 'Priority support', included: false }
+        { text: 'Anti-cheating features', included: false },
+        { text: 'Tab switch detection', included: false },
+        { text: 'Fullscreen mode enforcement', included: false }
       ]
     },
     {
       id: 'pro',
       name: 'Pro',
-      description: 'For power users who need more AI generations.',
+      description: 'For educators who need anti-cheating quiz features.',
       price: 10,
       credits: 1000,
-      cta: 'Buy Credits',
+      duration: '3 months',
+      cta: 'Get Pro',
       popular: true,
       features: [
         { text: '1,000 AI Credits', included: true },
@@ -357,16 +376,21 @@ const App = () => {
         { text: 'Advanced analytics', included: true },
         { text: 'Priority email support', included: true },
         { text: 'Export to Excel', included: true },
-        { text: 'Best value for regular use', included: true }
+        { text: '3 months premium access', included: true, highlight: true },
+        { text: 'Tab switch detection', included: true, highlight: true },
+        { text: 'Prevent duplicate roll numbers', included: true, highlight: true },
+        { text: 'Sequential answering mode', included: true, highlight: true },
+        { text: 'Fullscreen + split-screen detection', included: true, highlight: true }
       ]
     },
     {
       id: 'power',
       name: 'Power',
-      description: 'For teams and heavy AI users who need maximum credits.',
+      description: 'For institutions needing long-term anti-cheating protection.',
       price: 50,
       credits: 10000,
-      cta: 'Buy Credits',
+      duration: '2 years',
+      cta: 'Get Power',
       popular: false,
       features: [
         { text: '10,000 AI Credits', included: true },
@@ -375,7 +399,11 @@ const App = () => {
         { text: 'Advanced analytics', included: true },
         { text: 'Priority email support', included: true },
         { text: 'Export to Excel', included: true },
-        { text: 'Best for heavy usage', included: true }
+        { text: '2 years premium access', included: true, highlight: true },
+        { text: 'Tab switch detection', included: true, highlight: true },
+        { text: 'Prevent duplicate roll numbers', included: true, highlight: true },
+        { text: 'Sequential answering mode', included: true, highlight: true },
+        { text: 'Fullscreen + split-screen detection', included: true, highlight: true }
       ]
     }
   ];

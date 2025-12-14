@@ -22,13 +22,15 @@ const PLANS = {
         amount: 10,
         credits: 1000,
         name: 'Pro',
-        paymentLink: 'https://urpy.link/Yv2F3F@'
+        paymentLink: 'https://urpy.link/Yv2F3F@',
+        durationMonths: 3 // 3 months subscription
     },
     power: {
         amount: 50,
         credits: 10000,
         name: 'Power',
-        paymentLink: 'https://urpy.link/Lt0Yh4@'
+        paymentLink: 'https://urpy.link/Lt0Yh4@',
+        durationMonths: 24 // 2 years subscription
     }
 };
 
@@ -192,15 +194,30 @@ router.post('/approve/:paymentId', protect, isAdmin, async (req, res) => {
         payment.verifiedBy = req.user.email;
         await payment.save();
         
-        // Add credits to user
+        // Get plan details
+        const planDetails = PLANS[payment.plan];
+        
+        // Add credits and activate plan for user
         const user = await User.findById(payment.user);
         user.credits += payment.credits;
+        
+        // Set subscription plan
+        user.plan = payment.plan;
+        user.planActivatedAt = new Date();
+        
+        // Calculate expiration date
+        const expirationDate = new Date();
+        expirationDate.setMonth(expirationDate.getMonth() + planDetails.durationMonths);
+        user.planExpiresAt = expirationDate;
+        
         await user.save();
         
         res.json({
-            message: `Payment approved! ${payment.credits} credits added to user.`,
+            message: `Payment approved! ${payment.credits} credits added. ${planDetails.name} plan activated until ${expirationDate.toLocaleDateString()}.`,
             payment,
-            userCredits: user.credits
+            userCredits: user.credits,
+            plan: user.plan,
+            planExpiresAt: user.planExpiresAt
         });
     } catch (error) {
         console.error('Approve payment error:', error);
@@ -256,16 +273,31 @@ router.post('/quick-approve', protect, isAdmin, async (req, res) => {
         payment.verifiedBy = req.user.email;
         await payment.save();
         
-        // Add credits to user
+        // Get plan details
+        const planDetails = PLANS[payment.plan];
+        
+        // Add credits and activate plan for user
         const user = await User.findById(payment.user);
         user.credits += payment.credits;
+        
+        // Set subscription plan
+        user.plan = payment.plan;
+        user.planActivatedAt = new Date();
+        
+        // Calculate expiration date
+        const expirationDate = new Date();
+        expirationDate.setMonth(expirationDate.getMonth() + planDetails.durationMonths);
+        user.planExpiresAt = expirationDate;
+        
         await user.save();
         
         res.json({
-            message: `Payment approved! ${payment.credits} credits added.`,
+            message: `Payment approved! ${payment.credits} credits added. ${planDetails.name} plan activated until ${expirationDate.toLocaleDateString()}.`,
             payment,
             userEmail: user.email,
-            userCredits: user.credits
+            userCredits: user.credits,
+            plan: user.plan,
+            planExpiresAt: user.planExpiresAt
         });
     } catch (error) {
         res.status(500).json({ message: 'Error approving payment' });

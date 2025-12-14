@@ -143,12 +143,20 @@ router.get('/profile', protect, async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
+        
+        // Check if plan is still active
+        const isPlanActive = user.hasPremiumFeatures();
+        
         res.json({
             _id: user._id,
             name: user.name,
             email: user.email,
             avatar: user.avatar,
             credits: user.credits,
+            plan: user.plan || 'free',
+            planExpiresAt: user.planExpiresAt,
+            planActivatedAt: user.planActivatedAt,
+            isPlanActive,
             createdAt: user.createdAt
         });
     } catch (error) {

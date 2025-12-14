@@ -10,6 +10,15 @@ const userSchema = mongoose.Schema(
         isVerified: { type: Boolean, default: false },
         credits: { type: Number, default: 200 }, // AI credits for survey generation
         
+        // Subscription/Plan fields
+        plan: { 
+            type: String, 
+            enum: ['free', 'pro', 'power'], 
+            default: 'free' 
+        },
+        planExpiresAt: { type: Date, default: null }, // When the plan expires
+        planActivatedAt: { type: Date, default: null }, // When the plan was activated
+        
         // Google OAuth
         googleId: { type: String, unique: true, sparse: true },
         avatar: { type: String }, // Google profile picture
@@ -20,6 +29,24 @@ const userSchema = mongoose.Schema(
     },
     { timestamps: true }
 );
+
+// Virtual to check if plan is active
+userSchema.virtual('isPlanActive').get(function() {
+    if (this.plan === 'free') return false;
+    if (!this.planExpiresAt) return false;
+    return new Date() < this.planExpiresAt;
+});
+
+// Method to check if user has premium features
+userSchema.methods.hasPremiumFeatures = function() {
+    if (this.plan === 'free') return false;
+    if (!this.planExpiresAt) return false;
+    return new Date() < this.planExpiresAt;
+};
+
+// Ensure virtuals are included in JSON
+userSchema.set('toJSON', { virtuals: true });
+userSchema.set('toObject', { virtuals: true });
 
 // Hash password
 userSchema.pre('save', async function (next) {
