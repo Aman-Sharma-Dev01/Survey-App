@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { PlusCircle, Loader, Trash2, BarChart3, Link, Play, Eye, EyeOff } from 'lucide-react';
+import { PlusCircle, Loader, Trash2, BarChart3, Link, Play, Eye, EyeOff, Edit } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getCreatorQuizzes, deleteQuiz, updateQuizPublishStatus } from '../services/quizService';
 
-const QuizCard = ({ quiz, onPublish, onDelete, onAnalytics, onCopyLink }) => {
+const QuizCard = ({ quiz, onPublish, onDelete, onAnalytics, onEdit, onCopyLink }) => {
     const [copying, setCopying] = useState(false);
 
     const handleCopy = async () => {
@@ -65,6 +65,13 @@ const QuizCard = ({ quiz, onPublish, onDelete, onAnalytics, onCopyLink }) => {
                         {copying ? 'Copied!' : 'Copy Link'}
                     </button>
                 )}
+
+                <button
+                    onClick={() => onEdit(quiz._id)}
+                    className="flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 transition"
+                >
+                    <Edit size={16} className="mr-1" /> Edit
+                </button>
 
                 <button
                     onClick={() => onAnalytics(quiz._id)}
@@ -129,6 +136,10 @@ const QuizDashboardPage = ({ navigate }) => {
         }
     };
 
+    const handleEdit = (quizId) => {
+        navigate(`quiz-edit/${quizId}`);
+    };
+
     const handleAnalytics = (quizId) => {
         navigate(`quiz-analytics/${quizId}`);
     };
@@ -180,6 +191,7 @@ const QuizDashboardPage = ({ navigate }) => {
                             quiz={quiz}
                             onPublish={handlePublish}
                             onDelete={handleDelete}
+                            onEdit={handleEdit}
                             onAnalytics={handleAnalytics}
                         />
                     ))}

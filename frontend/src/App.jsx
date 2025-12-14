@@ -29,6 +29,7 @@ import QuizCreate from './pages/QuizCreate.jsx';
 import QuizDashboard from './pages/QuizDashboard.jsx';
 import QuizTake from './pages/QuizTake.jsx';
 import QuizAnalytics from './pages/QuizAnalytics.jsx';
+import QuizEdit from './pages/QuizEdit.jsx';
 
 // ⭐ Payment Admin
 import PaymentAdmin from './pages/PaymentAdmin.jsx';
@@ -76,7 +77,7 @@ const App = () => {
 
   // Protect private pages
   useEffect(() => {
-    const protectedPaths = ['dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-analytics', 'payment-admin', 'payment-history', 'certificate-admin'];
+    const protectedPaths = ['dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-edit', 'quiz-analytics', 'payment-admin', 'payment-history', 'certificate-admin'];
     const [pathSegment] = getPathSegments(currentPath);
 
     if (protectedPaths.includes(pathSegment) && !authState.isAuthenticated) {
@@ -178,6 +179,13 @@ const App = () => {
 
       case 'quiz-create':
         return <QuizCreate navigate={navigate} />;
+
+      case 'quiz-edit':
+        return pathId ? (
+          <QuizEdit quizId={pathId} navigate={navigate} />
+        ) : (
+          <QuizDashboard navigate={navigate} />
+        );
 
       case 'quiz-analytics':
         return pathId ? (
