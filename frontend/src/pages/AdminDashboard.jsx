@@ -188,31 +188,6 @@ const AdminDashboard = ({ navigate }) => {
                         ))}
                     </div>
                 </div>
-
-                {/* Stats Preview */}
-                <div className="mt-10 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-bold text-gray-800 mb-4">Quick Stats</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="text-center p-4 bg-indigo-50 rounded-xl">
-                            <p className="text-2xl font-bold text-indigo-600">{user?.credits || 0}</p>
-                            <p className="text-sm text-gray-600">Your Credits</p>
-                        </div>
-                        <div className="text-center p-4 bg-green-50 rounded-xl">
-                            <p className="text-2xl font-bold text-green-600 capitalize">{user?.plan || 'Free'}</p>
-                            <p className="text-sm text-gray-600">Current Plan</p>
-                        </div>
-                        <div className="text-center p-4 bg-purple-50 rounded-xl">
-                            <p className="text-2xl font-bold text-purple-600">
-                                {user?.planExpiresAt ? new Date(user.planExpiresAt).toLocaleDateString() : 'N/A'}
-                            </p>
-                            <p className="text-sm text-gray-600">Plan Expires</p>
-                        </div>
-                        <div className="text-center p-4 bg-amber-50 rounded-xl">
-                            <p className="text-2xl font-bold text-amber-600">Admin</p>
-                            <p className="text-sm text-gray-600">Role</p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     );

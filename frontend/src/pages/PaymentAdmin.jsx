@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Clock, RefreshCw, ArrowLeft, ShieldX, History, Crown } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, RefreshCw, ArrowLeft, ShieldX } from 'lucide-react';
 import { getPendingPayments, approvePayment, rejectPayment } from '../services/paymentService';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -115,29 +115,7 @@ const PaymentAdmin = ({ onBack, navigate }) => {
                         </button>
                         <h1 className="text-2xl font-bold text-gray-900">Payment Admin</h1>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => navigate('plan-admin')}
-                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition"
-                        >
-                            <Crown size={18} />
-                            Plans
-                        </button>
-                        <button
-                            onClick={() => navigate('payment-history')}
-                            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-                        >
-                            <History size={18} />
-                            History
-                        </button>
-                        <button
-                            onClick={fetchPayments}
-                            disabled={loading}
-                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-                        >
-                            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-                            Refresh
-                        </button>
+                </div>
                     </div>
                 </div>
 
