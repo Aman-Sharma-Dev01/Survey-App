@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { BarChart3, Users, CheckCircle, XCircle, Clock, TrendingUp, Loader, Filter, Trophy, Download } from 'lucide-react';
+import { BarChart3, Users, CheckCircle, XCircle, Clock, TrendingUp, Loader, Filter, Trophy, Download, ChevronDown } from 'lucide-react';
 import { getQuizAnalytics } from '../services/quizService';
 
 const QuizAnalyticsPage = ({ quizId, navigate }) => {
@@ -7,6 +7,7 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [selectedClass, setSelectedClass] = useState('');
+    const [isQuestionPerformanceOpen, setIsQuestionPerformanceOpen] = useState(false);
 
     useEffect(() => {
         const fetchAnalytics = async () => {
@@ -296,42 +297,54 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
                 </div>
             )}
 
-            {/* Question Performance */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-emerald-100">
-                <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                    <BarChart3 size={24} className="mr-2 text-emerald-600" />
-                    Question Performance
-                </h2>
-                <div className="space-y-4">
-                    {questionStats.map((q, idx) => (
-                        <div key={q.questionId} className="p-4 bg-gray-50 rounded-lg">
-                            <div className="flex justify-between items-start mb-2">
-                                <p className="font-medium text-gray-800">
-                                    Q{idx + 1}. {q.questionText}
+            {/* Question Performance - Collapsible */}
+            <div className="bg-white rounded-xl shadow-lg mb-8 border border-emerald-100 overflow-hidden">
+                <button
+                    onClick={() => setIsQuestionPerformanceOpen(!isQuestionPerformanceOpen)}
+                    className="w-full p-6 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                >
+                    <h2 className="text-xl font-bold text-gray-800 flex items-center">
+                        <BarChart3 size={24} className="mr-2 text-emerald-600" />
+                        Question Performance
+                        <span className="ml-2 text-sm font-normal text-gray-500">({questionStats.length} questions)</span>
+                    </h2>
+                    <ChevronDown 
+                        size={24} 
+                        className={`text-gray-500 transition-transform duration-300 ${isQuestionPerformanceOpen ? 'rotate-180' : ''}`} 
+                    />
+                </button>
+                <div className={`transition-all duration-300 ease-in-out ${isQuestionPerformanceOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                    <div className="px-6 pb-6 space-y-4">
+                        {questionStats.map((q, idx) => (
+                            <div key={q.questionId} className="p-4 bg-gray-50 rounded-lg">
+                                <div className="flex justify-between items-start mb-2">
+                                    <p className="font-medium text-gray-800">
+                                        Q{idx + 1}. {q.questionText}
+                                    </p>
+                                    <span className={`px-2 py-1 rounded text-sm font-medium ${
+                                        q.accuracy >= 70 ? 'bg-emerald-100 text-emerald-700' :
+                                        q.accuracy >= 40 ? 'bg-yellow-100 text-yellow-700' :
+                                        'bg-red-100 text-red-700'
+                                    }`}>
+                                        {q.accuracy}% correct
+                                    </span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div 
+                                        className={`h-2 rounded-full transition-all ${
+                                            q.accuracy >= 70 ? 'bg-emerald-500' :
+                                            q.accuracy >= 40 ? 'bg-yellow-500' :
+                                            'bg-red-500'
+                                        }`}
+                                        style={{ width: `${q.accuracy}%` }}
+                                    />
+                                </div>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    {q.correctCount} / {q.totalAttempts} answered correctly
                                 </p>
-                                <span className={`px-2 py-1 rounded text-sm font-medium ${
-                                    q.accuracy >= 70 ? 'bg-emerald-100 text-emerald-700' :
-                                    q.accuracy >= 40 ? 'bg-yellow-100 text-yellow-700' :
-                                    'bg-red-100 text-red-700'
-                                }`}>
-                                    {q.accuracy}% correct
-                                </span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div 
-                                    className={`h-2 rounded-full transition-all ${
-                                        q.accuracy >= 70 ? 'bg-emerald-500' :
-                                        q.accuracy >= 40 ? 'bg-yellow-500' :
-                                        'bg-red-500'
-                                    }`}
-                                    style={{ width: `${q.accuracy}%` }}
-                                />
-                            </div>
-                            <p className="text-sm text-gray-500 mt-1">
-                                {q.correctCount} / {q.totalAttempts} answered correctly
-                            </p>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             </div>
 
