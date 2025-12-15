@@ -12,6 +12,7 @@ import {
   ChevronDown,
   AlertCircle
 } from 'lucide-react';
+import { BASE_URL } from '../services/api';
 
 // ================= NAVBAR =================
 const Navbar = () => {
@@ -226,7 +227,7 @@ const ContactForm = () => {
       // REAL BACKEND CONNECTION
       // Ensure your Node.js backend is running on port 5000
       // ---------------------------------------------------------
-      const response = await fetch('http://localhost:5000/api/contact', {
+      const response = await fetch(`${BASE_URL}/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
