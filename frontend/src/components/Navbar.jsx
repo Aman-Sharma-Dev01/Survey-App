@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { LogOut, PlusCircle, LayoutDashboard, HelpCircle, Menu, X, Coins, ShoppingCart, Crown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { LogOut, PlusCircle, LayoutDashboard, HelpCircle, Menu, X, Coins, ShoppingCart, Crown, Gift, Ticket, CheckCircle, Loader } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { applyCoupon } from '../services/couponService';
 
 // Avatar component - shows Google avatar or initials
 const ProfileAvatar = ({ user, size = 'sm' }) => {
@@ -55,9 +56,45 @@ const NavButton = ({ Icon, label, target, onClick, current, mobile = false }) =>
 };
 
 const Navbar = ({ currentPage, handleNavigate }) => {
-    const { isAuthenticated, logout, user, credits } = useAuth();
+    const { isAuthenticated, logout, user, credits, fetchProfile } = useAuth();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [profileDropdown, setProfileDropdown] = useState(false);
+    const [couponInput, setCouponInput] = useState('');
+    const [couponLoading, setCouponLoading] = useState(false);
+    const [couponMessage, setCouponMessage] = useState({ type: '', text: '' });
+
+    // Clear coupon message after 5 seconds
+    useEffect(() => {
+        if (couponMessage.text) {
+            const timer = setTimeout(() => setCouponMessage({ type: '', text: '' }), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [couponMessage]);
+
+    const handleApplyCoupon = async () => {
+        const codeToApply = couponInput.trim() || user?.couponCode;
+        if (!codeToApply) {
+            setCouponMessage({ type: 'error', text: 'Please enter a coupon code' });
+            return;
+        }
+        
+        setCouponLoading(true);
+        setCouponMessage({ type: '', text: '' });
+        
+        try {
+            const result = await applyCoupon(codeToApply);
+            setCouponMessage({ type: 'success', text: result.message });
+            setCouponInput('');
+            // Refresh user profile to get updated plan status
+            if (fetchProfile) {
+                await fetchProfile();
+            }
+        } catch (error) {
+            setCouponMessage({ type: 'error', text: error.message || 'Failed to apply coupon' });
+        } finally {
+            setCouponLoading(false);
+        }
+    };
 
     const handleMobileNavigate = (page) => {
         handleNavigate(page);
@@ -147,6 +184,67 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                                             </div>
                                             <p className="text-xs text-gray-400 mt-1">20 credits per AI generation</p>
                                         </div>
+                                        
+                                        {/* Coupon Section */}
+                                        <div className="px-4 py-3 border-b border-gray-100">
+                                            {/* Display assigned coupon if user has one */}
+                                            {user?.couponCode && !user?.couponUsed && (
+                                                <div className="mb-3 p-2 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <Gift size={14} className="text-green-600" />
+                                                        <span className="text-xs font-semibold text-green-700">Your Coupon Code</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <code className="text-sm font-mono bg-white px-2 py-1 rounded border border-green-200 text-green-800">
+                                                            {user.couponCode}
+                                                        </code>
+                                                        <button
+                                                            onClick={() => {
+                                                                setCouponInput(user.couponCode);
+                                                                handleApplyCoupon();
+                                                            }}
+                                                            disabled={couponLoading}
+                                                            className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition disabled:opacity-50"
+                                                        >
+                                                            {couponLoading ? <Loader size={12} className="animate-spin" /> : 'Apply'}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            
+                                            {/* Apply coupon input */}
+                                            <div>
+                                                <label className="text-xs text-gray-500 mb-1 block flex items-center gap-1">
+                                                    <Ticket size={12} />
+                                                    Apply Coupon Code
+                                                </label>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={couponInput}
+                                                        onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                                                        placeholder="Enter code"
+                                                        className="flex-1 px-2 py-1.5 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                                    />
+                                                    <button
+                                                        onClick={handleApplyCoupon}
+                                                        disabled={couponLoading || !couponInput.trim()}
+                                                        className="px-3 py-1.5 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        {couponLoading ? <Loader size={14} className="animate-spin" /> : 'Apply'}
+                                                    </button>
+                                                </div>
+                                                {couponMessage.text && (
+                                                    <p className={`text-xs mt-1 flex items-center gap-1 ${
+                                                        couponMessage.type === 'success' ? 'text-green-600' : 'text-red-600'
+                                                    }`}>
+                                                        {couponMessage.type === 'success' ? <CheckCircle size={12} /> : null}
+                                                        {couponMessage.text}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        
                                         <button
                                             onClick={() => { handleNavigate('pricing'); setProfileDropdown(false); }}
                                             className="w-full px-4 py-2 text-left text-sm text-indigo-600 hover:bg-indigo-50 flex items-center"
@@ -252,6 +350,64 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                                             )}
                                         </div>
                                     </div>
+                                    
+                                    {/* Mobile Coupon Section */}
+                                    <div className="mb-3 bg-indigo-900 rounded-lg p-3">
+                                        {/* Display assigned coupon if user has one */}
+                                        {user?.couponCode && !user?.couponUsed && (
+                                            <div className="mb-3 p-2 bg-green-900/30 rounded-lg border border-green-600/30">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <Gift size={14} className="text-green-400" />
+                                                    <span className="text-xs font-semibold text-green-400">Your Coupon</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <code className="text-sm font-mono bg-indigo-800 px-2 py-1 rounded text-green-300">
+                                                        {user.couponCode}
+                                                    </code>
+                                                    <button
+                                                        onClick={() => {
+                                                            setCouponInput(user.couponCode);
+                                                            handleApplyCoupon();
+                                                        }}
+                                                        disabled={couponLoading}
+                                                        className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition disabled:opacity-50"
+                                                    >
+                                                        {couponLoading ? <Loader size={12} className="animate-spin" /> : 'Apply'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        <label className="text-xs text-indigo-300 mb-1 block flex items-center gap-1">
+                                            <Ticket size={12} />
+                                            Apply Coupon Code
+                                        </label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={couponInput}
+                                                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                                                placeholder="Enter code"
+                                                className="flex-1 px-2 py-1.5 text-sm bg-indigo-800 border border-indigo-600 rounded text-white placeholder-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                                            />
+                                            <button
+                                                onClick={handleApplyCoupon}
+                                                disabled={couponLoading || !couponInput.trim()}
+                                                className="px-3 py-1.5 bg-indigo-500 text-white text-sm rounded hover:bg-indigo-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {couponLoading ? <Loader size={14} className="animate-spin" /> : 'Apply'}
+                                            </button>
+                                        </div>
+                                        {couponMessage.text && (
+                                            <p className={`text-xs mt-1 flex items-center gap-1 ${
+                                                couponMessage.type === 'success' ? 'text-green-400' : 'text-red-400'
+                                            }`}>
+                                                {couponMessage.type === 'success' ? <CheckCircle size={12} /> : null}
+                                                {couponMessage.text}
+                                            </p>
+                                        )}
+                                    </div>
+                                    
                                     <button
                                         onClick={() => { logout(); setMobileMenuOpen(false); }}
                                         className="w-full px-3 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition flex items-center"

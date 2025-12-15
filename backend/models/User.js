@@ -23,6 +23,10 @@ const userSchema = mongoose.Schema(
         googleId: { type: String, unique: true, sparse: true },
         avatar: { type: String }, // Google profile picture
 
+        // Coupon/Offer fields
+        couponCode: { type: String, default: null }, // Assigned coupon code for the user
+        couponUsed: { type: Boolean, default: false }, // Whether the user has used their coupon
+
         verificationToken: String,
         resetPasswordToken: String,
         resetPasswordExpire: Date

@@ -9,7 +9,8 @@ import {
     PlusCircle,
     Users,
     Settings,
-    ShieldCheck
+    ShieldCheck,
+    Gift
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -105,6 +106,13 @@ const AdminDashboard = ({ navigate }) => {
             description: 'Create and manage quiz certificates',
             color: 'blue',
             route: 'certificate-admin'
+        },
+        {
+            icon: Gift,
+            title: 'Offers & Coupons',
+            description: 'Manage promotional offers and vouchers',
+            color: 'pink',
+            route: 'offer-admin'
         }
     ];
 
@@ -155,7 +163,7 @@ const AdminDashboard = ({ navigate }) => {
                         <Settings size={22} className="text-gray-600" />
                         Admin Tools
                     </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                         {adminFeatures.map((feature, index) => (
                             <AdminCard
                                 key={index}

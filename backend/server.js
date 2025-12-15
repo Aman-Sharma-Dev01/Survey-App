@@ -11,6 +11,7 @@ import quizRoutes from './routes/quizRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import certificateRoutes from './routes/certificateRoutes.js';
+import couponRoutes from './routes/couponRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -52,6 +53,7 @@ app.use('/api/quizzes', quizRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/certificates', certificateRoutes);
+app.use('/api/coupons', couponRoutes);
 
 // Error Handling Middleware (Basic example)
 app.use((err, req, res, next) => {

@@ -5,6 +5,7 @@ import { protect } from '../middleware/authMiddleware.js';
 // import { sendRegistrationEmail } from '../utils/notificationService.js'; // Removed SMS import
 // import { sendRegistrationEmail } from '../utils/emailService.js';
 import { sendVerificationEmail, sendResetPasswordEmail ,sendRegistrationEmail } from '../utils/emailService.js';
+import { assignCouponToNewUser } from './couponRoutes.js';
 
 
 
@@ -112,6 +113,13 @@ router.post('/google', async (req, res) => {
             });
             await user.save();
 
+            // Assign coupon to new user if offer is active
+            try {
+                await assignCouponToNewUser(user._id, user.email);
+            } catch (error) {
+                console.error('Error assigning coupon during Google auth:', error);
+            }
+
             // Send welcome email for new users
             try {
                 await sendRegistrationEmail(email, name || email.split('@')[0]);
@@ -157,6 +165,8 @@ router.get('/profile', protect, async (req, res) => {
             planExpiresAt: user.planExpiresAt,
             planActivatedAt: user.planActivatedAt,
             isPlanActive,
+            couponCode: user.couponUsed ? null : user.couponCode,
+            couponUsed: user.couponUsed,
             createdAt: user.createdAt
         });
     } catch (error) {
@@ -222,6 +232,14 @@ router.get("/verify/:token", async (req, res) => {
     user.isVerified = true;
     user.verificationToken = undefined;
     await user.save();
+    
+    // Assign coupon to new user if offer is active
+    try {
+        await assignCouponToNewUser(user._id, user.email);
+    } catch (error) {
+        console.error('Error assigning coupon during verification:', error);
+    }
+    
     sendRegistrationEmail(user.email, user.name);
     return res.json({ message: "Verification successful" });
 });
