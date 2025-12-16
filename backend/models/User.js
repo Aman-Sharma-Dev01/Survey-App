@@ -2,6 +2,12 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 
+// Helper function to check if email belongs to premium domain (lifetime free premium)
+const isPremiumDomain = (email) => {
+    if (!email) return false;
+    return email.toLowerCase().endsWith('@mru.edu.in');
+};
+
 const userSchema = mongoose.Schema(
     {
         name: { type: String, required: true },
@@ -36,6 +42,9 @@ const userSchema = mongoose.Schema(
 
 // Virtual to check if plan is active
 userSchema.virtual('isPlanActive').get(function() {
+    // Grant lifetime premium to mru.edu.in emails
+    if (isPremiumDomain(this.email)) return true;
+    
     if (this.plan === 'free') return false;
     if (!this.planExpiresAt) return false;
     return new Date() < this.planExpiresAt;
@@ -43,6 +52,9 @@ userSchema.virtual('isPlanActive').get(function() {
 
 // Method to check if user has premium features
 userSchema.methods.hasPremiumFeatures = function() {
+    // Grant lifetime premium to mru.edu.in emails
+    if (isPremiumDomain(this.email)) return true;
+    
     if (this.plan === 'free') return false;
     if (!this.planExpiresAt) return false;
     return new Date() < this.planExpiresAt;
