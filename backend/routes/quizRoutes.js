@@ -11,7 +11,7 @@ const router = express.Router();
 =========================================================== */
 router.post('/', protect, async (req, res) => {
     try {
-        const { title, description, questions, settings, classes } = req.body;
+        const { title, description, questions, settings, classes, isScheduled, startAt, endAt, timeZone } = req.body;
 
         const quiz = new Quiz({
             title,
@@ -20,6 +20,10 @@ router.post('/', protect, async (req, res) => {
             settings,
             classes: classes || [],
             creator: req.user._id,
+            isScheduled: !!isScheduled,
+            startAt: startAt ? new Date(startAt) : null,
+            endAt: endAt ? new Date(endAt) : null,
+            timeZone: timeZone || 'UTC'
         });
 
         const createdQuiz = await quiz.save();
@@ -60,12 +64,27 @@ router.get('/public/:id', async (req, res) => {
             return res.status(403).json({ message: 'This quiz is not available' });
         }
 
+        // Enforce scheduling if enabled
+        if (quiz.isScheduled) {
+            const now = new Date();
+            if (quiz.startAt && now < quiz.startAt) {
+                return res.status(403).json({ message: 'This quiz is scheduled for a future time' });
+            }
+            if (quiz.endAt && now > quiz.endAt) {
+                return res.status(403).json({ message: 'This quiz has ended' });
+            }
+        }
+
         // Return quiz without correct answers
         const publicQuiz = {
             _id: quiz._id,
             title: quiz.title,
             description: quiz.description,
             classes: quiz.classes || [], // Include classes for selection
+            isScheduled: !!quiz.isScheduled,
+            startAt: quiz.startAt || null,
+            endAt: quiz.endAt || null,
+            timeZone: quiz.timeZone || 'UTC',
             questions: quiz.questions.map(q => ({
                 _id: q._id,
                 questionText: q.questionText,
@@ -148,6 +167,17 @@ router.post('/submit/:id', async (req, res) => {
 
         if (!quiz.isPublished) {
             return res.status(403).json({ message: 'This quiz is not available' });
+        }
+
+        // Enforce scheduling if enabled
+        if (quiz.isScheduled) {
+            const now = new Date();
+            if (quiz.startAt && now < quiz.startAt) {
+                return res.status(403).json({ message: 'This quiz is scheduled for a future time' });
+            }
+            if (quiz.endAt && now > quiz.endAt) {
+                return res.status(403).json({ message: 'This quiz has ended' });
+            }
         }
 
         // Check if roll number already exists for this quiz (only if setting is enabled)
@@ -402,7 +432,7 @@ router.put('/:id', protect, async (req, res) => {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        const { title, description, questions, settings, isPublished, classes } = req.body;
+        const { title, description, questions, settings, isPublished, classes, isScheduled, startAt, endAt, timeZone } = req.body;
 
         if (title) quiz.title = title;
         if (description !== undefined) quiz.description = description;
@@ -410,6 +440,10 @@ router.put('/:id', protect, async (req, res) => {
         if (settings) quiz.settings = { ...quiz.settings, ...settings };
         if (isPublished !== undefined) quiz.isPublished = isPublished;
         if (classes !== undefined) quiz.classes = classes;
+        if (typeof isScheduled === 'boolean') quiz.isScheduled = isScheduled;
+        if (startAt !== undefined) quiz.startAt = startAt ? new Date(startAt) : null;
+        if (endAt !== undefined) quiz.endAt = endAt ? new Date(endAt) : null;
+        if (timeZone !== undefined) quiz.timeZone = timeZone;
 
         const updatedQuiz = await quiz.save();
         res.json(updatedQuiz);

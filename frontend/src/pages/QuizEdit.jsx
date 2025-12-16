@@ -347,6 +347,10 @@ const QuizEditPage = ({ quizId, navigate }) => {
     const [showSettings, setShowSettings] = useState(false);
     const [status, setStatus] = useState('');
     const [showPremiumModal, setShowPremiumModal] = useState(false);
+    // Scheduling state
+    const [isScheduled, setIsScheduled] = useState(false);
+    const [startAtLocal, setStartAtLocal] = useState('');
+    const [endAtLocal, setEndAtLocal] = useState('');
 
     useEffect(() => {
         const fetchQuiz = async () => {
@@ -365,6 +369,20 @@ const QuizEditPage = ({ quizId, navigate }) => {
                     ...q,
                     tempId: q._id || generateTempId()
                 })) || []);
+                // Initialize scheduling fields
+                setIsScheduled(Boolean(quiz.isScheduled));
+                const toLocal = (iso) => {
+                    if (!iso) return '';
+                    const d = new Date(iso);
+                    const yyyy = d.getFullYear();
+                    const mm = String(d.getMonth() + 1).padStart(2, '0');
+                    const dd = String(d.getDate()).padStart(2, '0');
+                    const hh = String(d.getHours()).padStart(2, '0');
+                    const min = String(d.getMinutes()).padStart(2, '0');
+                    return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+                };
+                setStartAtLocal(quiz.startAt ? toLocal(quiz.startAt) : '');
+                setEndAtLocal(quiz.endAt ? toLocal(quiz.endAt) : '');
             } catch (err) {
                 setStatus('Error: Failed to load quiz');
             } finally {
@@ -475,7 +493,11 @@ const QuizEditPage = ({ quizId, navigate }) => {
                 description,
                 classes,
                 questions: cleanQuestions,
-                settings
+                settings,
+                isScheduled: !!isScheduled,
+                startAt: startAtLocal ? new Date(startAtLocal).toISOString() : null,
+                endAt: endAtLocal ? new Date(endAtLocal).toISOString() : null,
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
             });
             
             setStatus('Quiz updated successfully! Redirecting...');
@@ -723,6 +745,44 @@ const QuizEditPage = ({ quizId, navigate }) => {
                             </div>
                         </div>
                     )}
+                    {/* Scheduling */}
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-800">Schedule Quiz</h3>
+                                <p className="text-xs text-gray-500">Optional — make the quiz available only during the scheduled window.</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <label className="inline-flex items-center">
+                                    <input type="checkbox" className="mr-2" checked={isScheduled} onChange={(e) => setIsScheduled(e.target.checked)} />
+                                    <span className="text-sm">Enable Schedule</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {isScheduled && (
+                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs text-gray-600">Start (local)</label>
+                                    <input
+                                        type="datetime-local"
+                                        value={startAtLocal}
+                                        onChange={(e) => setStartAtLocal(e.target.value)}
+                                        className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-gray-600">End (local)</label>
+                                    <input
+                                        type="datetime-local"
+                                        value={endAtLocal}
+                                        onChange={(e) => setEndAtLocal(e.target.value)}
+                                        className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Premium Upgrade Modal */}

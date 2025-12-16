@@ -355,6 +355,10 @@ const QuizCreatePage = ({ navigate }) => {
     const [status, setStatus] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPremiumModal, setShowPremiumModal] = useState(false);
+    // Scheduling state
+    const [isScheduled, setIsScheduled] = useState(false);
+    const [startAtLocal, setStartAtLocal] = useState(''); // datetime-local string
+    const [endAtLocal, setEndAtLocal] = useState('');
 
     const addClass = () => {
         const trimmed = classesInput.trim();
@@ -458,7 +462,11 @@ const QuizCreatePage = ({ navigate }) => {
                 description,
                 classes,
                 questions: cleanQuestions,
-                settings
+                settings,
+                isScheduled: !!isScheduled,
+                startAt: startAtLocal ? new Date(startAtLocal).toISOString() : null,
+                endAt: endAtLocal ? new Date(endAtLocal).toISOString() : null,
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
             });
             
             setStatus('Quiz created successfully! Redirecting...');
@@ -692,6 +700,44 @@ const QuizCreatePage = ({ navigate }) => {
                             </div>
                         </div>
                     )}
+                    {/* Scheduling */}
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-800">Schedule Quiz</h3>
+                                <p className="text-xs text-gray-500">Optional — make the quiz available only during the scheduled window.</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <label className="inline-flex items-center">
+                                    <input type="checkbox" className="mr-2" checked={isScheduled} onChange={(e) => setIsScheduled(e.target.checked)} />
+                                    <span className="text-sm">Enable Schedule</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {isScheduled && (
+                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs text-gray-600">Start (local)</label>
+                                    <input
+                                        type="datetime-local"
+                                        value={startAtLocal}
+                                        onChange={(e) => setStartAtLocal(e.target.value)}
+                                        className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-gray-600">End (local)</label>
+                                    <input
+                                        type="datetime-local"
+                                        value={endAtLocal}
+                                        onChange={(e) => setEndAtLocal(e.target.value)}
+                                        className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Premium Upgrade Modal */}

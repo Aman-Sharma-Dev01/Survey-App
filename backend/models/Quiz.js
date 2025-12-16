@@ -47,6 +47,12 @@ const quizSchema = mongoose.Schema(
             requireSequentialAnswering: { type: Boolean, default: false }, // Must answer current question before moving to next
             fullscreenModeEnabled: { type: Boolean, default: false } // Force fullscreen mode (3 exits = auto-submit)
         },
+        // Scheduling fields
+        isScheduled: { type: Boolean, default: false },
+        startAt: { type: Date, default: null },
+        endAt: { type: Date, default: null },
+        timeZone: { type: String, default: 'UTC' }, // optional IANA timezone
+
         isPublished: { type: Boolean, default: false },
         attemptCount: { type: Number, default: 0 }
     },
@@ -56,6 +62,20 @@ const quizSchema = mongoose.Schema(
 // Virtual for total points
 quizSchema.virtual('totalPoints').get(function() {
     return this.questions.reduce((sum, q) => sum + (q.points || 1), 0);
+});
+
+// Virtual to check if quiz is currently active (based on schedule)
+quizSchema.virtual('isActive').get(function() {
+    // If not published, not active
+    if (!this.isPublished) return false;
+
+    // If not scheduled, published quizzes are active
+    if (!this.isScheduled) return true;
+
+    const now = new Date();
+    if (this.startAt && now < this.startAt) return false;
+    if (this.endAt && now > this.endAt) return false;
+    return true;
 });
 
 // Ensure virtuals are included in JSON output
