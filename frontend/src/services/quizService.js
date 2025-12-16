@@ -61,3 +61,22 @@ export const submitQuizResponse = async (quizId, responseData) => {
 export const getQuizAnalytics = async (quizId) => {
     return fetchApi(`/quizzes/analytics/${quizId}`, 'GET', null, true);
 };
+
+/**
+ * Get share URL for a quiz (public link)
+ * @param {string} quizId
+ * @returns {string}
+ */
+export const getQuizShareUrl = (quizId) => {
+    return `${window.location.origin}/#quiz/${quizId}`;
+};
+
+/**
+ * Get QR code image URL for a quiz (uses external QR API)
+ * @param {string} quizId
+ * @returns {string}
+ */
+export const getQuizQRCodeUrl = (quizId) => {
+    const url = getQuizShareUrl(quizId);
+    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+};

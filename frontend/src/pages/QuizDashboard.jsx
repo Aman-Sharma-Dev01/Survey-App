@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { PlusCircle, Loader, Trash2, BarChart3, Link, Play, Eye, EyeOff, Edit, Search } from 'lucide-react';
+import { PlusCircle, Loader, Trash2, BarChart3, Link, Play, Eye, EyeOff, Edit, Search, QrCode } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { getCreatorQuizzes, deleteQuiz, updateQuizPublishStatus } from '../services/quizService';
+import { getCreatorQuizzes, deleteQuiz, updateQuizPublishStatus, getQuizQRCodeUrl, getQuizShareUrl } from '../services/quizService';
 
-const QuizCard = ({ quiz, onPublish, onDelete, onAnalytics, onEdit, onCopyLink }) => {
+const QuizCard = ({ quiz, onPublish, onDelete, onAnalytics, onEdit, onCopyLink, onShowQR }) => {
     const [copying, setCopying] = useState(false);
 
     const handleCopy = async () => {
@@ -47,8 +47,8 @@ const QuizCard = ({ quiz, onPublish, onDelete, onAnalytics, onEdit, onCopyLink }
                 <button
                     onClick={() => onPublish(quiz, !quiz.isPublished)}
                     className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition ${
-                        quiz.isPublished 
-                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
+                        quiz.isPublished
+                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
                     }`}
                 >
@@ -57,13 +57,24 @@ const QuizCard = ({ quiz, onPublish, onDelete, onAnalytics, onEdit, onCopyLink }
                 </button>
 
                 {quiz.isPublished && (
-                    <button
-                        onClick={handleCopy}
-                        className="flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
-                    >
-                        <Link size={16} className="mr-1" />
-                        {copying ? 'Copied!' : 'Copy Link'}
-                    </button>
+                    <>
+                        <button
+                            onClick={handleCopy}
+                            className="flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+                        >
+                            <Link size={16} className="mr-1" />
+                            {copying ? 'Copied!' : 'Copy Link'}
+                        </button>
+
+                        <button
+                            onClick={() => onShowQR(quiz)}
+                            className="flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition"
+                            title="Show QR Code"
+                        >
+                            <QrCode size={16} className="mr-1" />
+                            QR
+                        </button>
+                    </>
                 )}
 
                 <button
@@ -97,6 +108,8 @@ const QuizDashboardPage = ({ navigate }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [showQRModal, setShowQRModal] = useState(false);
+    const [selectedQuiz, setSelectedQuiz] = useState(null);
 
     const fetchQuizzes = useCallback(async () => {
         setLoading(true);
@@ -152,6 +165,20 @@ const QuizDashboardPage = ({ navigate }) => {
             </div>
         );
     }
+
+    // QR modal handlers
+    const copyToClipboard = async (text) => {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (e) {
+            console.error('Copy failed', e);
+        }
+    };
+
+    const closeQRModal = () => {
+        setShowQRModal(false);
+        setSelectedQuiz(null);
+    };
 
     return (
         <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
@@ -252,9 +279,67 @@ const QuizDashboardPage = ({ navigate }) => {
                                     onDelete={handleDelete}
                                     onEdit={handleEdit}
                                     onAnalytics={handleAnalytics}
+                                    onShowQR={(q) => {
+                                        setSelectedQuiz(q);
+                                        setShowQRModal(true);
+                                    }}
                                 />
                             ))}
                         </div>
+                        {showQRModal && selectedQuiz && (
+                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                                <div className="bg-white rounded-2xl max-w-md w-full p-6">
+                                    <div className="text-center">
+                                        <h2 className="text-xl font-bold text-gray-800 mb-4">Quiz QR Code</h2>
+
+                                        <div className="bg-gray-50 rounded-xl p-4 mb-4">
+                                            <p className="text-sm text-gray-600 mb-2">{selectedQuiz.title}</p>
+                                            <p className="font-mono text-sm bg-white px-3 py-1 rounded inline-block">{selectedQuiz._id}</p>
+                                        </div>
+
+                                        <img
+                                            src={getQuizQRCodeUrl(selectedQuiz._id)}
+                                            alt="Quiz QR Code"
+                                            className="mx-auto w-48 h-48 rounded-lg shadow-lg mb-4"
+                                        />
+
+                                        <div className="space-y-2 mb-4">
+                                            <p className="text-sm text-gray-500">Share URL:</p>
+                                            <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                                                <input
+                                                    type="text"
+                                                    value={getQuizShareUrl(selectedQuiz._id)}
+                                                    readOnly
+                                                    className="flex-1 text-xs bg-transparent outline-none"
+                                                />
+                                                <button
+                                                    onClick={() => copyToClipboard(getQuizShareUrl(selectedQuiz._id))}
+                                                    className="px-2 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-700"
+                                                >
+                                                    Copy
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={closeQRModal}
+                                                className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors"
+                                            >
+                                                Close
+                                            </button>
+                                            <a
+                                                href={getQuizQRCodeUrl(selectedQuiz._id)}
+                                                download={`quiz-${selectedQuiz._id}-qr.png`}
+                                                className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-center"
+                                            >
+                                                Download QR
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </>
                 );
             })()}
