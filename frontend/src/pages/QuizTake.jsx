@@ -649,6 +649,82 @@ const QuizTakePage = ({ quizId }) => {
 
     // Start Screen
     if (!hasStarted) {
+        // If user chose to view instructions, show instructions as a standalone page
+        if (showInstructions) {
+            return (
+                <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8">
+                    <div className="bg-white rounded-xl shadow-xl p-8 text-left">
+                        <h1 className="text-2xl font-bold text-emerald-800 mb-4">{quiz.title} — Instructions</h1>
+                        <div className="mb-4">
+                            <p className="text-sm text-gray-600 mb-2">Please read the instructions carefully before starting the quiz.</p>
+                            <ul className="list-disc list-inside text-sm text-gray-700 space-y-2">
+                                <li>Total Questions: <strong className="text-gray-800">{questions.length}</strong></li>
+                                <li>Total Points: <strong className="text-gray-800">{quiz.totalPoints}</strong></li>
+                                {quiz.settings?.timeLimit > 0 && (
+                                    <li>Time Limit: <strong className="text-gray-800">{quiz.settings.timeLimit} minutes</strong></li>
+                                )}
+                                {quiz.settings?.fullscreenModeEnabled && (
+                                    <li>This quiz requires <strong className="text-gray-800">fullscreen</strong>. You will be asked to enter fullscreen before starting.</li>
+                                )}
+                                {quiz.settings?.tabSwitchingEnabled && (
+                                    <li><strong className="text-gray-800">Do not switch tabs</strong> during the quiz. Excessive tab switching may auto-submit the quiz.</li>
+                                )}
+                                {quiz.settings?.requireSequentialAnswering && (
+                                    <li>Questions must be answered in order. You cannot jump ahead until the current question is answered.</li>
+                                )}
+                                {quiz.settings?.preventDuplicateRollNo && (
+                                    <li>Duplicate roll numbers are not allowed. Enter your correct roll number.</li>
+                                )}
+                                <li>Avoid refreshing the page or using developer tools; right-click and certain shortcuts are disabled.</li>
+                                <li>Ensure a stable internet connection for uninterrupted submission.</li>
+                            </ul>
+                        </div>
+
+                        <label className="flex items-center space-x-3 mb-4">
+                            <input
+                                type="checkbox"
+                                checked={agreedToGuidelines}
+                                onChange={(e) => setAgreedToGuidelines(e.target.checked)}
+                                className="w-4 h-4"
+                            />
+                            <span className="text-sm text-gray-700">I have read and agree to the instructions above</span>
+                        </label>
+
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setShowInstructions(false)}
+                                className="px-4 py-2 border rounded-lg hover:bg-gray-50 transition"
+                            >
+                                Back
+                            </button>
+
+                            <button
+                                onClick={async () => {
+                                    if (!agreedToGuidelines) {
+                                        alert('Please agree to the instructions before starting the quiz.');
+                                        return;
+                                    }
+
+                                    const processedQuestions = processQuestions(quiz);
+                                    setQuestions(processedQuestions);
+
+                                    if (quiz?.settings?.fullscreenModeEnabled) {
+                                        await enterFullscreen();
+                                    }
+
+                                    setHasStarted(true);
+                                }}
+                                disabled={!agreedToGuidelines}
+                                className={`px-6 py-3 rounded-lg font-medium ${!agreedToGuidelines ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
+                            >
+                                {quiz?.settings?.fullscreenModeEnabled ? 'Enter Fullscreen & Start Quiz' : 'Start Quiz'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
         return (
             <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8">
                 <div className="bg-white rounded-xl shadow-xl p-8 text-center">
