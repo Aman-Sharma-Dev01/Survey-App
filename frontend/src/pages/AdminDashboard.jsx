@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     CreditCard, 
     History, 
@@ -10,9 +10,14 @@ import {
     Users,
     Settings,
     ShieldCheck,
-    Gift
+    Gift,
+    Mail,
+    MailCheck,
+    MailX,
+    Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
+import api from '../services/api';
 
 // Admin email allowed to access this page
 const ADMIN_EMAIL = 'support@surveyzen.live';
@@ -51,9 +56,45 @@ const AdminCard = ({ icon: Icon, title, description, color, onClick }) => {
 
 const AdminDashboard = ({ navigate }) => {
     const { user } = useAuth();
+    const [emailVerificationEnabled, setEmailVerificationEnabled] = useState(true);
+    const [isLoadingSettings, setIsLoadingSettings] = useState(true);
+    const [isTogglingVerification, setIsTogglingVerification] = useState(false);
     
     // Check if current user is admin
     const isAdmin = user?.email === ADMIN_EMAIL;
+
+    // Fetch system settings
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const response = await api.get('/auth/system-settings');
+                setEmailVerificationEnabled(response.data.emailVerificationEnabled);
+            } catch (error) {
+                console.error('Error fetching system settings:', error);
+            } finally {
+                setIsLoadingSettings(false);
+            }
+        };
+        if (isAdmin) {
+            fetchSettings();
+        }
+    }, [isAdmin]);
+
+    // Toggle email verification
+    const toggleEmailVerification = async () => {
+        setIsTogglingVerification(true);
+        try {
+            const response = await api.put('/auth/system-settings', {
+                emailVerificationEnabled: !emailVerificationEnabled
+            });
+            setEmailVerificationEnabled(response.data.emailVerificationEnabled);
+        } catch (error) {
+            console.error('Error updating system settings:', error);
+            alert('Failed to update setting');
+        } finally {
+            setIsTogglingVerification(false);
+        }
+    };
 
     // Access denied screen for non-admins
     if (!isAdmin) {
@@ -174,6 +215,63 @@ const AdminDashboard = ({ navigate }) => {
                                 onClick={() => navigate(feature.route)}
                             />
                         ))}
+                    </div>
+                </div>
+
+                {/* System Settings */}
+                <div className="mb-10">
+                    <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <Mail size={22} className="text-gray-600" />
+                        System Settings
+                    </h2>
+                    <div className="bg-white rounded-2xl shadow-lg p-6">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className={`p-3 rounded-xl ${emailVerificationEnabled ? 'bg-green-100' : 'bg-gray-100'}`}>
+                                    {emailVerificationEnabled ? (
+                                        <MailCheck size={28} className="text-green-600" />
+                                    ) : (
+                                        <MailX size={28} className="text-gray-500" />
+                                    )}
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-gray-800">Email Verification</h3>
+                                    <p className="text-sm text-gray-500">
+                                        {emailVerificationEnabled 
+                                            ? 'Users must verify their email after registration'
+                                            : 'Users are auto-verified upon registration'
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={toggleEmailVerification}
+                                disabled={isLoadingSettings || isTogglingVerification}
+                                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                                    emailVerificationEnabled ? 'bg-green-500' : 'bg-gray-300'
+                                } ${(isLoadingSettings || isTogglingVerification) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                            >
+                                {isTogglingVerification ? (
+                                    <span className="absolute inset-0 flex items-center justify-center">
+                                        <Loader2 size={16} className="animate-spin text-white" />
+                                    </span>
+                                ) : (
+                                    <span
+                                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform ${
+                                            emailVerificationEnabled ? 'translate-x-8' : 'translate-x-1'
+                                        }`}
+                                    />
+                                )}
+                            </button>
+                        </div>
+                        <div className={`mt-4 p-3 rounded-lg ${emailVerificationEnabled ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
+                            <p className={`text-sm ${emailVerificationEnabled ? 'text-green-700' : 'text-amber-700'}`}>
+                                {emailVerificationEnabled 
+                                    ? '✓ Email verification is enabled. New users will receive a verification email.'
+                                    : '⚠ Email verification is disabled. Users will be auto-verified on registration.'
+                                }
+                            </p>
+                        </div>
                     </div>
                 </div>
 

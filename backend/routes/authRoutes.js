@@ -1,5 +1,6 @@
 import express from 'express';
 import User from '../models/User.js';
+import SystemSettings from '../models/SystemSettings.js';
 import jwt from 'jsonwebtoken';
 import { protect } from '../middleware/authMiddleware.js';
 // import { sendRegistrationEmail } from '../utils/notificationService.js'; // Removed SMS import
@@ -24,16 +25,41 @@ router.post('/register', async (req, res) => {
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: 'User already exists' });
 
+    // Check if email verification is enabled
+    let settings = await SystemSettings.findOne({ key: 'global' });
+    if (!settings) {
+        settings = new SystemSettings({ key: 'global' });
+        await settings.save();
+    }
+
     const user = new User({ name, email, password });
 
-    // Create token
-    const verifyToken = user.generateVerificationToken();
-    await user.save();
+    if (settings.emailVerificationEnabled) {
+        // Email verification is ON - send verification email
+        const verifyToken = user.generateVerificationToken();
+        await user.save();
 
-    // Send verification email
-    await sendVerificationEmail(email, name, verifyToken);
+        // Send verification email
+        await sendVerificationEmail(email, name, verifyToken);
 
-    res.json({ message: "Registration successful! Please verify your email." });
+        res.json({ message: "Registration successful! Please verify your email." });
+    } else {
+        // Email verification is OFF - auto-verify user
+        user.isVerified = true;
+        await user.save();
+
+        // Try to assign coupon to new user
+        try {
+            await assignCouponToNewUser(user._id);
+        } catch (error) {
+            console.error('Error assigning coupon during registration:', error);
+        }
+
+        res.json({ 
+            message: "Registration successful! You can now login.",
+            autoVerified: true
+        });
+    }
 });
 
 
@@ -277,4 +303,58 @@ router.post('/reset-password/:token', async (req, res) => {
     await user.save();
 
     res.json({ message: "Password reset successful" });
+});
+
+// @desc    Get system settings
+// @route   GET /api/auth/system-settings
+// @access  Public (for checking verification status)
+router.get('/system-settings', async (req, res) => {
+    try {
+        let settings = await SystemSettings.findOne({ key: 'global' });
+        if (!settings) {
+            settings = new SystemSettings({ key: 'global' });
+            await settings.save();
+        }
+        res.json({
+            emailVerificationEnabled: settings.emailVerificationEnabled
+        });
+    } catch (error) {
+        console.error('Error fetching system settings:', error);
+        res.status(500).json({ message: 'Error fetching system settings' });
+    }
+});
+
+// @desc    Update system settings (Admin only)
+// @route   PUT /api/auth/system-settings
+// @access  Private (Admin)
+router.put('/system-settings', protect, async (req, res) => {
+    try {
+        const ADMIN_EMAIL = 'support@surveyzen.live';
+        const user = await User.findById(req.user._id);
+        
+        if (!user || user.email !== ADMIN_EMAIL) {
+            return res.status(403).json({ message: 'Admin access required' });
+        }
+
+        const { emailVerificationEnabled } = req.body;
+
+        let settings = await SystemSettings.findOne({ key: 'global' });
+        if (!settings) {
+            settings = new SystemSettings({ key: 'global' });
+        }
+
+        if (typeof emailVerificationEnabled === 'boolean') {
+            settings.emailVerificationEnabled = emailVerificationEnabled;
+        }
+        settings.lastUpdatedBy = req.user._id;
+        await settings.save();
+
+        res.json({
+            message: 'System settings updated successfully',
+            emailVerificationEnabled: settings.emailVerificationEnabled
+        });
+    } catch (error) {
+        console.error('Error updating system settings:', error);
+        res.status(500).json({ message: 'Error updating system settings' });
+    }
 });
