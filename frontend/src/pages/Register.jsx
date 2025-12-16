@@ -85,8 +85,14 @@ const RegisterPage = ({ navigate = () => {} }) => {
 
         try {
             const data = await registerCreator({ name, email, password });
-            setSuccess('Account created successfully! Please check your email to verify your account.');
-            setTimeout(() => navigate('login'), 3000);
+            // Backend returns `autoVerified: true` when email verification is disabled
+            if (data && data.autoVerified) {
+                setSuccess('Account created successfully! You can now login.');
+                setTimeout(() => navigate('login'), 3000);
+            } else {
+                setSuccess('Account created successfully! Go to your email (Gmail) for the verification link.');
+                setTimeout(() => navigate('login'), 5000);
+            }
         } catch (err) {
             setError(err.message || 'Registration failed. Try again.');
         } finally {
