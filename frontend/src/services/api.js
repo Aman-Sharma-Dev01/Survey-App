@@ -3,8 +3,8 @@
 
 
 
-export const BASE_URL = 'https://survey-app-egj3.onrender.com/api';     // New backend URL
-// export const BASE_URL = 'http://localhost:5000/api'; 
+// export const BASE_URL = 'https://survey-app-egj3.onrender.com/api';     // New backend URL
+export const BASE_URL = 'http://localhost:5000/api'; 
 // Helper to access token storage directly (AuthContext stores token in localStorage)
 const getAuthToken = () => localStorage.getItem('token');
 const removeAuthToken = () => localStorage.removeItem('token');
@@ -54,7 +54,10 @@ export const fetchApi = async (url, method = 'GET', data = null, isProtected = f
 
         if (!response.ok) {
             // API returned a non-2xx status (e.g., 400, 404, 500)
-            throw new Error(responseData.message || `API error on ${url}: ${response.status}`);
+            const err = new Error(responseData?.message || `API error on ${url}: ${response.status}`);
+            // Attach full response data for callers to inspect (e.g., schedule info)
+            err.data = responseData;
+            throw err;
         }
 
         return responseData;

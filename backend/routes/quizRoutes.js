@@ -68,10 +68,22 @@ router.get('/public/:id', async (req, res) => {
         if (quiz.isScheduled) {
             const now = new Date();
             if (quiz.startAt && now < quiz.startAt) {
-                return res.status(403).json({ message: 'This quiz is scheduled for a future time' });
+                return res.status(403).json({ 
+                    message: 'This quiz is scheduled for a future time',
+                    isScheduled: true,
+                    startAt: quiz.startAt,
+                    endAt: quiz.endAt || null,
+                    timeZone: quiz.timeZone || 'UTC'
+                });
             }
             if (quiz.endAt && now > quiz.endAt) {
-                return res.status(403).json({ message: 'This quiz has ended' });
+                return res.status(403).json({ 
+                    message: 'This quiz has ended',
+                    isScheduled: true,
+                    startAt: quiz.startAt || null,
+                    endAt: quiz.endAt,
+                    timeZone: quiz.timeZone || 'UTC'
+                });
             }
         }
 
@@ -173,10 +185,22 @@ router.post('/submit/:id', async (req, res) => {
         if (quiz.isScheduled) {
             const now = new Date();
             if (quiz.startAt && now < quiz.startAt) {
-                return res.status(403).json({ message: 'This quiz is scheduled for a future time' });
+                return res.status(403).json({ 
+                    message: 'This quiz is scheduled for a future time',
+                    isScheduled: true,
+                    startAt: quiz.startAt,
+                    endAt: quiz.endAt || null,
+                    timeZone: quiz.timeZone || 'UTC'
+                });
             }
             if (quiz.endAt && now > quiz.endAt) {
-                return res.status(403).json({ message: 'This quiz has ended' });
+                return res.status(403).json({ 
+                    message: 'This quiz has ended',
+                    isScheduled: true,
+                    startAt: quiz.startAt || null,
+                    endAt: quiz.endAt,
+                    timeZone: quiz.timeZone || 'UTC'
+                });
             }
         }
 

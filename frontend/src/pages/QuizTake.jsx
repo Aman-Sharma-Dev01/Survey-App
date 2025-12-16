@@ -72,6 +72,8 @@ const QuizTakePage = ({ quizId }) => {
     const [answers, setAnswers] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [scheduledInfo, setScheduledInfo] = useState(null);
+    const [scheduledTimeLeft, setScheduledTimeLeft] = useState(null);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [results, setResults] = useState(null);
     const [timeLeft, setTimeLeft] = useState(null);
@@ -122,7 +124,22 @@ const QuizTakePage = ({ quizId }) => {
                     setTimeLeft(data.settings.timeLimit * 60);
                 }
             } catch (err) {
-                setError(err.message || 'Quiz not found');
+                // If server returned scheduling info, store structured info and start countdown
+                if (err?.data && err.data.isScheduled && err.data.startAt) {
+                    const startAt = err.data.startAt;
+                    const endAt = err.data.endAt;
+                    const tz = err.data.timeZone;
+                    setScheduledInfo({ startAt, endAt, timeZone: tz });
+                    try {
+                        const start = new Date(startAt);
+                        setScheduledTimeLeft(Math.max(0, Math.floor((start - new Date()) / 1000)));
+                        setError('');
+                    } catch (e) {
+                        setError(err.message || 'This quiz is scheduled for a future time');
+                    }
+                } else {
+                    setError(err.message || 'Quiz not found');
+                }
             } finally {
                 setLoading(false);
             }
@@ -199,6 +216,55 @@ const QuizTakePage = ({ quizId }) => {
         }
         return () => clearInterval(timerRef.current);
     }, [hasStarted, isSubmitted]);
+
+    // Scheduled quiz countdown: when scheduledInfo exists, count down and refetch when start reaches
+    useEffect(() => {
+        if (!scheduledInfo) return;
+
+        let interval = null;
+        const tick = async () => {
+            try {
+                const start = new Date(scheduledInfo.startAt);
+                const diff = Math.floor((start - new Date()) / 1000);
+                setScheduledTimeLeft(diff);
+
+                if (diff <= 0) {
+                    // Try to fetch the quiz again - it should be available now
+                    clearInterval(interval);
+                    setLoading(true);
+                    try {
+                        const data = await getPublicQuiz(quizId);
+                        setQuiz(data);
+                        setQuestions(data.questions);
+                        if (data.settings?.timeLimit > 0) {
+                            setTimeLeft(data.settings.timeLimit * 60);
+                        }
+                        setScheduledInfo(null);
+                        setScheduledTimeLeft(null);
+                        setError('');
+                    } catch (err) {
+                        // Still scheduled or another error; if still scheduled, update info
+                        if (err?.data && err.data.isScheduled && err.data.startAt) {
+                            setScheduledInfo({ startAt: err.data.startAt, endAt: err.data.endAt, timeZone: err.data.timeZone });
+                            const s = new Date(err.data.startAt);
+                            setScheduledTimeLeft(Math.max(0, Math.floor((s - new Date()) / 1000)));
+                        } else {
+                            setScheduledInfo(null);
+                            setError(err.message || 'Quiz not found');
+                        }
+                    } finally {
+                        setLoading(false);
+                    }
+                }
+            } catch (e) {
+                setError('This quiz is scheduled for a future time');
+            }
+        };
+
+        tick();
+        interval = setInterval(tick, 1000);
+        return () => clearInterval(interval);
+    }, [scheduledInfo, quizId]);
 
     // Disable right-click and keyboard shortcuts to prevent inspect element
     useEffect(() => {
@@ -603,6 +669,34 @@ const QuizTakePage = ({ quizId }) => {
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
                     <p className="mt-4 text-gray-600">Loading quiz...</p>
                 </div>
+            </div>
+        );
+    }
+
+    if (scheduledInfo) {
+        const start = new Date(scheduledInfo.startAt);
+        const end = scheduledInfo.endAt ? new Date(scheduledInfo.endAt) : null;
+        const startStr = start.toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const endStr = end ? end.toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
+        const days = Math.floor((scheduledTimeLeft || 0) / (3600 * 24));
+        const hrs = Math.floor(((scheduledTimeLeft || 0) % (3600 * 24)) / 3600);
+        const mins = Math.floor(((scheduledTimeLeft || 0) % 3600) / 60);
+        const secs = Math.floor((scheduledTimeLeft || 0) % 60);
+
+        return (
+            <div className="max-w-2xl mx-auto p-8 mt-10 text-center bg-white rounded-xl shadow-xl">
+                <Clock size={48} className="mx-auto text-emerald-600 mb-4" />
+                <h2 className="text-2xl font-bold text-emerald-800 mb-2">Scheduled</h2>
+                <p className="text-gray-700 mb-3">This quiz is scheduled to start on <strong className="text-emerald-700">{startStr}</strong>.</p>
+                {endStr && <p className="text-gray-700 mb-3">It will end on <strong className="text-emerald-700">{endStr}</strong>.</p>}
+                <div className="text-2xl font-mono text-emerald-700 mb-4">
+                    {scheduledTimeLeft > 0 ? (
+                        <span>{days > 0 ? `${days}d ` : ''}{hrs.toString().padStart(2,'0')}:{mins.toString().padStart(2,'0')}:{secs.toString().padStart(2,'0')}</span>
+                    ) : (
+                        <span>Starting soon...</span>
+                    )}
+                </div>
+                <p className="text-sm text-gray-600">Times shown in your local timezone.</p>
             </div>
         );
     }
