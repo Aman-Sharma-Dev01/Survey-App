@@ -34,6 +34,20 @@ router.post('/register', async (req, res) => {
 
     const user = new User({ name, email, password });
 
+    // If admin enabled auto-grant for MRU domain, make this user pro (lifetime)
+    try {
+        if (settings.autoGrantMruPro) {
+            const mruRegex = /@mru\.edu\.in$/i;
+            if (mruRegex.test(email)) {
+                user.plan = 'pro';
+                user.planActivatedAt = new Date();
+                user.planExpiresAt = null;
+            }
+        }
+    } catch (e) {
+        console.error('Error applying autoGrantMruPro during register:', e);
+    }
+
     if (settings.emailVerificationEnabled) {
         // Email verification is ON - send verification email
         const verifyToken = user.generateVerificationToken();
@@ -48,9 +62,9 @@ router.post('/register', async (req, res) => {
         user.isVerified = true;
         await user.save();
 
-        // Try to assign coupon to new user
+        // Try to assign coupon to new user (pass email so helper can check manual coupons)
         try {
-            await assignCouponToNewUser(user._id);
+            await assignCouponToNewUser(user._id, user.email);
         } catch (error) {
             console.error('Error assigning coupon during registration:', error);
         }
@@ -137,6 +151,19 @@ router.post('/google', async (req, res) => {
                 avatar: picture,
                 isVerified: true, // Google accounts are pre-verified
             });
+
+            // Apply auto-grant for MRU domain if enabled
+            try {
+                const settings = await SystemSettings.findOne({ key: 'global' });
+                const mruRegex = /@mru\.edu\.in$/i;
+                if (settings?.autoGrantMruPro && mruRegex.test(email)) {
+                    user.plan = 'pro';
+                    user.planActivatedAt = new Date();
+                    user.planExpiresAt = null;
+                }
+            } catch (e) {
+                console.error('Error applying autoGrantMruPro during Google auth:', e);
+            }
             await user.save();
 
             // Assign coupon to new user if offer is active
@@ -180,17 +207,22 @@ router.get('/profile', protect, async (req, res) => {
         
         // Check if plan is still active
         const isPlanActive = user.hasPremiumFeatures();
-        
+
+        // If user belongs to MRU domain, show `pro` in profile response so frontend can display the pro badge.
+        const mruRegex = /@mru\.edu\.in$/i;
+        const displayPlan = mruRegex.test(user.email) ? 'pro' : (user.plan || 'free');
+        const displayIsPlanActive = mruRegex.test(user.email) ? true : isPlanActive;
+
         res.json({
             _id: user._id,
             name: user.name,
             email: user.email,
             avatar: user.avatar,
             credits: user.credits,
-            plan: user.plan || 'free',
+            plan: displayPlan,
             planExpiresAt: user.planExpiresAt,
             planActivatedAt: user.planActivatedAt,
-            isPlanActive,
+            isPlanActive: displayIsPlanActive,
             couponCode: user.couponUsed ? null : user.couponCode,
             couponUsed: user.couponUsed,
             createdAt: user.createdAt
@@ -316,7 +348,8 @@ router.get('/system-settings', async (req, res) => {
             await settings.save();
         }
         res.json({
-            emailVerificationEnabled: settings.emailVerificationEnabled
+            emailVerificationEnabled: settings.emailVerificationEnabled,
+            autoGrantMruPro: settings.autoGrantMruPro || false
         });
     } catch (error) {
         console.error('Error fetching system settings:', error);
@@ -338,8 +371,7 @@ router.put('/system-settings', protect, async (req, res) => {
             return res.status(403).json({ message: 'Admin access required' });
         }
 
-        const { emailVerificationEnabled } = req.body;
-
+        const { emailVerificationEnabled, autoGrantMruPro, runGrantNow } = req.body;
         let settings = await SystemSettings.findOne({ key: 'global' });
         if (!settings) {
             settings = new SystemSettings({ key: 'global' });
@@ -348,13 +380,36 @@ router.put('/system-settings', protect, async (req, res) => {
         if (typeof emailVerificationEnabled === 'boolean') {
             settings.emailVerificationEnabled = emailVerificationEnabled;
         }
+        if (typeof autoGrantMruPro === 'boolean') {
+            settings.autoGrantMruPro = autoGrantMruPro;
+        }
         settings.lastUpdatedBy = req.user._id;
         await settings.save();
         console.log('Saved settings:', settings);
 
+        // If admin requested an immediate grant run, update matching users
+        if (settings.autoGrantMruPro && runGrantNow) {
+            try {
+                const regex = /@mru\.edu\.in$/i;
+                const users = await User.find({ email: { $regex: regex } });
+                for (const u of users) {
+                    if (u.plan !== 'pro' || u.planExpiresAt !== null) {
+                        u.plan = 'pro';
+                        u.planActivatedAt = new Date();
+                        u.planExpiresAt = null;
+                        await u.save();
+                    }
+                }
+                console.log(`Grant run: updated ${users.length} users`);
+            } catch (grantErr) {
+                console.error('Error running immediate grant:', grantErr);
+            }
+        }
+
         res.json({
             message: 'System settings updated successfully',
-            emailVerificationEnabled: settings.emailVerificationEnabled
+            emailVerificationEnabled: settings.emailVerificationEnabled,
+            autoGrantMruPro: settings.autoGrantMruPro
         });
     } catch (error) {
         console.error('Error updating system settings:', error);

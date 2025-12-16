@@ -53,8 +53,9 @@ const couponSchema = mongoose.Schema(
     { timestamps: true }
 );
 
-// Index for faster lookups
-couponSchema.index({ code: 1 });
+// Indexes for faster lookups
+// Note: `code` field already has `unique: true` which creates an index — avoid duplicate index creation
+// couponSchema.index({ code: 1 });
 couponSchema.index({ assignedTo: 1 });
 couponSchema.index({ assignedEmail: 1 });
 couponSchema.index({ isUsed: 1 });

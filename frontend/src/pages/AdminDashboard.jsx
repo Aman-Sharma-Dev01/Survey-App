@@ -57,8 +57,11 @@ const AdminCard = ({ icon: Icon, title, description, color, onClick }) => {
 const AdminDashboard = ({ navigate }) => {
     const { user } = useAuth();
     const [emailVerificationEnabled, setEmailVerificationEnabled] = useState(true);
+    const [autoGrantMruPro, setAutoGrantMruPro] = useState(false);
     const [isLoadingSettings, setIsLoadingSettings] = useState(true);
     const [isTogglingVerification, setIsTogglingVerification] = useState(false);
+    const [isTogglingAutoGrant, setIsTogglingAutoGrant] = useState(false);
+    const [isRunningGrantNow, setIsRunningGrantNow] = useState(false);
     
     // Check if current user is admin
     const isAdmin = user?.email === ADMIN_EMAIL;
@@ -70,6 +73,7 @@ const AdminDashboard = ({ navigate }) => {
                 const response = await api.get('/auth/system-settings');
                 // `api.get` returns the response body directly
                 setEmailVerificationEnabled(response.emailVerificationEnabled);
+                setAutoGrantMruPro(Boolean(response.autoGrantMruPro));
             } catch (error) {
                 console.error('Error fetching system settings:', error);
             } finally {
@@ -95,6 +99,41 @@ const AdminDashboard = ({ navigate }) => {
                 alert(error?.message || 'Failed to update setting');
         } finally {
             setIsTogglingVerification(false);
+        }
+    };
+
+    // Toggle auto-grant for mru.edu.in users
+    const toggleAutoGrant = async () => {
+        setIsTogglingAutoGrant(true);
+        try {
+            const result = await api.put('/auth/system-settings', {
+                autoGrantMruPro: !autoGrantMruPro
+            }, true);
+            setAutoGrantMruPro(Boolean(result.autoGrantMruPro));
+            alert(`Auto-grant for mru.edu.in is now ${result.autoGrantMruPro ? 'ENABLED' : 'DISABLED'}`);
+        } catch (error) {
+            console.error('Error updating auto-grant setting:', error);
+            alert(error?.message || 'Failed to update auto-grant setting');
+        } finally {
+            setIsTogglingAutoGrant(false);
+        }
+    };
+
+    // Run immediate grant for existing MRU users (admin-only)
+    const runGrantNow = async () => {
+        if (!confirm('This will grant lifetime pro to all existing @mru.edu.in users. Proceed?')) return;
+        setIsRunningGrantNow(true);
+        try {
+            // Backend accepts `runGrantNow: true` and will perform the one-off update
+            const result = await api.put('/auth/system-settings', {
+                runGrantNow: true
+            }, true);
+            alert(result.message || 'Grant operation started. Check backend logs.');
+        } catch (error) {
+            console.error('Error running grant now:', error);
+            alert(error?.message || 'Failed to run grant operation');
+        } finally {
+            setIsRunningGrantNow(false);
         }
     };
 
@@ -273,6 +312,61 @@ const AdminDashboard = ({ navigate }) => {
                                     : '⚠ Email verification is disabled. Users will be auto-verified on registration.'
                                 }
                             </p>
+                        </div>
+                        {/* Auto-grant MRU Pro setting */}
+                        <div className="mt-6 border-t pt-6">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className={`p-3 rounded-xl ${autoGrantMruPro ? 'bg-indigo-100' : 'bg-gray-100'}`}>
+                                        <Crown size={28} className={autoGrantMruPro ? 'text-indigo-600' : 'text-gray-500'} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-gray-800">Auto-grant MRU Pro</h3>
+                                        <p className="text-sm text-gray-500">
+                                            {autoGrantMruPro
+                                                ? 'New users signing up with @mru.edu.in will be granted lifetime Pro.'
+                                                : 'Auto-grant is disabled. MRU users will not receive Pro automatically.'
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        onClick={toggleAutoGrant}
+                                        disabled={isLoadingSettings || isTogglingAutoGrant}
+                                        className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                                            autoGrantMruPro ? 'bg-indigo-600' : 'bg-gray-300'
+                                        } ${(isLoadingSettings || isTogglingAutoGrant) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                    >
+                                        {isTogglingAutoGrant ? (
+                                            <span className="absolute inset-0 flex items-center justify-center">
+                                                <Loader2 size={16} className="animate-spin text-white" />
+                                            </span>
+                                        ) : (
+                                            <span
+                                                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform ${
+                                                    autoGrantMruPro ? 'translate-x-8' : 'translate-x-1'
+                                                }`}
+                                            />
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={runGrantNow}
+                                        disabled={isRunningGrantNow}
+                                        className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium border border-indigo-100 hover:bg-indigo-100 transition"
+                                    >
+                                        {isRunningGrantNow ? 'Running…' : 'Run now'}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className={`mt-3 p-3 rounded-lg ${autoGrantMruPro ? 'bg-indigo-50 border border-indigo-100' : 'bg-gray-50 border border-gray-100'}`}>
+                                <p className={`text-sm ${autoGrantMruPro ? 'text-indigo-700' : 'text-gray-700'}`}>
+                                    {autoGrantMruPro
+                                        ? '✓ Auto-grant is ON. Existing users are unaffected unless you run the one-off grant.'
+                                        : 'Auto-grant is OFF. Use "Run now" to grant existing MRU users manually.'
+                                    }
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
