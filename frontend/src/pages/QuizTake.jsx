@@ -82,6 +82,8 @@ const QuizTakePage = ({ quizId }) => {
     const [participantClass, setParticipantClass] = useState('');
     const [participantRollNo, setParticipantRollNo] = useState('');
     const [hasStarted, setHasStarted] = useState(false);
+    const [agreedToGuidelines, setAgreedToGuidelines] = useState(false);
+    const [showInstructions, setShowInstructions] = useState(false);
     const [rollNoError, setRollNoError] = useState('');
     const [checkingRollNo, setCheckingRollNo] = useState(false);
     
@@ -108,229 +110,49 @@ const QuizTakePage = ({ quizId }) => {
 
     const timerRef = useRef(null);
 
-    // Fetch quiz
+    // Fetch quiz and handle visibility/tab-switch enforcement
     useEffect(() => {
+        let isMounted = true;
         const fetchQuiz = async () => {
             setLoading(true);
             try {
                 const data = await getPublicQuiz(quizId);
+                if (!isMounted) return;
                 setQuiz(data);
-                
-                // Don't process questions yet - will be done when starting or resuming
                 setQuestions(data.questions);
-                
-                // Set timer if time limit exists
                 if (data.settings?.timeLimit > 0) {
                     setTimeLeft(data.settings.timeLimit * 60);
                 }
             } catch (err) {
-                // If server returned scheduling info, store structured info and start countdown
+                // If server returned scheduling info, store structured info and compute time left
                 if (err?.data && err.data.isScheduled && err.data.startAt) {
                     const startAt = err.data.startAt;
                     const endAt = err.data.endAt;
                     const tz = err.data.timeZone;
                     setScheduledInfo({ startAt, endAt, timeZone: tz });
-                    try {
-                        const start = new Date(startAt);
-                        setScheduledTimeLeft(Math.max(0, Math.floor((start - new Date()) / 1000)));
-                        setError('');
-                    } catch (e) {
-                        setError(err.message || 'This quiz is scheduled for a future time');
-                    }
+                    const start = new Date(startAt);
+                    const now = new Date();
+                    const diffSeconds = Math.max(0, Math.floor((start - now) / 1000));
+                    setScheduledTimeLeft(diffSeconds);
                 } else {
-                    setError(err.message || 'Quiz not found');
+                    setError(err?.message || 'Failed to load quiz');
                 }
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
+
         fetchQuiz();
-    }, [quizId]);
 
-    // Save quiz state periodically when quiz is in progress
-    useEffect(() => {
-        if (!hasStarted || isSubmitted || !participantRollNo) return;
-
-        const saveState = () => {
-            saveQuizState(quizId, participantRollNo, {
-                answers,
-                currentIndex,
-                timeLeft,
-                startedAt: startedAt.toISOString(),
-                participantName,
-                participantClass,
-                participantRollNo,
-                tabSwitchCount: tabSwitchRef.current,
-                fullscreenExitCount: fullscreenExitRef.current,
-                splitScreenCount: splitScreenRef.current,
-                questionsOrder: questions.map(q => q._id) // Save question order for consistency
-            });
-        };
-
-        // Save immediately when state changes
-        saveState();
-
-        // Also save periodically every 5 seconds
-        const interval = setInterval(saveState, 5000);
-
-        return () => clearInterval(interval);
-    }, [hasStarted, isSubmitted, answers, currentIndex, timeLeft, participantName, participantClass, participantRollNo, quizId, questions, startedAt]);
-
-    // Check for saved session when roll number changes
-    useEffect(() => {
-        if (!quiz || !participantRollNo.trim() || hasStarted) return;
-
-        const savedState = loadQuizState(quizId, participantRollNo.trim());
-        
-        if (savedState && savedState.timeLeft > 0) {
-            // Check if the saved session is still valid (not expired - within 24 hours)
-            const savedTime = new Date(savedState.savedAt);
-            const hoursSinceSave = (new Date() - savedTime) / (1000 * 60 * 60);
-            
-            if (hoursSinceSave < 24) {
-                setRestoredSession(savedState);
-                setShowResumePrompt(true);
-            } else {
-                // Clear expired session
-                clearQuizState(quizId, participantRollNo.trim());
-            }
-        } else {
-            setRestoredSession(null);
-            setShowResumePrompt(false);
-        }
-    }, [participantRollNo, quiz, quizId, hasStarted]);
-
-    // Timer countdown
-    useEffect(() => {
-        if (hasStarted && timeLeft !== null && timeLeft > 0 && !isSubmitted) {
-            timerRef.current = setInterval(() => {
-                setTimeLeft(prev => {
-                    if (prev <= 1) {
-                        clearInterval(timerRef.current);
-                        handleSubmit(true); // Auto-submit
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-        }
-        return () => clearInterval(timerRef.current);
-    }, [hasStarted, isSubmitted]);
-
-    // Scheduled quiz countdown: when scheduledInfo exists, count down and refetch when start reaches
-    useEffect(() => {
-        if (!scheduledInfo) return;
-
-        let interval = null;
-        const tick = async () => {
-            try {
-                const start = new Date(scheduledInfo.startAt);
-                const diff = Math.floor((start - new Date()) / 1000);
-                setScheduledTimeLeft(diff);
-
-                if (diff <= 0) {
-                    // Try to fetch the quiz again - it should be available now
-                    clearInterval(interval);
-                    setLoading(true);
-                    try {
-                        const data = await getPublicQuiz(quizId);
-                        setQuiz(data);
-                        setQuestions(data.questions);
-                        if (data.settings?.timeLimit > 0) {
-                            setTimeLeft(data.settings.timeLimit * 60);
-                        }
-                        setScheduledInfo(null);
-                        setScheduledTimeLeft(null);
-                        setError('');
-                    } catch (err) {
-                        // Still scheduled or another error; if still scheduled, update info
-                        if (err?.data && err.data.isScheduled && err.data.startAt) {
-                            setScheduledInfo({ startAt: err.data.startAt, endAt: err.data.endAt, timeZone: err.data.timeZone });
-                            const s = new Date(err.data.startAt);
-                            setScheduledTimeLeft(Math.max(0, Math.floor((s - new Date()) / 1000)));
-                        } else {
-                            setScheduledInfo(null);
-                            setError(err.message || 'Quiz not found');
-                        }
-                    } finally {
-                        setLoading(false);
-                    }
-                }
-            } catch (e) {
-                setError('This quiz is scheduled for a future time');
-            }
-        };
-
-        tick();
-        interval = setInterval(tick, 1000);
-        return () => clearInterval(interval);
-    }, [scheduledInfo, quizId]);
-
-    // Disable right-click and keyboard shortcuts to prevent inspect element
-    useEffect(() => {
-        if (!hasStarted || isSubmitted) return;
-
-        // Disable right-click context menu
-        const handleContextMenu = (e) => {
-            e.preventDefault();
-            return false;
-        };
-
-        // Disable keyboard shortcuts for developer tools
-        const handleKeyDown = (e) => {
-            // F12
-            if (e.key === 'F12') {
-                e.preventDefault();
-                return false;
-            }
-            // Ctrl+Shift+I (Inspect)
-            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-                e.preventDefault();
-                return false;
-            }
-            // Ctrl+Shift+J (Console)
-            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-                e.preventDefault();
-                return false;
-            }
-            // Ctrl+Shift+C (Element selector)
-            if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-                e.preventDefault();
-                return false;
-            }
-            // Ctrl+U (View source)
-            if (e.ctrlKey && e.key === 'u') {
-                e.preventDefault();
-                return false;
-            }
-        };
-
-        document.addEventListener('contextmenu', handleContextMenu);
-        document.addEventListener('keydown', handleKeyDown);
-
-        return () => {
-            document.removeEventListener('contextmenu', handleContextMenu);
-            document.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [hasStarted, isSubmitted]);
-
-    // Tab switch detection - only if enabled in quiz settings
-    useEffect(() => {
-        if (!hasStarted || isSubmitted || !quiz?.settings?.tabSwitchingEnabled) return;
-
+        // Visibility change handler for tab-switch detection
         const handleVisibilityChange = () => {
+            if (!hasStarted || isSubmitted || !quiz?.settings?.tabSwitchingEnabled) return;
             if (document.hidden) {
-                // User switched away from tab
                 tabSwitchRef.current += 1;
                 setTabSwitchCount(tabSwitchRef.current);
-
+                setShowTabWarning(true);
                 if (tabSwitchRef.current >= 3) {
-                    // Auto-submit after 3 tab switches
-                    setShowTabWarning(false);
-                    handleSubmit(true, true); // autoSubmit=true, dueToTabSwitch=true
-                } else {
-                    // Show warning
-                    setShowTabWarning(true);
+                    handleSubmit(true, true, false);
                 }
             }
         };
@@ -338,9 +160,45 @@ const QuizTakePage = ({ quizId }) => {
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
+            isMounted = false;
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
-    }, [hasStarted, isSubmitted, quiz?.settings?.tabSwitchingEnabled]);
+    }, [quizId, hasStarted, isSubmitted, quiz?.settings?.tabSwitchingEnabled]);
+
+    // Countdown for scheduled quizzes — updates every second and refetches when start time arrives
+    useEffect(() => {
+        if (!scheduledInfo) return;
+
+        const start = new Date(scheduledInfo.startAt);
+        const now = new Date();
+        const initial = Math.max(0, Math.floor((start - now) / 1000));
+        setScheduledTimeLeft(initial);
+
+        const iv = setInterval(() => {
+            setScheduledTimeLeft(prev => {
+                const next = (prev || 0) - 1;
+                if (next <= 0) {
+                    clearInterval(iv);
+                    // refetch quiz when scheduled time arrives
+                    (async () => {
+                        try {
+                            const data = await getPublicQuiz(quizId);
+                            setScheduledInfo(null);
+                            setQuiz(data);
+                            setQuestions(data.questions || []);
+                            if (data.settings?.timeLimit) setTimeLeft(data.settings.timeLimit * 60);
+                        } catch (e) {
+                            // ignore - fetchQuiz useEffect will handle further
+                        }
+                    })();
+                    return 0;
+                }
+                return next;
+            });
+        }, 1000);
+
+        return () => clearInterval(iv);
+    }, [scheduledInfo, quizId]);
 
     // Fullscreen utility functions
     const enterFullscreen = useCallback(async () => {
@@ -853,6 +711,8 @@ const QuizTakePage = ({ quizId }) => {
                         </div>
                     )}
 
+                    
+
                     {quiz.classes && quiz.classes.length > 0 && (
                         <div className="mb-6">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -887,6 +747,117 @@ const QuizTakePage = ({ quizId }) => {
                         </p>
                     )}
 
+                    {/* Step flow: Details -> Instructions -> Start */}
+                    {(quiz && (quiz.classes && quiz.classes.length > 0 ? (participantName.trim() && participantClass && participantRollNo.trim()) : true)) && (
+                        <div className="mb-6">
+                            {!showInstructions ? (
+                                <div className="flex items-center justify-center">
+                                    <button
+                                        onClick={async () => {
+                                            // Validate required fields (same as Start validation)
+                                            if (quiz.classes && quiz.classes.length > 0) {
+                                                if (!participantName.trim() || !participantClass || !participantRollNo.trim()) {
+                                                    alert('Please fill all required details before proceeding to instructions');
+                                                    return;
+                                                }
+                                            }
+
+                                            // Optionally check duplicate roll number before showing instructions
+                                            if (quiz?.settings?.preventDuplicateRollNo && participantRollNo && participantRollNo.trim()) {
+                                                setCheckingRollNo(true);
+                                                setRollNoError('');
+                                                try {
+                                                    const result = await checkRollNoExists(quizId, participantRollNo.trim());
+                                                    if (result.exists) {
+                                                        setRollNoError(result.message);
+                                                        setCheckingRollNo(false);
+                                                        return;
+                                                    }
+                                                } catch (err) {
+                                                    console.error('Error checking roll number:', err);
+                                                }
+                                                setCheckingRollNo(false);
+                                            }
+
+                                            setShowInstructions(true);
+                                        }}
+                                        disabled={checkingRollNo}
+                                        className={`px-8 py-3 rounded-lg ${checkingRollNo ? 'bg-gray-300 text-gray-600' : 'bg-emerald-600 text-white hover:bg-emerald-700'} font-medium`}
+                                    >
+                                        {checkingRollNo ? 'Checking...' : 'Go to Instructions'}
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="mb-6 bg-white rounded-xl shadow p-6 text-left">
+                                    <h3 className="text-lg font-semibold text-emerald-800 mb-3">Instructions & Guidelines</h3>
+                                    <ul className="list-disc list-inside text-sm text-gray-700 space-y-2 mb-4">
+                                        <li>Total Questions: <strong className="text-gray-800">{questions.length}</strong></li>
+                                        <li>Total Points: <strong className="text-gray-800">{quiz.totalPoints}</strong></li>
+                                        {quiz.settings?.timeLimit > 0 && (
+                                            <li>Time Limit: <strong className="text-gray-800">{quiz.settings.timeLimit} minutes</strong></li>
+                                        )}
+                                        {quiz.settings?.fullscreenModeEnabled && (
+                                            <li>This quiz requires <strong className="text-gray-800">fullscreen</strong>. You will be asked to enter fullscreen before starting.</li>
+                                        )}
+                                        {quiz.settings?.tabSwitchingEnabled && (
+                                            <li><strong className="text-gray-800">Do not switch tabs</strong> during the quiz. Excessive tab switching may auto-submit the quiz.</li>
+                                        )}
+                                        {quiz.settings?.requireSequentialAnswering && (
+                                            <li>Questions must be answered in order. You cannot jump ahead until the current question is answered.</li>
+                                        )}
+                                        {quiz.settings?.preventDuplicateRollNo && (
+                                            <li>Duplicate roll numbers are not allowed. Enter your correct roll number.</li>
+                                        )}
+                                        <li>Avoid refreshing the page or using developer tools; right-click and certain shortcuts are disabled.</li>
+                                        <li>Ensure a stable internet connection for uninterrupted submission.</li>
+                                    </ul>
+
+                                    <label className="flex items-center space-x-3 mb-4">
+                                        <input
+                                            type="checkbox"
+                                            checked={agreedToGuidelines}
+                                            onChange={(e) => setAgreedToGuidelines(e.target.checked)}
+                                            className="w-4 h-4"
+                                        />
+                                        <span className="text-sm text-gray-700">I have read and agree to the instructions above</span>
+                                    </label>
+
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => setShowInstructions(false)}
+                                            className="px-4 py-2 border rounded-lg hover:bg-gray-50 transition"
+                                        >
+                                            Back
+                                        </button>
+
+                                        <button
+                                            onClick={async () => {
+                                                if (!agreedToGuidelines) {
+                                                    alert('Please agree to the instructions before starting the quiz.');
+                                                    return;
+                                                }
+
+                                                // Start the quiz: process questions and enter fullscreen if required
+                                                const processedQuestions = processQuestions(quiz);
+                                                setQuestions(processedQuestions);
+
+                                                if (quiz?.settings?.fullscreenModeEnabled) {
+                                                    await enterFullscreen();
+                                                }
+
+                                                setHasStarted(true);
+                                            }}
+                                            disabled={!agreedToGuidelines}
+                                            className={`px-6 py-3 rounded-lg font-medium ${!agreedToGuidelines ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
+                                        >
+                                            {quiz?.settings?.fullscreenModeEnabled ? 'Enter Fullscreen & Start Quiz' : 'Start Quiz'}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* Resume Session Prompt */}
                     {showResumePrompt && restoredSession && (
                         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -901,7 +872,8 @@ const QuizTakePage = ({ quizId }) => {
                             <div className="flex justify-center">
                                 <button
                                     onClick={resumeSession}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-sm flex items-center"
+                                    disabled={!agreedToGuidelines}
+                                    className={`px-4 py-2 ${!agreedToGuidelines ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'} rounded-lg transition font-medium text-sm flex items-center`}
                                 >
                                     <RefreshCw size={16} className="mr-1" />
                                     Resume Quiz
@@ -942,6 +914,11 @@ const QuizTakePage = ({ quizId }) => {
                                         return;
                                     }
                                 }
+                                // Require agreement to guidelines
+                                if (!agreedToGuidelines) {
+                                    alert('Please agree to the instructions before starting the quiz.');
+                                    return;
+                                }
 
                                 // Check if roll number exists before starting (only if setting is enabled)
                                 if (quiz?.settings?.preventDuplicateRollNo && participantRollNo && participantRollNo.trim()) {
@@ -971,8 +948,8 @@ const QuizTakePage = ({ quizId }) => {
 
                                 setHasStarted(true);
                             }}
-                            disabled={checkingRollNo || (quiz.classes && quiz.classes.length > 0 && (!participantName.trim() || !participantClass || !participantRollNo.trim()))}
-                            className="px-8 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mx-auto"
+                            disabled={checkingRollNo || (quiz.classes && quiz.classes.length > 0 && (!participantName.trim() || !participantClass || !participantRollNo.trim())) || !agreedToGuidelines}
+                            className={`px-8 py-3 rounded-lg text-lg shadow-lg flex items-center justify-center mx-auto font-medium transition ${checkingRollNo || (quiz.classes && quiz.classes.length > 0 && (!participantName.trim() || !participantClass || !participantRollNo.trim())) || !agreedToGuidelines ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
                         >
                             {quiz?.settings?.fullscreenModeEnabled && <Maximize size={20} className="mr-2" />}
                             {checkingRollNo ? 'Checking...' : quiz?.settings?.fullscreenModeEnabled ? 'Enter Fullscreen & Start Quiz' : 'Start Quiz'}
