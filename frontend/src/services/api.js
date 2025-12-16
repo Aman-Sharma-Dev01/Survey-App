@@ -3,8 +3,8 @@
 
 
 
-export const BASE_URL = 'https://survey-app-egj3.onrender.com/api';     // New backend URL
-// export const BASE_URL = 'http://localhost:5000/api'; 
+// export const BASE_URL = 'https://survey-app-egj3.onrender.com/api';     // New backend URL
+export const BASE_URL = 'http://localhost:5000/api'; 
 // Helper to access token storage directly (AuthContext stores token in localStorage)
 const getAuthToken = () => localStorage.getItem('token');
 const removeAuthToken = () => localStorage.removeItem('token');
@@ -70,3 +70,16 @@ export const deleteSurvey = async (surveyId) => {
 };
 // Utility to create small temporary IDs used for client-side keys
 export const generateTempId = () => `t_${Math.random().toString(36).slice(2,9)}_${Date.now().toString(36)}`;
+
+// Default export compatibility wrapper
+// Provides a simple `api.get/post/put/del` interface used across the frontend
+const api = {
+    get: (url, isProtected = false) => fetchApi(url, 'GET', null, isProtected),
+    post: (url, data, isProtected = false) => fetchApi(url, 'POST', data, isProtected),
+    put: (url, data, isProtected = false) => fetchApi(url, 'PUT', data, isProtected),
+    del: (url, isProtected = false) => fetchApi(url, 'DELETE', null, isProtected),
+    // expose underlying helper if needed
+    fetchApi,
+};
+
+export default api;

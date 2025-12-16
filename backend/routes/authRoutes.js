@@ -331,6 +331,8 @@ router.put('/system-settings', protect, async (req, res) => {
     try {
         const ADMIN_EMAIL = 'support@surveyzen.live';
         const user = await User.findById(req.user._id);
+        console.log('System settings update request by:', user?.email);
+        console.log('Request body:', req.body);
         
         if (!user || user.email !== ADMIN_EMAIL) {
             return res.status(403).json({ message: 'Admin access required' });
@@ -348,6 +350,7 @@ router.put('/system-settings', protect, async (req, res) => {
         }
         settings.lastUpdatedBy = req.user._id;
         await settings.save();
+        console.log('Saved settings:', settings);
 
         res.json({
             message: 'System settings updated successfully',

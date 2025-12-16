@@ -68,7 +68,8 @@ const AdminDashboard = ({ navigate }) => {
         const fetchSettings = async () => {
             try {
                 const response = await api.get('/auth/system-settings');
-                setEmailVerificationEnabled(response.data.emailVerificationEnabled);
+                // `api.get` returns the response body directly
+                setEmailVerificationEnabled(response.emailVerificationEnabled);
             } catch (error) {
                 console.error('Error fetching system settings:', error);
             } finally {
@@ -84,13 +85,14 @@ const AdminDashboard = ({ navigate }) => {
     const toggleEmailVerification = async () => {
         setIsTogglingVerification(true);
         try {
-            const response = await api.put('/auth/system-settings', {
+            // This route requires admin/auth, send protected request
+            const result = await api.put('/auth/system-settings', {
                 emailVerificationEnabled: !emailVerificationEnabled
-            });
-            setEmailVerificationEnabled(response.data.emailVerificationEnabled);
+            }, true);
+            setEmailVerificationEnabled(result.emailVerificationEnabled);
         } catch (error) {
             console.error('Error updating system settings:', error);
-            alert('Failed to update setting');
+                alert(error?.message || 'Failed to update setting');
         } finally {
             setIsTogglingVerification(false);
         }
