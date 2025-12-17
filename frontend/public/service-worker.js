@@ -76,3 +76,85 @@ self.addEventListener('message', (event) => {
         self.skipWaiting();
     }
 });
+
+// Background Sync: attempt to flush queued requests stored in IndexedDB
+self.addEventListener('sync', (event) => {
+    if (event.tag && event.tag.startsWith('surveyzen-sync')) {
+        event.waitUntil(flushQueuedRequests());
+    }
+});
+
+// Allow page to request immediate flush via message
+self.addEventListener('message', (event) => {
+    if (!event.data) return;
+    if (event.data.type === 'FLUSH_QUEUED') {
+        event.waitUntil(flushQueuedRequests());
+    }
+});
+
+async function openDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open('surveyzen-offline-db', 1);
+        req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('requests')) {
+                db.createObjectStore('requests', { keyPath: 'id' });
+            }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function getAllRequests() {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction('requests', 'readonly');
+        const store = tx.objectStore('requests');
+        const r = store.getAll();
+        r.onsuccess = () => resolve(r.result || []);
+        r.onerror = () => reject(r.error);
+    });
+}
+
+async function deleteRequest(id) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction('requests', 'readwrite');
+        const store = tx.objectStore('requests');
+        const r = store.delete(id);
+        r.onsuccess = () => resolve();
+        r.onerror = () => reject(r.error);
+    });
+}
+
+async function flushQueuedRequests() {
+    try {
+        const items = await getAllRequests();
+        if (!items || items.length === 0) return;
+        // Attempt to send each queued request
+        for (const item of items) {
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (item.isProtected && item.token) {
+                    headers['Authorization'] = `Bearer ${item.token}`;
+                }
+                const res = await fetch(item.url, {
+                    method: item.method,
+                    headers,
+                    body: item.body ? JSON.stringify(item.body) : undefined,
+                    credentials: 'include'
+                });
+                if (res && res.ok) {
+                    await deleteRequest(item.id);
+                }
+            } catch (err) {
+                // network error - stop and retry later
+                console.warn('ServiceWorker: failed to send queued request', err);
+                return;
+            }
+        }
+    } catch (e) {
+        console.error('ServiceWorker flushQueuedRequests failed', e);
+    }
+}

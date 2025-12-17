@@ -9,6 +9,12 @@ export const BASE_URL = 'https://survey-app-egj3.onrender.com/api';     // New b
 const getAuthToken = () => localStorage.getItem('token');
 const removeAuthToken = () => localStorage.removeItem('token');
 
+// Offline queue: will store outgoing mutating requests when offline and flush them when online
+import { init as initOfflineQueue, addRequest as addOfflineRequest, listenForOnline, flushQueue } from './offlineQueue';
+// initialize offline queue with base URL and token getter
+initOfflineQueue(BASE_URL, getAuthToken).catch((e) => console.warn('offlineQueue init failed', e));
+listenForOnline();
+
 /**
  * Generic utility function to make API requests.
  * @param {string} url - The endpoint URL segment (e.g., '/auth/login').
@@ -62,9 +68,49 @@ export const fetchApi = async (url, method = 'GET', data = null, isProtected = f
 
         return responseData;
     } catch (error) {
-        // Re-throw to be caught by the calling service or hook (e.g., useApi)
+        // If network error and this is a mutating request, queue it for later
+        const isNetworkError = (error instanceof TypeError) || (error.message && error.message.toLowerCase().includes('network'));
+        if (isNetworkError && ['POST', 'PUT', 'DELETE'].includes(method.toUpperCase())) {
+            try {
+                const tempId = generateTempId();
+                await addOfflineRequest({
+                    id: tempId,
+                    url,
+                    method,
+                    body: data,
+                    isProtected,
+                    createdAt: Date.now(),
+                });
+                // Try to register a background sync (if supported)
+                try {
+                    if ('serviceWorker' in navigator && 'SyncManager' in window) {
+                        const reg = await navigator.serviceWorker.ready;
+                        // register a sync with a tag; include timestamp to allow multiple registrations
+                        await reg.sync.register(`surveyzen-sync-${Date.now()}`);
+                    } else if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                        // fallback: post message to service worker to trigger a flush when possible
+                        navigator.serviceWorker.controller.postMessage({ type: 'FLUSH_QUEUED' });
+                    }
+                } catch (se) {
+                    // ignore sync registration failures
+                    console.warn('Background sync registration failed', se);
+                }
+                // return a minimal queued response so callers know it's queued
+                return { queued: true, id: tempId };
+            } catch (qe) {
+                // if queuing fails, fall through and rethrow original error
+                console.warn('Failed to queue request', qe);
+            }
+        }
         throw error;
     }
+};
+
+/**
+ * Helper to POST with offline support explicitly. Returns server response or { queued: true, id }
+ */
+export const postWithOffline = async (url, data, isProtected = false) => {
+    return fetchApi(url, 'POST', data, isProtected);
 };
 
 // API Call: DELETE /surveys/:surveyId
@@ -79,6 +125,7 @@ export const generateTempId = () => `t_${Math.random().toString(36).slice(2,9)}_
 const api = {
     get: (url, isProtected = false) => fetchApi(url, 'GET', null, isProtected),
     post: (url, data, isProtected = false) => fetchApi(url, 'POST', data, isProtected),
+    postWithOffline: (url, data, isProtected = false) => postWithOffline(url, data, isProtected),
     put: (url, data, isProtected = false) => fetchApi(url, 'PUT', data, isProtected),
     del: (url, isProtected = false) => fetchApi(url, 'DELETE', null, isProtected),
     // expose underlying helper if needed
