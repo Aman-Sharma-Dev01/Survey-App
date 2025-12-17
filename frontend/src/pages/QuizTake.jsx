@@ -544,6 +544,28 @@ const QuizTakePage = ({ quizId }) => {
         }
     };
 
+    // Try to start quiz but check for saved session first (returns true if started)
+    const tryStart = async (processedQuestions) => {
+        const roll = (participantRollNo || '').toString().trim();
+        if (roll) {
+            try {
+                const saved = loadQuizState(quizId, roll);
+                if (saved && (saved.startedAt || (saved.answers && Object.keys(saved.answers).length > 0))) {
+                    setRestoredSession(saved);
+                    setShowResumePrompt(true);
+                    return false;
+                }
+            } catch (e) {
+                console.warn('Failed to load saved quiz state', e);
+            }
+        }
+
+        setQuestions(processedQuestions);
+        setStartedAt(new Date());
+        setHasStarted(true);
+        return true;
+    };
+
     // Function to start fresh (discard saved session)
     const startFresh = () => {
         if (participantRollNo) {
@@ -552,6 +574,40 @@ const QuizTakePage = ({ quizId }) => {
         setRestoredSession(null);
         setShowResumePrompt(false);
     };
+
+    // Auto-save quiz state to localStorage while the quiz is in progress
+    useEffect(() => {
+        const save = () => {
+            const roll = (participantRollNo || '').toString().trim();
+            if (!hasStarted || !roll) return;
+            try {
+                const state = {
+                    answers,
+                    currentIndex,
+                    timeLeft,
+                    startedAt: startedAt?.toISOString ? startedAt.toISOString() : new Date(startedAt).toISOString(),
+                    participantName,
+                    participantClass,
+                    participantRollNo: roll,
+                    tabSwitchCount: tabSwitchRef.current,
+                    fullscreenExitCount: fullscreenExitRef.current,
+                    splitScreenCount: splitScreenRef.current,
+                    questionsOrder: questions?.map(q => q._id) || []
+                };
+                saveQuizState(quizId, roll, state);
+            } catch (e) {
+                console.warn('Failed to auto-save quiz state', e);
+            }
+        };
+
+        // Save immediately when relevant data changes
+        save();
+
+        // Also save on unload to ensure state persists
+        const handleBeforeUnload = () => save();
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [hasStarted, answers, currentIndex, timeLeft, startedAt, participantName, participantClass, participantRollNo, questions]);
 
     const currentQuestion = questions[currentIndex];
     const answeredCount = Object.keys(answers).length;
@@ -763,13 +819,10 @@ const QuizTakePage = ({ quizId }) => {
                                     }
 
                                     const processedQuestions = processQuestions(quiz);
-                                    setQuestions(processedQuestions);
-
-                                    if (quiz?.settings?.fullscreenModeEnabled) {
+                                    const started = await tryStart(processedQuestions);
+                                    if (started && quiz?.settings?.fullscreenModeEnabled) {
                                         await enterFullscreen();
                                     }
-
-                                    setHasStarted(true);
                                 }}
                                 disabled={!agreedToGuidelines}
                                 className={`px-6 py-3 rounded-lg font-medium ${!agreedToGuidelines ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
@@ -972,13 +1025,10 @@ const QuizTakePage = ({ quizId }) => {
 
                                                 // Start the quiz: process questions and enter fullscreen if required
                                                 const processedQuestions = processQuestions(quiz);
-                                                setQuestions(processedQuestions);
-
-                                                if (quiz?.settings?.fullscreenModeEnabled) {
+                                                const started = await tryStart(processedQuestions);
+                                                if (started && quiz?.settings?.fullscreenModeEnabled) {
                                                     await enterFullscreen();
                                                 }
-
-                                                setHasStarted(true);
                                             }}
                                             disabled={!agreedToGuidelines}
                                             className={`px-6 py-3 rounded-lg font-medium ${!agreedToGuidelines ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
@@ -1072,14 +1122,12 @@ const QuizTakePage = ({ quizId }) => {
 
                                 // Process questions for new session
                                 const processedQuestions = processQuestions(quiz);
-                                setQuestions(processedQuestions);
+                                const started = await tryStart(processedQuestions);
 
                                 // Enter fullscreen if required
-                                if (quiz?.settings?.fullscreenModeEnabled) {
+                                if (started && quiz?.settings?.fullscreenModeEnabled) {
                                     await enterFullscreen();
                                 }
-
-                                setHasStarted(true);
                             }}
                             disabled={checkingRollNo || (quiz.classes && quiz.classes.length > 0 && (!participantName.trim() || !participantClass || !participantRollNo.trim())) || !agreedToGuidelines}
                             className={`px-8 py-3 rounded-lg text-lg shadow-lg flex items-center justify-center mx-auto font-medium transition ${checkingRollNo || (quiz.classes && quiz.classes.length > 0 && (!participantName.trim() || !participantClass || !participantRollNo.trim())) || !agreedToGuidelines ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}
