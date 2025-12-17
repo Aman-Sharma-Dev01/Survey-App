@@ -566,6 +566,23 @@ const QuizTakePage = ({ quizId }) => {
         return true;
     };
 
+    // Check if there's a saved session for the current roll number and show resume prompt (does not start)
+    const checkForSavedSession = (roll) => {
+        try {
+            const r = (roll || participantRollNo || '').toString().trim();
+            if (!r) return false;
+            const saved = loadQuizState(quizId, r);
+            if (saved && (saved.startedAt || (saved.answers && Object.keys(saved.answers).length > 0))) {
+                setRestoredSession(saved);
+                setShowResumePrompt(true);
+                return true;
+            }
+        } catch (e) {
+            console.warn('checkForSavedSession failed', e);
+        }
+        return false;
+    };
+
     // Function to start fresh (discard saved session)
     const startFresh = () => {
         if (participantRollNo) {
@@ -966,6 +983,8 @@ const QuizTakePage = ({ quizId }) => {
                                             }
 
                                             setShowInstructions(true);
+                                            // Show resume prompt on the Instructions tab if a saved session exists
+                                            checkForSavedSession();
                                         }}
                                         disabled={checkingRollNo}
                                         className={`px-8 py-3 rounded-lg ${checkingRollNo ? 'bg-gray-300 text-gray-600' : 'bg-emerald-600 text-white hover:bg-emerald-700'} font-medium`}
