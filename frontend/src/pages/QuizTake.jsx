@@ -110,6 +110,7 @@ const QuizTakePage = ({ quizId }) => {
     const splitScreenRef = useRef(0);
 
     const timerRef = useRef(null);
+    
 
     // Fetch quiz and handle visibility/tab-switch enforcement
     useEffect(() => {
@@ -451,6 +452,36 @@ const QuizTakePage = ({ quizId }) => {
             setLoading(false);
         }
     };
+
+    // Start countdown timer when quiz starts and timeLeft is set
+    useEffect(() => {
+        if (!hasStarted || isSubmitted || timeLeft === null) return;
+
+        // Clear any existing timer
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+        }
+
+        timerRef.current = setInterval(() => {
+            setTimeLeft(prev => {
+                if (prev === null) return prev;
+                if (prev <= 1) {
+                    // Time up: clear timer and auto-submit
+                    clearInterval(timerRef.current);
+                    try {
+                        handleSubmit(true, false, false, false);
+                    } catch (e) {
+                        console.error('Auto-submit failed', e);
+                    }
+                    return 0;
+                }
+                const next = prev - 1;
+                return next;
+            });
+        }, 1000);
+
+        return () => clearInterval(timerRef.current);
+    }, [hasStarted, isSubmitted, timeLeft]);
 
     // Function to process questions with shuffling
     const processQuestions = (quizData, savedOrder = null) => {
