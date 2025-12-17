@@ -30,6 +30,7 @@ import QuizDashboard from './pages/QuizDashboard.jsx';
 import QuizTake from './pages/QuizTake.jsx';
 import QuizAnalytics from './pages/QuizAnalytics.jsx';
 import QuizEdit from './pages/QuizEdit.jsx';
+import QueuedSubmissionsPage from './pages/QueuedSubmissionsPage.jsx';
 
 // ⭐ Payment Admin
 import PaymentAdmin from './pages/PaymentAdmin.jsx';
@@ -211,6 +212,9 @@ const App = () => {
             <p className="text-gray-500">Please use a valid quiz link to participate.</p>
           </div>
         );
+
+      case 'queued-submissions':
+        return <QueuedSubmissionsPage navigate={navigate} />;
 
       // ⭐ Payment Admin (only for you)
       case 'payment-admin':

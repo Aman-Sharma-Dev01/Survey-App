@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LogOut, PlusCircle, LayoutDashboard, HelpCircle, Menu, X, Coins, ShoppingCart, Crown, Gift, Ticket, CheckCircle, Loader } from 'lucide-react';
+import { LogOut, PlusCircle, LayoutDashboard, HelpCircle, Menu, X, Coins, ShoppingCart, Crown, Gift, Ticket, CheckCircle, Loader, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { applyCoupon } from '../services/couponService';
 
@@ -115,6 +115,7 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                             <NavButton Icon={LayoutDashboard} label="Surveys" target="dashboard" onClick={() => handleNavigate('dashboard')} current={currentPage} />
                             <NavButton Icon={PlusCircle} label="Create Survey" target="create" onClick={() => handleNavigate('create')} current={currentPage} />
                             <NavButton Icon={HelpCircle} label="Quizzes" target="quiz-dashboard" onClick={() => handleNavigate('quiz-dashboard')} current={currentPage} />
+                            <NavButton Icon={RefreshCw} label="Queued" target="queued-submissions" onClick={() => handleNavigate('queued-submissions')} current={currentPage} />
                             
                             {/* Credits Display */}
                             <div className="flex items-center px-3 py-1.5 bg-indigo-800 rounded-lg">
@@ -314,6 +315,14 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                                     label="Quizzes" 
                                     target="quiz-dashboard" 
                                     onClick={() => handleMobileNavigate('quiz-dashboard')} 
+                                    current={currentPage}
+                                    mobile
+                                />
+                                <NavButton 
+                                    Icon={RefreshCw}
+                                    label="Queued"
+                                    target="queued-submissions"
+                                    onClick={() => handleMobileNavigate('queued-submissions')}
                                     current={currentPage}
                                     mobile
                                 />
