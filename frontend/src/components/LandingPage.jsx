@@ -129,13 +129,9 @@ const Hero = () => {
                       pt-10 pb-16 sm:pt-16 sm:pb-24 w-full"> 
 
                       <Snowfall color="lightblue" />  
+                      <Snowfall color="lightblue" />  
                       
-                      
-                      
-                     
-
-                         
-
+             
         <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
 
           {/* LEFT SIDE */}
