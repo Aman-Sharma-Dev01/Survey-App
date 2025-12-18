@@ -1,4 +1,5 @@
 import React, { useState, useEffect} from 'react';
+import Snowfall from 'react-snowfall';
 import {
   ClipboardList,
   Share2,
@@ -125,7 +126,14 @@ const Hero = () => {
   return (
     <section className="bg-white overflow-hidden w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 
-                      pt-10 pb-16 sm:pt-16 sm:pb-24 w-full">
+                      pt-10 pb-16 sm:pt-16 sm:pb-24 w-full"> 
+
+                      <Snowfall color="lightblue" />  
+                      
+                      
+                     
+
+                         
 
         <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
 
