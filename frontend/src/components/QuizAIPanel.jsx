@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Send, Copy, Download, Coins, Sparkles } from 'lucide-react';
+import { Send, Copy, Download, Coins, Sparkles, CheckCircle, X } from 'lucide-react';
 import { chatQuizAI } from '../services/quizAi';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -91,6 +91,8 @@ export default function QuizAIPanel({ quiz, onImportQuestions, navigate }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [showCreditWarning, setShowCreditWarning] = useState(false);
+  const [importedQuestions, setImportedQuestions] = useState(null);
+  const [showImportPopup, setShowImportPopup] = useState(false);
   const [thread, setThread] = useState([
     {
       role: 'assistant',
@@ -198,13 +200,80 @@ export default function QuizAIPanel({ quiz, onImportQuestions, navigate }) {
       };
     });
 
-    onImportQuestions?.(newQs);
+    setImportedQuestions(newQs);
+    setShowImportPopup(true);
+  };
+
+  const confirmImport = () => {
+    if (importedQuestions && importedQuestions.length > 0) {
+      onImportQuestions?.(importedQuestions);
+    }
+    setShowImportPopup(false);
+    setImportedQuestions(null);
   };
 
   const lastAssistantMsg = [...thread].reverse().find((m) => m.role === 'assistant');
 
   return (
     <div className="bg-white rounded-xl shadow-lg border border-emerald-100 flex flex-col h-full overflow-hidden">
+      {/* Import Review Popup */}
+      {showImportPopup && importedQuestions && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-lg mx-4 w-full max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <CheckCircle size={28} className="text-green-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">Questions Ready to Import</h2>
+                  <p className="text-sm text-gray-500">{importedQuestions.length} question{importedQuestions.length > 1 ? 's' : ''} detected</p>
+                </div>
+              </div>
+              <button onClick={() => setShowImportPopup(false)} className="p-1 hover:bg-gray-100 rounded">
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto space-y-3 mb-4 pr-2">
+              {importedQuestions.map((q, idx) => (
+                <div key={idx} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                  <div className="flex items-start gap-2">
+                    <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded">Q{idx + 1}</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-800">{q.questionText}</p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        <span className="text-xs text-gray-500">Type: {q.questionType}</span>
+                        <span className="text-xs text-gray-500">• {q.options?.length || 0} options</span>
+                        <span className="text-xs text-gray-500">• {q.points} pts</span>
+                        {q.options?.some(o => o.isCorrect) && (
+                          <span className="text-xs text-green-600">✓ Has correct answer</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex gap-3 justify-end pt-3 border-t">
+              <button
+                onClick={() => setShowImportPopup(false)}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmImport}
+                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-2"
+              >
+                <CheckCircle size={16} /> Add to Quiz
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Credit Warning Modal */}
       {showCreditWarning && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

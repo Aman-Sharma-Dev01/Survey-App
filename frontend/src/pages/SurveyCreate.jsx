@@ -16,7 +16,7 @@ const SurveyCreatePage = ({ handleNavigate }) => {
       tempId: generateTempId(),
       questionText: '',
       questionType: 'RADIO',
-      isRequired: false,
+      isRequired: true,
       options: [{ optionText: 'Option 1', value: 'Option 1' }],
     };
     setQuestions((prev) => [...prev, newQuestion]);
@@ -60,7 +60,7 @@ const SurveyCreatePage = ({ handleNavigate }) => {
         questionText: q.questionText?.trim() || '',
         // Default RADIO if options exist, otherwise TEXT
         questionType: q.questionType || (hasOpts ? 'RADIO' : 'TEXT'),
-        isRequired: !!q.isRequired,
+        isRequired: q.isRequired !== undefined ? q.isRequired : true,
         options: hasOpts
           ? q.options.map((o, idx) => {
               const text = typeof o === 'string' ? o : (o.optionText || o.value || `Option ${idx + 1}`);
