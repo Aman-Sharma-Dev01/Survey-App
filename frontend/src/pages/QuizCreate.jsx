@@ -3,7 +3,7 @@ import { PlusCircle, Trash2, ChevronDown, ChevronUp, Check, Settings, Clock, Hel
 import { generateTempId } from '../services/api';
 import { createQuiz } from '../services/quizService';
 import { uploadImage, deleteImage } from '../services/uploadService';
-import QuizChatWidget from '../components/QuizChatWidget';
+import QuizAIPanel from '../components/QuizAIPanel';
 import { useAuth } from '../context/AuthContext.jsx';
 import { PremiumSettingRow, PremiumUpgradeModal } from '../components/PremiumFeatureLock';
 
@@ -481,43 +481,46 @@ const QuizCreatePage = ({ navigate }) => {
     const totalPoints = questions.reduce((sum, q) => sum + (q.points || 1), 0);
 
     return (
-        <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-emerald-800 mb-6 border-b pb-2">Create New Quiz</h1>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Quiz Details */}
-                <div className="bg-white p-6 rounded-xl shadow-lg border border-emerald-100 space-y-4">
-                    <h2 className="text-xl font-bold text-gray-800 flex items-center">
-                        <HelpCircle size={24} className="mr-2 text-emerald-600" />
-                        Quiz Details
-                    </h2>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Quiz Title *</label>
-                        <input
-                            type="text"
-                            required
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            className="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 text-lg"
-                            placeholder="e.g., JavaScript Fundamentals Quiz"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Description</label>
-                        <textarea
-                            rows="2"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            className="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-                            placeholder="Brief description of the quiz..."
-                        />
-                    </div>
+            <div className="flex flex-col lg:flex-row gap-6">
+                {/* Left Column - Quiz Form */}
+                <div className="flex-1 min-w-0">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Quiz Details */}
+                        <div className="bg-white p-6 rounded-xl shadow-lg border border-emerald-100 space-y-4">
+                            <h2 className="text-xl font-bold text-gray-800 flex items-center">
+                                <HelpCircle size={24} className="mr-2 text-emerald-600" />
+                                Quiz Details
+                            </h2>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Quiz Title *</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    className="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500 text-lg"
+                                    placeholder="e.g., JavaScript Fundamentals Quiz"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Description</label>
+                                <textarea
+                                    rows="2"
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    className="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
+                                    placeholder="Brief description of the quiz..."
+                                />
+                            </div>
 
-                    {/* Classes/Sections Input */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Classes/Sections <span className="text-gray-400">(optional - for student grouping)</span>
-                        </label>
+                            {/* Classes/Sections Input */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Classes/Sections <span className="text-gray-400">(optional - for student grouping)</span>
+                                </label>
                         <div className="flex gap-2">
                             <input
                                 type="text"
@@ -786,14 +789,20 @@ const QuizCreatePage = ({ navigate }) => {
                 >
                     {loading ? 'Creating Quiz...' : 'Create Quiz'}
                 </button>
-            </form>
+                    </form>
+                </div>
 
-            {/* AI Quiz Assistant */}
-            <QuizChatWidget
-                quiz={{ title, description, questions }}
-                onImportQuestions={onImportQuestions}
-                navigate={navigate}
-            />
+                {/* Right Column - AI Assistant Panel */}
+                <div className="lg:w-96 lg:shrink-0">
+                    <div className="lg:sticky lg:top-4 h-[calc(100vh-8rem)] min-h-[500px]">
+                        <QuizAIPanel
+                            quiz={{ title, description, questions }}
+                            onImportQuestions={onImportQuestions}
+                            navigate={navigate}
+                        />
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
