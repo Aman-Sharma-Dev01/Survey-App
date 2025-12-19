@@ -3,18 +3,13 @@ import multer from 'multer';
 import cloudinary from '../config/cloudinary.js';
 import { protect } from '../middleware/authMiddleware.js';
 import mammoth from 'mammoth';
+import { createRequire } from 'module';
 
 const router = express.Router();
 
-// Dynamic import for pdf-parse (CommonJS module)
-let pdfParse;
-const loadPdfParse = async () => {
-  if (!pdfParse) {
-    const module = await import('pdf-parse');
-    pdfParse = module.default;
-  }
-  return pdfParse;
-};
+// Use createRequire for CommonJS modules like pdf-parse
+const require = createRequire(import.meta.url);
+const pdfParse = require('pdf-parse');
 
 // Configure multer for memory storage (we'll upload directly to Cloudinary)
 const storage = multer.memoryStorage();
@@ -142,8 +137,7 @@ router.post('/document', protect, documentUpload.single('document'), async (req,
         // Parse PDF files
         if (mimeType === 'application/pdf') {
             try {
-                const pdf = await loadPdfParse();
-                const pdfData = await pdf(req.file.buffer);
+                const pdfData = await pdfParse(req.file.buffer);
                 extractedText = pdfData.text;
             } catch (pdfError) {
                 console.error('PDF parsing error:', pdfError);
