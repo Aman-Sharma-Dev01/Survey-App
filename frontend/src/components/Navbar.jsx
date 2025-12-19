@@ -216,11 +216,11 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                                 <span className="text-yellow-400 font-semibold text-sm">{credits}</span>
                             </div>
 
+                            {/* MRU Badge */}
+                            {isFromMRU && <MRUBadge onClick={() => setShowMRUModal(true)} />}
+
                             {/* Profile Dropdown */}
-                            <div className="relative flex items-center gap-2">
-                                {/* MRU Badge - shown outside the profile button */}
-                                {isFromMRU && <MRUBadge onClick={() => setShowMRUModal(true)} />}
-                                
+                            <div className="relative">
                                 <button
                                     onClick={() => setProfileDropdown(!profileDropdown)}
                                     className="flex items-center gap-2 px-2 py-1 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition"
@@ -240,7 +240,7 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                                 </button>
                                 
                                 {profileDropdown && (
-                                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
+                                    <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
                                         <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
                                             <ProfileAvatar user={user} size="md" />
                                             <div className="flex-1 min-w-0">
