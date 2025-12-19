@@ -1,7 +1,96 @@
 import React, { useState, useEffect } from 'react';
-import { LogOut, PlusCircle, LayoutDashboard, HelpCircle, Menu, X, Coins, ShoppingCart, Crown, Gift, Ticket, CheckCircle, Loader, RefreshCw } from 'lucide-react';
+import { LogOut, PlusCircle, LayoutDashboard, HelpCircle, Menu, X, Coins, ShoppingCart, Crown, Gift, Ticket, CheckCircle, Loader, RefreshCw, GraduationCap, Sparkles, Zap, FileText, BarChart3, Users, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { applyCoupon } from '../services/couponService';
+
+// Check if user email is from Manav Rachna University
+const isMRUUser = (email) => {
+    if (!email) return false;
+    return email.toLowerCase().endsWith('@mru.edu.in');
+};
+
+// MRU Badge Component
+const MRUBadge = ({ onClick }) => (
+    <button
+        onClick={onClick}
+        className="hidden lg:inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:from-blue-700 hover:to-cyan-600 transition shadow-sm"
+        title="Manav Rachna University - Premium Access"
+    >
+        <GraduationCap size={10} />
+        <span>MRU</span>
+    </button>
+);
+
+// MRU Premium Modal
+const MRUPremiumModal = ({ isOpen, onClose }) => {
+    if (!isOpen) return null;
+    
+    const premiumFeatures = [
+        { icon: Sparkles, title: 'Unlimited AI Question Generation', desc: 'Generate unlimited survey and quiz questions using AI' },
+        { icon: Zap, title: 'Unlimited AI Credits', desc: 'No credit limits for AI-powered features' },
+        { icon: FileText, title: 'PDF & Document Upload', desc: 'Upload PDFs and Word documents for AI analysis' },
+        { icon: BarChart3, title: 'Advanced Analytics', desc: 'Deep insights and detailed response analytics' },
+        { icon: Users, title: 'Unlimited Responses', desc: 'Collect unlimited survey and quiz responses' },
+        { icon: Shield, title: 'Priority Support', desc: 'Get priority assistance from our support team' },
+    ];
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+            <div 
+                className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+                onClick={e => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-5 text-white">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                            <GraduationCap size={28} />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold">Manav Rachna University</h2>
+                            <p className="text-blue-100 text-sm">Premium Access Enabled</p>
+                        </div>
+                    </div>
+                </div>
+                
+                {/* Content */}
+                <div className="p-6">
+                    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-4 mb-4 border border-blue-100">
+                        <div className="flex items-center gap-2 text-blue-700">
+                            <Crown size={18} className="text-blue-600" />
+                            <span className="font-semibold">All Premium Features are FREE for MRU Staff & Faculty!</span>
+                        </div>
+                    </div>
+                    
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Your Premium Benefits:</h3>
+                    <div className="space-y-3">
+                        {premiumFeatures.map((feature, idx) => (
+                            <div key={idx} className="flex items-start gap-3">
+                                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <feature.icon size={16} className="text-blue-600" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-800">{feature.title}</p>
+                                    <p className="text-xs text-gray-500">{feature.desc}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                
+                {/* Footer */}
+                <div className="px-6 py-4 bg-gray-50 border-t">
+                    <button
+                        onClick={onClose}
+                        className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-600 transition"
+                    >
+                        Got it!
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // Avatar component - shows Google avatar or initials
 const ProfileAvatar = ({ user, size = 'sm' }) => {
@@ -62,6 +151,10 @@ const Navbar = ({ currentPage, handleNavigate }) => {
     const [couponInput, setCouponInput] = useState('');
     const [couponLoading, setCouponLoading] = useState(false);
     const [couponMessage, setCouponMessage] = useState({ type: '', text: '' });
+    const [showMRUModal, setShowMRUModal] = useState(false);
+
+    // Check if user is from MRU
+    const isFromMRU = isMRUUser(user?.email);
 
     // Clear coupon message after 5 seconds
     useEffect(() => {
@@ -124,7 +217,10 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                             </div>
 
                             {/* Profile Dropdown */}
-                            <div className="relative">
+                            <div className="relative flex items-center gap-2">
+                                {/* MRU Badge - shown outside the profile button */}
+                                {isFromMRU && <MRUBadge onClick={() => setShowMRUModal(true)} />}
+                                
                                 <button
                                     onClick={() => setProfileDropdown(!profileDropdown)}
                                     className="flex items-center gap-2 px-2 py-1 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition"
@@ -174,6 +270,18 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                                                     </span>
                                                 </div>
                                             </div>
+                                        )}
+                                        {/* MRU Premium Status */}
+                                        {isFromMRU && (
+                                            <button
+                                                onClick={() => { setShowMRUModal(true); setProfileDropdown(false); }}
+                                                className="w-full px-4 py-2 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 transition text-left"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <GraduationCap size={14} className="text-blue-600" />
+                                                    <span className="text-xs text-blue-700 font-medium">Manav Rachna University - Premium Access</span>
+                                                </div>
+                                            </button>
                                         )}
                                         <div className="px-4 py-3 border-b border-gray-100">
                                             <div className="flex items-center justify-between">
@@ -285,6 +393,17 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                     <div className="px-4 py-3 space-y-2">
                         {isAuthenticated ? (
                             <>
+                                {/* MRU Badge - Mobile */}
+                                {isFromMRU && (
+                                    <button
+                                        onClick={() => { setShowMRUModal(true); setMobileMenuOpen(false); }}
+                                        className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-lg mb-2"
+                                    >
+                                        <GraduationCap size={16} />
+                                        <span className="text-sm font-semibold">Manav Rachna University</span>
+                                    </button>
+                                )}
+                                
                                 {/* Credits Display - Mobile */}
                                 <div className="flex items-center justify-between px-3 py-2 bg-indigo-900 rounded-lg mb-2">
                                     <span className="text-indigo-300 text-sm">AI Credits</span>
@@ -446,6 +565,9 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                     </div>
                 </div>
             )}
+            
+            {/* MRU Premium Modal */}
+            <MRUPremiumModal isOpen={showMRUModal} onClose={() => setShowMRUModal(false)} />
         </header>
     );
 };
