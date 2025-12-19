@@ -39,7 +39,21 @@ const LoginPage = ({ navigate }) => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
-    const { login } = useAuth();
+    const { login, user, token } = useAuth();
+
+    // Redirect to dashboard if already logged in
+    useEffect(() => {
+        const storedToken = localStorage.getItem('token');
+        if (storedToken || token) {
+            // Check if admin email to redirect appropriately
+            const storedUser = user?.email;
+            if (storedUser === ADMIN_EMAIL) {
+                navigate('admin-dashboard');
+            } else {
+                navigate('dashboard');
+            }
+        }
+    }, [token, user, navigate]);
 
     const handleGoogleCallback = async (credential) => {
         setGoogleLoading(true);

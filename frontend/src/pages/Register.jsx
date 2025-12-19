@@ -44,7 +44,15 @@ const RegisterPage = ({ navigate = () => {} }) => {
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
-    const { login } = useAuth();
+    const { login, user, token } = useAuth();
+
+    // Redirect to dashboard if already logged in
+    useEffect(() => {
+        const storedToken = localStorage.getItem('token');
+        if (storedToken || token) {
+            navigate('dashboard');
+        }
+    }, [token, navigate]);
 
     // Initialize Google OAuth2 client for popup flow
     const googleClientRef = React.useRef(null);
