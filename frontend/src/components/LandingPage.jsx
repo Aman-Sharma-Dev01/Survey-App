@@ -129,6 +129,10 @@ const Hero = () => {
                       pt-10 pb-16 sm:pt-16 sm:pb-24 w-full"> 
 
                       <Snowfall color="lightblue" />  
+                      <Snowfall color="black" />  
+                  
+                   
+
                        
                       
              
