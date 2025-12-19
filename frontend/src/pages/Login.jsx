@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { loginCreator, googleAuth } from '../services/authService';
+import { BASE_URL } from '../services/api.js';
 
 // Google Client ID
 const GOOGLE_CLIENT_ID = '776337724732-4j8psg32dgr5upg1jajekjflrfc25on7.apps.googleusercontent.com';
@@ -72,7 +73,7 @@ const LoginPage = ({ navigate }) => {
                             setGoogleLoading(true);
                             setError('');
                             try {
-                                const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google/code`, {
+                                const res = await fetch(`${BASE_URL || 'http://localhost:5000'}/api/auth/google/code`, {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ code: response.code }),
