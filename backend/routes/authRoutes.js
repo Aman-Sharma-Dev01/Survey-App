@@ -195,6 +195,104 @@ router.post('/google', async (req, res) => {
     }
 });
 
+// @desc    Google OAuth login/register using authorization code (popup flow)
+// @route   POST /api/auth/google/code
+// @access  Public
+router.post('/google/code', async (req, res) => {
+    try {
+        const { code } = req.body;
+
+        if (!code) {
+            return res.status(400).json({ message: 'Authorization code is required' });
+        }
+
+        // Exchange authorization code for tokens
+        const { OAuth2Client } = await import('google-auth-library');
+        const client = new OAuth2Client(
+            process.env.GOOGLE_CLIENT_ID,
+            process.env.GOOGLE_CLIENT_SECRET,
+            'postmessage' // Special redirect URI for popup flow
+        );
+
+        const { tokens } = await client.getToken(code);
+        
+        // Verify the ID token to get user info
+        const ticket = await client.verifyIdToken({
+            idToken: tokens.id_token,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        
+        const payload = ticket.getPayload();
+        const { sub: googleId, email, name, picture } = payload;
+
+        if (!email) {
+            return res.status(400).json({ message: 'Email not provided by Google' });
+        }
+
+        // Check if user exists by googleId or email
+        let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+        if (user) {
+            // If user exists but doesn't have googleId, link the account
+            if (!user.googleId) {
+                user.googleId = googleId;
+                user.avatar = picture;
+                user.isVerified = true; // Google accounts are verified
+                await user.save();
+            }
+        } else {
+            // Create new user
+            user = new User({
+                name: name || email.split('@')[0], // Use email prefix if name not provided
+                email,
+                googleId,
+                avatar: picture,
+                isVerified: true, // Google accounts are pre-verified
+            });
+
+            // Apply auto-grant for MRU domain if enabled
+            try {
+                const settings = await SystemSettings.findOne({ key: 'global' });
+                const mruRegex = /@mru\.edu\.in$/i;
+                if (settings?.autoGrantMruPro && mruRegex.test(email)) {
+                    user.plan = 'pro';
+                    user.planActivatedAt = new Date();
+                    user.planExpiresAt = null;
+                }
+            } catch (e) {
+                console.error('Error applying autoGrantMruPro during Google auth:', e);
+            }
+            await user.save();
+
+            // Assign coupon to new user if offer is active
+            try {
+                await assignCouponToNewUser(user._id, user.email);
+            } catch (error) {
+                console.error('Error assigning coupon during Google auth:', error);
+            }
+
+            // Send welcome email for new users
+            try {
+                await sendRegistrationEmail(email, name || email.split('@')[0]);
+            } catch (emailError) {
+                console.error('Failed to send welcome email:', emailError);
+            }
+        }
+
+        res.json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            avatar: user.avatar,
+            token: generateToken(user._id),
+            credits: user.credits,
+        });
+    } catch (error) {
+        console.error('Google auth code exchange error:', error);
+        res.status(401).json({ message: 'Google authentication failed' });
+    }
+});
+
 // @desc    Get user profile
 // @route   GET /api/auth/profile
 // @access  Private

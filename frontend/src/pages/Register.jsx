@@ -45,21 +45,65 @@ const RegisterPage = ({ navigate = () => {} }) => {
     const [googleLoading, setGoogleLoading] = useState(false);
     const { login } = useAuth();
 
-    // Initialize Google Sign-In
+    // Initialize Google OAuth2 client for popup flow
+    const googleClientRef = React.useRef(null);
+
     useEffect(() => {
-        if (window.google) {
-            window.google.accounts.id.initialize({
-                client_id: GOOGLE_CLIENT_ID,
-                callback: handleGoogleCallback,
-            });
+        // Load Google's OAuth2 client library if not already loaded
+        const initGoogleClient = () => {
+            if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+                googleClientRef.current = window.google.accounts.oauth2.initCodeClient({
+                    client_id: GOOGLE_CLIENT_ID,
+                    scope: 'email profile',
+                    ux_mode: 'popup',
+                    callback: async (response) => {
+                        if (response.code) {
+                            // Exchange auth code for credential on backend
+                            setGoogleLoading(true);
+                            setError('');
+                            try {
+                                const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google/code`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ code: response.code }),
+                                });
+                                const data = await res.json();
+                                if (!res.ok) throw new Error(data.message || 'Google sign-up failed');
+                                login({ email: data.email, name: data.name }, data.token);
+                                navigate('dashboard');
+                            } catch (err) {
+                                setError(err.message || 'Google sign-up failed. Please try again.');
+                            } finally {
+                                setGoogleLoading(false);
+                            }
+                        }
+                    },
+                });
+            }
+        };
+
+        // Check if library is already loaded
+        if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+            initGoogleClient();
+        } else {
+            // Wait for library to load
+            const checkInterval = setInterval(() => {
+                if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+                    initGoogleClient();
+                    clearInterval(checkInterval);
+                }
+            }, 100);
+            // Cleanup after 10 seconds
+            setTimeout(() => clearInterval(checkInterval), 10000);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const handleGoogleCallback = async (response) => {
+    const handleGoogleCallback = async (credential) => {
         setGoogleLoading(true);
         setError('');
         try {
-            const data = await googleAuth(response.credential);
+            const data = await googleAuth(credential);
             login({ email: data.email, name: data.name }, data.token);
             navigate('dashboard');
         } catch (err) {
@@ -70,8 +114,37 @@ const RegisterPage = ({ navigate = () => {} }) => {
     };
 
     const handleGoogleClick = () => {
-        if (window.google) {
-            window.google.accounts.id.prompt();
+        if (googleClientRef.current) {
+            googleClientRef.current.requestCode();
+        } else if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+            // Fallback: reinitialize and request
+            const client = window.google.accounts.oauth2.initCodeClient({
+                client_id: GOOGLE_CLIENT_ID,
+                scope: 'email profile',
+                ux_mode: 'popup',
+                callback: async (response) => {
+                    if (response.code) {
+                        setGoogleLoading(true);
+                        setError('');
+                        try {
+                            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google/code`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ code: response.code }),
+                            });
+                            const data = await res.json();
+                            if (!res.ok) throw new Error(data.message || 'Google sign-up failed');
+                            login({ email: data.email, name: data.name }, data.token);
+                            navigate('dashboard');
+                        } catch (err) {
+                            setError(err.message || 'Google sign-up failed. Please try again.');
+                        } finally {
+                            setGoogleLoading(false);
+                        }
+                    }
+                },
+            });
+            client.requestCode();
         } else {
             setError('Google Sign-In is not available. Please try again later.');
         }
