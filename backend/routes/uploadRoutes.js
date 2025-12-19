@@ -3,13 +3,12 @@ import multer from 'multer';
 import cloudinary from '../config/cloudinary.js';
 import { protect } from '../middleware/authMiddleware.js';
 import mammoth from 'mammoth';
-import { createRequire } from 'module';
+import PDFExtract from 'pdf.js-extract';
 
 const router = express.Router();
 
-// Use createRequire for CommonJS modules like pdf-parse
-const require = createRequire(import.meta.url);
-const pdfParse = require('pdf-parse');
+// Initialize PDF extractor
+const pdfExtract = new PDFExtract.PDFExtract();
 
 // Configure multer for memory storage (we'll upload directly to Cloudinary)
 const storage = multer.memoryStorage();
@@ -137,8 +136,11 @@ router.post('/document', protect, documentUpload.single('document'), async (req,
         // Parse PDF files
         if (mimeType === 'application/pdf') {
             try {
-                const pdfData = await pdfParse(req.file.buffer);
-                extractedText = pdfData.text;
+                const data = await pdfExtract.extractBuffer(req.file.buffer, {});
+                // Combine all text from all pages
+                extractedText = data.pages
+                    .map(page => page.content.map(item => item.str).join(' '))
+                    .join('\n\n');
             } catch (pdfError) {
                 console.error('PDF parsing error:', pdfError);
                 return res.status(400).json({ 
