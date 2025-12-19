@@ -19,6 +19,15 @@ router.post('/chat', async (req, res) => {
     } = req.body || {};
 
     // Build a system prompt that injects survey builder context
+    let contextInfo = '';
+    if (context.title || context.description) {
+      contextInfo += `\nCurrent Survey: "${context.title || 'Untitled'}"`;
+      if (context.description) contextInfo += ` - ${context.description}`;
+    }
+    if (context.documentContent) {
+      contextInfo += `\n\nDOCUMENT CONTENT TO BASE QUESTIONS ON:\n---\n${context.documentContent}\n---\n\nGenerate questions based on the content above. The questions should test understanding and cover key concepts from the document.`;
+    }
+
    const system = {
   role: 'system',
   content: `
@@ -50,6 +59,7 @@ STRICT RULES:
 - Keep question texts concise and options clear.
 
 You may also use context from the builder if helpful.
+${contextInfo}
 `
 };
 

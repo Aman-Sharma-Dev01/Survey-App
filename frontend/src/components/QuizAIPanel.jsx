@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Send, Copy, Download, Coins, Sparkles, CheckCircle, X } from 'lucide-react';
+import { Send, Copy, Download, Coins, Sparkles, CheckCircle, X, Paperclip, FileText, Loader2 } from 'lucide-react';
 import { chatQuizAI } from '../services/quizAi';
+import { parseDocument } from '../services/uploadService';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { generateTempId } from '../services/api';
@@ -93,11 +94,15 @@ export default function QuizAIPanel({ quiz, onImportQuestions, navigate }) {
   const [showCreditWarning, setShowCreditWarning] = useState(false);
   const [importedQuestions, setImportedQuestions] = useState(null);
   const [showImportPopup, setShowImportPopup] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [fileContent, setFileContent] = useState('');
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const fileInputRef = useRef(null);
   const [thread, setThread] = useState([
     {
       role: 'assistant',
       content:
-        'Hi! I can help you create quiz questions with correct answers and explanations. Tell me the topic and I\'ll generate questions you can import. Each generation uses 20 credits.',
+        'Hi! I can help you create quiz questions with correct answers and explanations. Tell me the topic and I\'ll generate questions you can import. Each generation uses 20 credits.\n\n📎 **Tip:** Upload a PDF or Word document and I can generate quiz questions from its content!',
     },
   ]);
   const listRef = useRef(null);
@@ -119,6 +124,56 @@ export default function QuizAIPanel({ quiz, onImportQuestions, navigate }) {
     }),
     [quiz]
   );
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain'
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      alert('Please upload a PDF, Word document (.doc, .docx), or text file.');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File size must be less than 10MB.');
+      return;
+    }
+
+    setUploadingFile(true);
+    try {
+      const result = await parseDocument(file);
+      if (result.success && result.content) {
+        setUploadedFile({ name: file.name, size: file.size });
+        setFileContent(result.content);
+        
+        // Add a message showing the file was uploaded
+        setThread(t => [...t, {
+          role: 'assistant',
+          content: `📄 **File uploaded:** ${file.name}\n\nI've extracted ${result.textLength.toLocaleString()} characters from the document.${result.isTruncated ? ' (Content was truncated due to length)' : ''}\n\nNow tell me what kind of quiz questions you'd like me to generate. For example:\n- "Generate 10 multiple choice questions with answers"\n- "Create true/false questions"\n- "Make questions testing key concepts"`
+        }]);
+      }
+    } catch (err) {
+      console.error('File upload error:', err);
+      alert(err.message || 'Failed to process document');
+    } finally {
+      setUploadingFile(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const removeUploadedFile = () => {
+    setUploadedFile(null);
+    setFileContent('');
+  };
 
   const send = async () => {
     const text = input.trim();
@@ -147,7 +202,9 @@ export default function QuizAIPanel({ quiz, onImportQuestions, navigate }) {
 
       const { content } = await chatQuizAI({
         messages: newThread.map((m) => ({ role: m.role, content: m.content })),
-        context,
+        context: fileContent 
+          ? { ...context, documentContent: fileContent }
+          : context,
         temperature: 0.7,
       });
 
@@ -387,10 +444,52 @@ export default function QuizAIPanel({ quiz, onImportQuestions, navigate }) {
 
       {/* Input */}
       <div className="p-3 border-t border-gray-100 shrink-0">
+        {/* Uploaded file indicator */}
+        {uploadedFile && (
+          <div className="mb-2 flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+            <FileText size={16} className="text-emerald-600" />
+            <span className="text-sm text-emerald-700 flex-1 truncate">{uploadedFile.name}</span>
+            <button
+              onClick={removeUploadedFile}
+              className="p-1 hover:bg-emerald-100 rounded"
+              title="Remove file"
+            >
+              <X size={14} className="text-emerald-600" />
+            </button>
+          </div>
+        )}
+        
+        {/* Uploading indicator */}
+        {uploadingFile && (
+          <div className="mb-2 flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+            <Loader2 size={16} className="text-emerald-600 animate-spin" />
+            <span className="text-sm text-gray-600">Processing document...</span>
+          </div>
+        )}
+        
         <div className="flex gap-2">
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          
+          {/* Upload button */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingFile || loading}
+            className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition"
+            title="Upload PDF or Word document"
+          >
+            <Paperclip size={18} className="text-gray-600" />
+          </button>
+          
           <input
             className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            placeholder="Generate 5 JavaScript questions..."
+            placeholder={uploadedFile ? "What questions should I generate?" : "Generate 5 JavaScript questions..."}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
@@ -409,7 +508,9 @@ export default function QuizAIPanel({ quiz, onImportQuestions, navigate }) {
             <Send size={18} />
           </button>
         </div>
-        <p className="text-xs text-gray-400 mt-2 text-center">Each generation uses 20 credits</p>
+        <p className="text-xs text-gray-400 mt-2 text-center">
+          {uploadedFile ? '📄 Document loaded • ' : ''}Each generation uses 20 credits
+        </p>
       </div>
     </div>
   );

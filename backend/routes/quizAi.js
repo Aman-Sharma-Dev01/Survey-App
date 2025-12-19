@@ -19,6 +19,15 @@ router.post('/chat', async (req, res) => {
     } = req.body || {};
 
     // Build a system prompt that injects quiz builder context
+    let contextInfo = '';
+    if (context.title || context.description) {
+      contextInfo += `\nCurrent Quiz: "${context.title || 'Untitled'}"`;
+      if (context.description) contextInfo += ` - ${context.description}`;
+    }
+    if (context.documentContent) {
+      contextInfo += `\n\nDOCUMENT CONTENT TO BASE QUESTIONS ON:\n---\n${context.documentContent}\n---\n\nGenerate quiz questions based on the content above. The questions should test understanding, recall, and comprehension of key concepts from the document. Include explanations that reference the document content.`;
+    }
+
     const system = {
       role: 'system',
       content: `
@@ -62,6 +71,7 @@ STRICT RULES:
 - The "explanation" field should briefly explain why the correct answer is correct.
 
 You may also use context from the builder if helpful.
+${contextInfo}
 `
     };
 

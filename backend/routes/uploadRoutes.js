@@ -2,8 +2,19 @@ import express from 'express';
 import multer from 'multer';
 import cloudinary from '../config/cloudinary.js';
 import { protect } from '../middleware/authMiddleware.js';
+import mammoth from 'mammoth';
 
 const router = express.Router();
+
+// Dynamic import for pdf-parse (CommonJS module)
+let pdfParse;
+const loadPdfParse = async () => {
+  if (!pdfParse) {
+    const module = await import('pdf-parse');
+    pdfParse = module.default;
+  }
+  return pdfParse;
+};
 
 // Configure multer for memory storage (we'll upload directly to Cloudinary)
 const storage = multer.memoryStorage();
@@ -17,11 +28,34 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
+// File filter for documents (PDF, Word)
+const documentFilter = (req, file, cb) => {
+    const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain'
+    ];
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Only PDF, Word (.doc, .docx), and text files are allowed!'), false);
+    }
+};
+
 const upload = multer({
     storage,
     fileFilter,
     limits: {
         fileSize: 5 * 1024 * 1024 // 5MB limit
+    }
+});
+
+const documentUpload = multer({
+    storage,
+    fileFilter: documentFilter,
+    limits: {
+        fileSize: 10 * 1024 * 1024 // 10MB limit for documents
     }
 });
 
@@ -85,6 +119,99 @@ router.delete('/image/:publicId', protect, async (req, res) => {
         console.error('Delete error:', error);
         res.status(500).json({ 
             message: 'Error deleting image', 
+            error: error.message 
+        });
+    }
+});
+
+/* ===========================================================
+   PARSE DOCUMENT (PDF, Word, Text)
+   POST /api/upload/document (Private)
+   Extracts text content from uploaded documents for AI processing
+=========================================================== */
+router.post('/document', protect, documentUpload.single('document'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No document file provided' });
+        }
+
+        let extractedText = '';
+        const fileName = req.file.originalname;
+        const mimeType = req.file.mimetype;
+
+        // Parse PDF files
+        if (mimeType === 'application/pdf') {
+            try {
+                const pdf = await loadPdfParse();
+                const pdfData = await pdf(req.file.buffer);
+                extractedText = pdfData.text;
+            } catch (pdfError) {
+                console.error('PDF parsing error:', pdfError);
+                return res.status(400).json({ 
+                    message: 'Error parsing PDF file. The file may be corrupted or password-protected.',
+                    error: pdfError.message 
+                });
+            }
+        }
+        // Parse Word documents (.docx)
+        else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+            try {
+                const result = await mammoth.extractRawText({ buffer: req.file.buffer });
+                extractedText = result.value;
+            } catch (docxError) {
+                console.error('DOCX parsing error:', docxError);
+                return res.status(400).json({ 
+                    message: 'Error parsing Word document.',
+                    error: docxError.message 
+                });
+            }
+        }
+        // Parse older Word documents (.doc) - mammoth has limited support
+        else if (mimeType === 'application/msword') {
+            try {
+                const result = await mammoth.extractRawText({ buffer: req.file.buffer });
+                extractedText = result.value;
+            } catch (docError) {
+                console.error('DOC parsing error:', docError);
+                return res.status(400).json({ 
+                    message: 'Error parsing Word document. Try saving it as .docx format.',
+                    error: docError.message 
+                });
+            }
+        }
+        // Parse plain text files
+        else if (mimeType === 'text/plain') {
+            extractedText = req.file.buffer.toString('utf-8');
+        }
+        else {
+            return res.status(400).json({ message: 'Unsupported file type' });
+        }
+
+        // Clean up the extracted text
+        extractedText = extractedText
+            .replace(/\r\n/g, '\n')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+
+        // Limit text length to prevent huge payloads (max 50,000 chars)
+        const maxLength = 50000;
+        const isTruncated = extractedText.length > maxLength;
+        if (isTruncated) {
+            extractedText = extractedText.substring(0, maxLength) + '...';
+        }
+
+        res.json({
+            success: true,
+            fileName,
+            mimeType,
+            textLength: extractedText.length,
+            isTruncated,
+            content: extractedText
+        });
+    } catch (error) {
+        console.error('Document parsing error:', error);
+        res.status(500).json({ 
+            message: 'Error processing document', 
             error: error.message 
         });
     }
