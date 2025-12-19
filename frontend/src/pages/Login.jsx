@@ -73,7 +73,7 @@ const LoginPage = ({ navigate }) => {
                             setGoogleLoading(true);
                             setError('');
                             try {
-                                const res = await fetch(`${BASE_URL || 'http://localhost:5000'}/api/auth/google/code`, {
+                                const res = await fetch(`${BASE_URL || 'http://localhost:5000/api'}/auth/google/code`, {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ code: response.code }),
