@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LogOut, PlusCircle, LayoutDashboard, HelpCircle, Menu, X, Coins, ShoppingCart, Crown, Gift, Ticket, CheckCircle, Loader, RefreshCw, GraduationCap, Sparkles, Zap, FileText, BarChart3, Users, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { applyCoupon } from '../services/couponService';
@@ -148,6 +148,7 @@ const Navbar = ({ currentPage, handleNavigate }) => {
     const { isAuthenticated, logout, user, credits, fetchProfile } = useAuth();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [profileDropdown, setProfileDropdown] = useState(false);
+    const profileRef = useRef(null);
     const [couponInput, setCouponInput] = useState('');
     const [couponLoading, setCouponLoading] = useState(false);
     const [couponMessage, setCouponMessage] = useState({ type: '', text: '' });
@@ -194,6 +195,29 @@ const Navbar = ({ currentPage, handleNavigate }) => {
         setMobileMenuOpen(false);
     };
 
+    // Close profile dropdown when clicking outside or pressing Escape
+    useEffect(() => {
+        if (!profileDropdown) return;
+
+        const onDocClick = (e) => {
+            if (profileRef.current && !profileRef.current.contains(e.target)) {
+                setProfileDropdown(false);
+            }
+        };
+
+        const onKeyDown = (e) => {
+            if (e.key === 'Escape') setProfileDropdown(false);
+        };
+
+        document.addEventListener('mousedown', onDocClick);
+        document.addEventListener('keydown', onKeyDown);
+
+        return () => {
+            document.removeEventListener('mousedown', onDocClick);
+            document.removeEventListener('keydown', onKeyDown);
+        };
+    }, [profileDropdown]);
+
     return (
         <header className="bg-indigo-700 shadow-lg sticky top-0 z-20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
@@ -220,7 +244,7 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                             {isFromMRU && <MRUBadge onClick={() => setShowMRUModal(true)} />}
 
                             {/* Profile Dropdown */}
-                            <div className="relative">
+                            <div className="relative" ref={profileRef}>
                                 <button
                                     onClick={() => setProfileDropdown(!profileDropdown)}
                                     className="flex items-center gap-2 px-2 py-1 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition"
@@ -275,11 +299,11 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                                         {isFromMRU && (
                                             <button
                                                 onClick={() => { setShowMRUModal(true); setProfileDropdown(false); }}
-                                                className="w-full px-4 py-2 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 transition text-left"
+                                                className="w-full px-4 py-2 border-b border-gray-100 bg-gradient-to-r from-amber-500 to-orange-500   text-left"
                                             >
                                                 <div className="flex items-center gap-2">
-                                                    <GraduationCap size={14} className="text-blue-600" />
-                                                    <span className="text-xs text-blue-700 font-medium">Manav Rachna University - Premium Access</span>
+                                                    <GraduationCap size={24} className="text-white " />
+                                                    <span className="text-xs text-white font-bold">Manav Rachna University - Premium Access</span>
                                                 </div>
                                             </button>
                                         )}
