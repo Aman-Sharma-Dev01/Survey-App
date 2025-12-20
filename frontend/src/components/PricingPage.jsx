@@ -355,6 +355,7 @@ const App = () => {
         { text: 'Basic analytics', included: true },
         { text: 'Email support', included: true },
         { text: 'Export to Excel', included: true },
+        { text: 'Document upload for AI generation', included: false },
         { text: 'Anti-cheating features', included: false },
         { text: 'Tab switch detection', included: false },
         { text: 'Fullscreen mode enforcement', included: false }
@@ -377,6 +378,7 @@ const App = () => {
         { text: 'Priority email support', included: true },
         { text: 'Export to Excel', included: true },
         { text: '3 months premium access', included: true, highlight: true },
+        { text: 'Document upload for AI generation', included: true, highlight: true },
         { text: 'Tab switch detection', included: true, highlight: true },
         { text: 'Prevent duplicate roll numbers', included: true, highlight: true },
         { text: 'Sequential answering mode', included: true, highlight: true },
@@ -400,6 +402,7 @@ const App = () => {
         { text: 'Priority email support', included: true },
         { text: 'Export to Excel', included: true },
         { text: '2 years premium access', included: true, highlight: true },
+        { text: 'Document upload for AI generation', included: true, highlight: true },
         { text: 'Tab switch detection', included: true, highlight: true },
         { text: 'Prevent duplicate roll numbers', included: true, highlight: true },
         { text: 'Sequential answering mode', included: true, highlight: true },

@@ -295,3 +295,122 @@ export const sendResetPasswordEmail = async (toEmail, token) => {
   });
 };
 
+
+/**
+ * Sends contact form submission to admin/support email
+ */
+export const sendContactEmail = async ({ name, email, subject, message }) => {
+  const adminEmail = process.env.CONTACT_EMAIL || process.env.BREVO_FROM_EMAIL;
+  
+  return sendEmail({
+    to: adminEmail,
+    subject: `[Contact Form] ${subject} - from ${name}`,
+    html: `
+    <div style="font-family: Arial, sans-serif; background:#f7f7f7; padding: 40px;">
+      <div style="max-width:600px; margin:0 auto; background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+
+        <!-- Header -->
+        <div style="background:#4f46e5; padding:25px; text-align:center;">
+          <h1 style="color:#ffffff; margin:0; font-size:24px;">📬 New Contact Form Submission</h1>
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 30px 40px; color:#333;">
+          <table style="width:100%; border-collapse:collapse;">
+            <tr>
+              <td style="padding:12px 0; border-bottom:1px solid #eee; font-weight:600; width:120px; color:#555;">Name:</td>
+              <td style="padding:12px 0; border-bottom:1px solid #eee; color:#222;">${name}</td>
+            </tr>
+            <tr>
+              <td style="padding:12px 0; border-bottom:1px solid #eee; font-weight:600; color:#555;">Email:</td>
+              <td style="padding:12px 0; border-bottom:1px solid #eee;"><a href="mailto:${email}" style="color:#4f46e5;">${email}</a></td>
+            </tr>
+            <tr>
+              <td style="padding:12px 0; border-bottom:1px solid #eee; font-weight:600; color:#555;">Subject:</td>
+              <td style="padding:12px 0; border-bottom:1px solid #eee; color:#222;">${subject}</td>
+            </tr>
+          </table>
+
+          <div style="margin-top:25px;">
+            <h3 style="color:#555; margin-bottom:10px; font-size:16px;">Message:</h3>
+            <div style="background:#f9fafb; padding:20px; border-radius:8px; border:1px solid #e5e7eb; white-space:pre-wrap; line-height:1.6; color:#333;">${message}</div>
+          </div>
+
+          <div style="margin-top:30px; text-align:center;">
+            <a href="mailto:${email}?subject=Re: ${subject}" 
+              style="background:#4f46e5; color:#ffffff; text-decoration:none; padding:12px 24px; border-radius:6px; font-size:14px; display:inline-block; font-weight:600;">
+              Reply to ${name}
+            </a>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background:#f2f2f2; text-align:center; padding:15px; font-size:13px; color:#666;">
+          Received on ${new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })}
+        </div>
+
+      </div>
+    </div>
+    `
+  });
+};
+
+/**
+ * Sends confirmation email to user after contact form submission
+ */
+export const sendContactConfirmationEmail = async (toEmail, name) => {
+  return sendEmail({
+    to: toEmail,
+    subject: "We've Received Your Message - SurveyZen",
+    html: `
+    <div style="font-family: Arial, sans-serif; background:#f7f7f7; padding: 40px;">
+      <div style="max-width:600px; margin:0 auto; background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+
+        <!-- Header Logo -->
+        <div style="text-align:center; padding:25px 0;">
+          <img src="https://surveyzen.live/logo3.png" alt="SurveyZen Logo"
+               style="width:150px; display:block; margin:0 auto;" />
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 30px 40px; color:#333;">
+          <h2 style="margin-top:0; font-size:24px; font-weight:600; text-align:center; color:#222;">
+            Thanks for Reaching Out, ${name}! ✉️
+          </h2>
+
+          <p style="font-size:16px; margin-bottom:16px;">
+            We've received your message and appreciate you taking the time to contact us.
+          </p>
+
+          <p style="font-size:16px; margin-bottom:16px;">
+            Our team typically responds within <strong>24-48 hours</strong> during business days. We'll get back to you as soon as possible at this email address.
+          </p>
+
+          <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:20px; margin:25px 0;">
+            <p style="margin:0; font-size:15px; color:#0369a1;">
+              💡 <strong>Quick Tip:</strong> While you wait, check out our <a href="https://surveyzen.live/#pricing" style="color:#0369a1;">pricing page</a> for the latest features and plans.
+            </p>
+          </div>
+
+          <p style="font-size:16px; margin-top:25px;">
+            Warm regards,<br>
+            <strong>Team SurveyZen</strong>
+          </p>
+        </div>
+
+        <!-- Bottom Logo -->
+        <div style="text-align:center; padding:20px 0;">
+          <img src="https://surveyzen.live/logo1.png" alt="SurveyZen Logo"
+               style="width:120px; opacity:0.85;" />
+        </div>
+
+        <!-- Footer -->
+        <div style="background:#f2f2f2; text-align:center; padding:15px; font-size:13px; color:#666;">
+          © ${new Date().getFullYear()} SurveyZen. All rights reserved.
+        </div>
+
+      </div>
+    </div>
+    `
+  });
+};

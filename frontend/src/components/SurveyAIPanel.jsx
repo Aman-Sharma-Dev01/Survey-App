@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Send, Copy, Download, Coins, Sparkles, CheckCircle, X, Paperclip, FileText, Loader2 } from 'lucide-react';
+import { Send, Copy, Download, Coins, Sparkles, CheckCircle, X, Paperclip, FileText, Loader2, Crown, Lock } from 'lucide-react';
 import { chatAI } from '../services/ai';
 import { parseDocument } from '../services/uploadService';
 import ReactMarkdown from 'react-markdown';
@@ -113,7 +113,8 @@ function parseQuestionsFromMarkdown(md) {
 }
 
 export default function SurveyAIPanel({ survey, onImportQuestions, navigate }) {
-  const { credits, useCredits: deductCredits } = useAuth();
+  const { credits, useCredits: deductCredits, user } = useAuth();
+  const isPremiumUser = user?.isPlanActive || false;
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [showCreditWarning, setShowCreditWarning] = useState(false);
@@ -123,14 +124,18 @@ export default function SurveyAIPanel({ survey, onImportQuestions, navigate }) {
   const [fileContent, setFileContent] = useState('');
   const [uploadingFile, setUploadingFile] = useState(false);
   const fileInputRef = useRef(null);
-  const [thread, setThread] = useState([
-    {
-      role: 'assistant',
-      content:
-        'Hi! I can help you write questions, pick presets, or improve wording. I will include a JSON block you can import. Each AI generation uses 20 credits.\n\n📎 **Tip:** Upload a PDF or Word document and I can generate questions from its content!',
-    },
-  ]);
+  const [thread, setThread] = useState([]);
   const listRef = useRef(null);
+
+  // Initialize thread with appropriate message based on premium status
+  React.useEffect(() => {
+    setThread([{
+      role: 'assistant',
+      content: isPremiumUser 
+        ? 'Hi! I can help you write questions, pick presets, or improve wording. I will include a JSON block you can import. Each AI generation uses 20 credits.\n\n📎 **Tip:** Upload a PDF or Word document and I can generate questions from its content!'
+        : 'Hi! I can help you write questions, pick presets, or improve wording. I will include a JSON block you can import. Each AI generation uses 20 credits.\n\n🔒 **Pro Feature:** Upgrade to Pro to upload PDF or Word documents for AI question generation!'
+    }]);
+  }, [isPremiumUser]);
 
   const context = useMemo(
     () => ({
@@ -147,6 +152,15 @@ export default function SurveyAIPanel({ survey, onImportQuestions, navigate }) {
   );
 
   const handleFileUpload = async (e) => {
+    // Premium check - non-premium users cannot upload
+    if (!isPremiumUser) {
+      alert('Document upload is a premium feature. Please upgrade to Pro to use this feature.');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -497,15 +511,32 @@ export default function SurveyAIPanel({ survey, onImportQuestions, navigate }) {
             className="hidden"
           />
           
-          {/* Upload button */}
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploadingFile || loading}
-            className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition"
-            title="Upload PDF or Word document"
-          >
-            <Paperclip size={18} className="text-gray-600" />
-          </button>
+          {/* Upload button with premium indicator */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                if (!isPremiumUser) {
+                  navigate && navigate('pricing');
+                } else {
+                  fileInputRef.current?.click();
+                }
+              }}
+              disabled={uploadingFile || loading}
+              className={`p-2 border rounded-lg disabled:opacity-50 transition ${
+                isPremiumUser 
+                  ? 'border-gray-200 hover:bg-gray-50' 
+                  : 'border-amber-200 bg-amber-50 hover:bg-amber-100'
+              }`}
+              title={isPremiumUser ? "Upload PDF or Word document" : "Pro feature - Upload documents"}
+            >
+              <Paperclip size={18} className={isPremiumUser ? "text-gray-600" : "text-amber-600"} />
+            </button>
+            {!isPremiumUser && (
+              <div className="absolute -top-1 -right-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full p-0.5">
+                <Crown size={10} className="text-white" />
+              </div>
+            )}
+          </div>
           
           <input
             className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"

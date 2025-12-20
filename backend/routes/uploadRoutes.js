@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import cloudinary from '../config/cloudinary.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, requirePremium } from '../middleware/authMiddleware.js';
 import mammoth from 'mammoth';
 import PDFExtract from 'pdf.js-extract';
 
@@ -55,9 +55,9 @@ const documentUpload = multer({
 
 /* ===========================================================
    UPLOAD SINGLE IMAGE
-   POST /api/upload/image (Private)
+   POST /api/upload/image (Private, Premium)
 =========================================================== */
-router.post('/image', protect, upload.single('image'), async (req, res) => {
+router.post('/image', protect, requirePremium, upload.single('image'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: 'No image file provided' });
@@ -120,10 +120,10 @@ router.delete('/image/:publicId', protect, async (req, res) => {
 
 /* ===========================================================
    PARSE DOCUMENT (PDF, Word, Text)
-   POST /api/upload/document (Private)
+   POST /api/upload/document (Private, Premium)
    Extracts text content from uploaded documents for AI processing
 =========================================================== */
-router.post('/document', protect, documentUpload.single('document'), async (req, res) => {
+router.post('/document', protect, requirePremium, documentUpload.single('document'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: 'No document file provided' });
