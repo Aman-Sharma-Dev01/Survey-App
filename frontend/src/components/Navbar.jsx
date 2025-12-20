@@ -275,11 +275,11 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                                         {isFromMRU && (
                                             <button
                                                 onClick={() => { setShowMRUModal(true); setProfileDropdown(false); }}
-                                                className="w-full px-4 py-2 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 transition text-left"
+                                                className="w-full px-4 py-2 border-b border-gray-100 bg-gradient-to-r from-amber-500 to-orange-500   text-left"
                                             >
                                                 <div className="flex items-center gap-2">
-                                                    <GraduationCap size={14} className="text-blue-600" />
-                                                    <span className="text-xs text-blue-700 font-medium">Manav Rachna University - Premium Access</span>
+                                                    <GraduationCap size={24} className="text-white " />
+                                                    <span className="text-xs text-white font-bold">Manav Rachna University - Premium Access</span>
                                                 </div>
                                             </button>
                                         )}
