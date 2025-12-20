@@ -300,12 +300,21 @@ export const sendResetPasswordEmail = async (toEmail, token) => {
  * Sends contact form submission to admin/support email
  */
 export const sendContactEmail = async ({ name, email, subject, message }) => {
+  // Use CONTACT_EMAIL if set, otherwise fall back to BREVO_FROM_EMAIL
+  // Note: The recipient email must be verified in Brevo or be the same as sender
   const adminEmail = process.env.CONTACT_EMAIL || process.env.BREVO_FROM_EMAIL;
   
-  return sendEmail({
-    to: adminEmail,
-    subject: `[Contact Form] ${subject} - from ${name}`,
-    html: `
+  console.log(`Sending contact form email to: ${adminEmail}`);
+  
+  try {
+    const response = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: { email: process.env.BREVO_FROM_EMAIL },
+        to: [{ email: adminEmail }],
+        replyTo: { email: email, name: name },
+        subject: `[Contact Form] ${subject} - from ${name}`,
+        htmlContent: `
     <div style="font-family: Arial, sans-serif; background:#f7f7f7; padding: 40px;">
       <div style="max-width:600px; margin:0 auto; background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
 
@@ -352,7 +361,21 @@ export const sendContactEmail = async ({ name, email, subject, message }) => {
       </div>
     </div>
     `
-  });
+      },
+      {
+        headers: {
+          "api-key": process.env.BREVO_API_KEY,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    console.log("Contact email sent successfully:", response.data);
+    return { success: true };
+  } catch (error) {
+    console.error("Contact email error:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
 /**
