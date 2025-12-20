@@ -47,6 +47,9 @@ import CertificateAdmin from './pages/CertificateAdmin.jsx';
 // ⭐ Offer Admin
 import OfferAdmin from './pages/OfferAdmin.jsx';
 
+// ⭐ Contact Admin
+import ContactAdmin from './pages/ContactAdmin.jsx';
+
 // Admin email
 const ADMIN_EMAIL = 'support@surveyzen.live';
 
@@ -86,7 +89,7 @@ const App = () => {
 
   // Protect private pages
   useEffect(() => {
-    const protectedPaths = ['dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-edit', 'quiz-analytics', 'payment-admin', 'payment-history', 'certificate-admin', 'plan-admin', 'admin-dashboard', 'offer-admin'];
+    const protectedPaths = ['dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-edit', 'quiz-analytics', 'payment-admin', 'payment-history', 'certificate-admin', 'plan-admin', 'admin-dashboard', 'offer-admin', 'contact-admin'];
     const [pathSegment] = getPathSegments(currentPath);
 
     if (protectedPaths.includes(pathSegment) && !authState.isAuthenticated) {
@@ -249,6 +252,10 @@ const App = () => {
       // ⭐ Offer Admin (Admin only)
       case 'offer-admin':
         return <OfferAdmin navigate={navigate} />;
+
+      // ⭐ Contact Admin (Admin only - view contact form submissions)
+      case 'contact-admin':
+        return <ContactAdmin navigate={navigate} />;
 
       default:
         return <LandingPage navigate={navigate} />;

@@ -14,7 +14,8 @@ import {
     Mail,
     MailCheck,
     MailX,
-    Loader2
+    Loader2,
+    MessageSquare
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import api from '../services/api';
@@ -195,6 +196,13 @@ const AdminDashboard = ({ navigate }) => {
             description: 'Manage promotional offers and vouchers',
             color: 'pink',
             route: 'offer-admin'
+        },
+        {
+            icon: MessageSquare,
+            title: 'Contact Messages',
+            description: 'View and respond to user messages',
+            color: 'teal',
+            route: 'contact-admin'
         }
     ];
 
