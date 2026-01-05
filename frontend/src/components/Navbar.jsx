@@ -221,7 +221,7 @@ const Navbar = ({ currentPage, handleNavigate }) => {
     return (
         <header className="bg-indigo-700 shadow-lg sticky top-0 z-20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
-                <a href="#dashboard" className="text-2xl font-extrabold text-white tracking-wider">
+                <a href="#home" className="text-2xl font-extrabold text-white tracking-wider">
                     SurveyZen
                 </a>
                 
@@ -229,10 +229,7 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                 <nav className="hidden md:flex space-x-4 items-center">
                     {isAuthenticated ? (
                         <>
-                            <NavButton Icon={LayoutDashboard} label="Surveys" target="dashboard" onClick={() => handleNavigate('dashboard')} current={currentPage} />
-                            <NavButton Icon={PlusCircle} label="Create Survey" target="create" onClick={() => handleNavigate('create')} current={currentPage} />
-                            <NavButton Icon={HelpCircle} label="Quizzes" target="quiz-dashboard" onClick={() => handleNavigate('quiz-dashboard')} current={currentPage} />
-                            <NavButton Icon={RefreshCw} label="Queued" target="queued-submissions" onClick={() => handleNavigate('queued-submissions')} current={currentPage} />
+                            <NavButton Icon={LayoutDashboard} label="Home" target="home" onClick={() => handleNavigate('home')} current={currentPage} />
                             
                             {/* Credits Display */}
                             <div className="flex items-center px-3 py-1.5 bg-indigo-800 rounded-lg">
@@ -439,33 +436,9 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                                 
                                 <NavButton 
                                     Icon={LayoutDashboard} 
-                                    label="Surveys" 
-                                    target="dashboard" 
-                                    onClick={() => handleMobileNavigate('dashboard')} 
-                                    current={currentPage}
-                                    mobile
-                                />
-                                <NavButton 
-                                    Icon={PlusCircle} 
-                                    label="Create Survey" 
-                                    target="create" 
-                                    onClick={() => handleMobileNavigate('create')} 
-                                    current={currentPage}
-                                    mobile
-                                />
-                                <NavButton 
-                                    Icon={HelpCircle} 
-                                    label="Quizzes" 
-                                    target="quiz-dashboard" 
-                                    onClick={() => handleMobileNavigate('quiz-dashboard')} 
-                                    current={currentPage}
-                                    mobile
-                                />
-                                <NavButton 
-                                    Icon={RefreshCw}
-                                    label="Queued"
-                                    target="queued-submissions"
-                                    onClick={() => handleMobileNavigate('queued-submissions')}
+                                    label="Home" 
+                                    target="home" 
+                                    onClick={() => handleMobileNavigate('home')} 
                                     current={currentPage}
                                     mobile
                                 />

@@ -50,6 +50,9 @@ import OfferAdmin from './pages/OfferAdmin.jsx';
 // ⭐ Contact Admin
 import ContactAdmin from './pages/ContactAdmin.jsx';
 
+// ⭐ Home Page - Feature Hub
+import HomePage from './pages/HomePage.jsx';
+
 // Admin email
 const ADMIN_EMAIL = 'support@surveyzen.live';
 
@@ -89,7 +92,7 @@ const App = () => {
 
   // Protect private pages
   useEffect(() => {
-    const protectedPaths = ['dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-edit', 'quiz-analytics', 'payment-admin', 'payment-history', 'certificate-admin', 'plan-admin', 'admin-dashboard', 'offer-admin', 'contact-admin'];
+    const protectedPaths = ['home', 'dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-edit', 'quiz-analytics', 'payment-admin', 'payment-history', 'certificate-admin', 'plan-admin', 'admin-dashboard', 'offer-admin', 'contact-admin'];
     const [pathSegment] = getPathSegments(currentPath);
 
     if (protectedPaths.includes(pathSegment) && !authState.isAuthenticated) {
@@ -153,6 +156,9 @@ const App = () => {
         return pathId
           ? <BlogPage slug={pathId} navigate={navigate} />
           : <BlogPage navigate={navigate} />;
+
+      case 'home':
+        return <HomePage navigate={navigate} />;
 
       case 'dashboard':
         return <Dashboard navigate={navigate} />;
