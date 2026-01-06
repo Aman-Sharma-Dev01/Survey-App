@@ -109,10 +109,7 @@ const HomePage = ({ navigate }) => {
             {/* Header Section */}
             <div className="max-w-7xl mx-auto mb-16">
                 <div className="text-center">
-                    <div className="inline-flex items-center gap-2 mb-4 bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm">
-                        <LayoutGrid size={16} className="text-blue-600" />
-                        <span className="text-sm font-semibold text-gray-700">Welcome Back</span>
-                    </div>
+                    
                     
                     <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600 mb-4">
                         Welcome, {user?.firstName || 'User'}!
