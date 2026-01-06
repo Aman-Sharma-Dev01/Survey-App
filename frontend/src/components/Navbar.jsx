@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LogOut, PlusCircle, LayoutDashboard, HelpCircle, Menu, X, Coins, ShoppingCart, Crown, Gift, Ticket, CheckCircle, Loader, RefreshCw, GraduationCap, Sparkles, Zap, FileText, BarChart3, Users, Shield } from 'lucide-react';
+import { LogOut, PlusCircle, LayoutDashboard, HelpCircle, Menu, X, Coins, ShoppingCart, Crown, Gift, Ticket, CheckCircle, Loader, RefreshCw, GraduationCap, Sparkles, Zap, FileText, BarChart3, Users, Shield, PenLine } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { applyCoupon } from '../services/couponService';
 
@@ -230,6 +230,7 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                     {isAuthenticated ? (
                         <>
                             <NavButton Icon={LayoutDashboard} label="Home" target="home" onClick={() => handleNavigate('home')} current={currentPage} />
+                            <NavButton Icon={PenLine} label="Write Blog" target="blog-create" onClick={() => handleNavigate('blog-create')} current={currentPage} />
                             
                             {/* Credits Display */}
                             <div className="flex items-center px-3 py-1.5 bg-indigo-800 rounded-lg">
@@ -439,6 +440,14 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                                     label="Home" 
                                     target="home" 
                                     onClick={() => handleMobileNavigate('home')} 
+                                    current={currentPage}
+                                    mobile
+                                />
+                                <NavButton 
+                                    Icon={PenLine} 
+                                    label="Write Blog" 
+                                    target="blog-create" 
+                                    onClick={() => handleMobileNavigate('blog-create')} 
                                     current={currentPage}
                                     mobile
                                 />

@@ -9,13 +9,17 @@ import {
     FileText,
     Loader,
     AlertCircle,
-    Filter
+    Filter,
+    X,
+    Calendar,
+    User
 } from 'lucide-react';
 import { 
     getAllBlogsAdmin, 
     approveBlog, 
     rejectBlog, 
     toggleFeaturedBlog,
+    getAdminBlogPreview,
     BLOG_CATEGORIES 
 } from '../services/blogService';
 
@@ -37,6 +41,10 @@ const BlogAdmin = ({ navigate }) => {
     const [rejectModal, setRejectModal] = useState(null);
     const [rejectReason, setRejectReason] = useState('');
     const [processing, setProcessing] = useState(null);
+    
+    // Preview modal state
+    const [previewBlog, setPreviewBlog] = useState(null);
+    const [previewLoading, setPreviewLoading] = useState(false);
 
     useEffect(() => {
         fetchBlogs();
@@ -101,6 +109,18 @@ const BlogAdmin = ({ navigate }) => {
             setError(err.message);
         } finally {
             setProcessing(null);
+        }
+    };
+
+    const handlePreview = async (slug) => {
+        setPreviewLoading(true);
+        try {
+            const blog = await getAdminBlogPreview(slug);
+            setPreviewBlog(blog);
+        } catch (err) {
+            setError('Failed to load preview: ' + err.message);
+        } finally {
+            setPreviewLoading(false);
         }
     };
 
@@ -237,14 +257,14 @@ const BlogAdmin = ({ navigate }) => {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <a
-                                                        href={`#/blog/${blog.slug}`}
-                                                        target="_blank"
-                                                        className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
+                                                    <button
+                                                        onClick={() => handlePreview(blog.slug)}
+                                                        disabled={previewLoading}
+                                                        className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg disabled:opacity-50"
                                                         title="Preview"
                                                     >
                                                         <Eye className="h-4 w-4" />
-                                                    </a>
+                                                    </button>
                                                     
                                                     {blog.status === 'pending' && (
                                                         <>
@@ -348,6 +368,113 @@ const BlogAdmin = ({ navigate }) => {
                                 {processing ? 'Rejecting...' : 'Reject Blog'}
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Preview Modal */}
+            {previewBlog && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto my-4">
+                        {/* Modal Header */}
+                        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <h3 className="text-lg font-bold text-gray-900">Blog Preview</h3>
+                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                    previewBlog.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                    previewBlog.status === 'published' ? 'bg-green-100 text-green-700' :
+                                    'bg-red-100 text-red-700'
+                                }`}>
+                                    {previewBlog.status.charAt(0).toUpperCase() + previewBlog.status.slice(1)}
+                                </span>
+                            </div>
+                            <button
+                                onClick={() => setPreviewBlog(null)}
+                                className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+                        
+                        {/* Modal Content */}
+                        <div className="p-6">
+                            {/* Cover Image */}
+                            {previewBlog.coverImage?.url && (
+                                <img 
+                                    src={previewBlog.coverImage.url} 
+                                    alt={previewBlog.title}
+                                    className="w-full h-64 object-cover rounded-xl mb-6"
+                                />
+                            )}
+                            
+                            {/* Category & Tags */}
+                            <div className="flex flex-wrap items-center gap-2 mb-4">
+                                {previewBlog.category && (
+                                    <span className="px-3 py-1 bg-indigo-100 text-indigo-700 text-sm font-medium rounded-full">
+                                        {BLOG_CATEGORIES.find(c => c.value === previewBlog.category)?.label || previewBlog.category}
+                                    </span>
+                                )}
+                                {previewBlog.tags?.map((tag, i) => (
+                                    <span key={i} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                        #{tag}
+                                    </span>
+                                ))}
+                            </div>
+                            
+                            {/* Title */}
+                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+                                {previewBlog.title}
+                            </h1>
+                            
+                            {/* Meta */}
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-6 pb-6 border-b border-gray-200">
+                                <div className="flex items-center gap-2">
+                                    <User className="h-4 w-4" />
+                                    <span>{previewBlog.authorName}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>{formatDate(previewBlog.createdAt)}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4" />
+                                    <span>{previewBlog.readTime || 5} min read</span>
+                                </div>
+                            </div>
+                            
+                            {/* Excerpt */}
+                            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                                <p className="text-gray-600 italic">{previewBlog.excerpt}</p>
+                            </div>
+                            
+                            {/* Content */}
+                            <div className="prose prose-sm max-w-none">
+                                <div className="whitespace-pre-wrap leading-relaxed text-gray-700">
+                                    {previewBlog.content}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {/* Modal Footer - Actions */}
+                        {previewBlog.status === 'pending' && (
+                            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+                                <button
+                                    onClick={() => { setRejectModal(previewBlog._id); setPreviewBlog(null); }}
+                                    className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium flex items-center gap-2"
+                                >
+                                    <XCircle className="h-4 w-4" />
+                                    Reject
+                                </button>
+                                <button
+                                    onClick={() => { handleApprove(previewBlog._id); setPreviewBlog(null); }}
+                                    disabled={processing === previewBlog._id}
+                                    className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+                                >
+                                    <CheckCircle className="h-4 w-4" />
+                                    Approve & Publish
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

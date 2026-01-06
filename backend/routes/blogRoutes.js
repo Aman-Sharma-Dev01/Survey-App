@@ -363,6 +363,22 @@ router.get('/admin/all', protect, adminOnly, async (req, res) => {
     }
 });
 
+// GET /api/blogs/admin/preview/:slug - Admin preview any blog by slug (including unpublished)
+router.get('/admin/preview/:slug', protect, adminOnly, async (req, res) => {
+    try {
+        const blog = await Blog.findOne({ slug: req.params.slug }).lean();
+
+        if (!blog) {
+            return res.status(404).json({ message: 'Blog not found' });
+        }
+
+        res.json(blog);
+    } catch (error) {
+        console.error('Error fetching blog for preview:', error);
+        res.status(500).json({ message: 'Failed to fetch blog' });
+    }
+});
+
 // PUT /api/blogs/admin/:id/approve - Approve blog
 router.put('/admin/:id/approve', protect, adminOnly, async (req, res) => {
     try {
@@ -431,6 +447,103 @@ router.put('/admin/:id/feature', protect, adminOnly, async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ message: 'Failed to update blog' });
+    }
+});
+
+// ==================== VOTING ROUTES ====================
+
+// POST /api/blogs/:slug/upvote - Upvote a blog
+router.post('/vote/:slug/upvote', protect, async (req, res) => {
+    try {
+        const blog = await Blog.findOne({ slug: req.params.slug, status: 'published', isApproved: true });
+
+        if (!blog) {
+            return res.status(404).json({ message: 'Blog not found' });
+        }
+
+        const userId = req.user._id;
+        const hasUpvoted = blog.upvotes.includes(userId);
+        const hasDownvoted = blog.downvotes.includes(userId);
+
+        if (hasUpvoted) {
+            // Remove upvote (toggle off)
+            blog.upvotes = blog.upvotes.filter(id => id.toString() !== userId.toString());
+        } else {
+            // Add upvote and remove downvote if exists
+            blog.upvotes.push(userId);
+            if (hasDownvoted) {
+                blog.downvotes = blog.downvotes.filter(id => id.toString() !== userId.toString());
+            }
+        }
+
+        await blog.save();
+
+        res.json({
+            upvotes: blog.upvotes.length,
+            downvotes: blog.downvotes.length,
+            userVote: blog.upvotes.includes(userId) ? 'up' : (blog.downvotes.includes(userId) ? 'down' : null)
+        });
+    } catch (error) {
+        console.error('Error upvoting blog:', error);
+        res.status(500).json({ message: 'Failed to upvote blog' });
+    }
+});
+
+// POST /api/blogs/:slug/downvote - Downvote a blog
+router.post('/vote/:slug/downvote', protect, async (req, res) => {
+    try {
+        const blog = await Blog.findOne({ slug: req.params.slug, status: 'published', isApproved: true });
+
+        if (!blog) {
+            return res.status(404).json({ message: 'Blog not found' });
+        }
+
+        const userId = req.user._id;
+        const hasUpvoted = blog.upvotes.includes(userId);
+        const hasDownvoted = blog.downvotes.includes(userId);
+
+        if (hasDownvoted) {
+            // Remove downvote (toggle off)
+            blog.downvotes = blog.downvotes.filter(id => id.toString() !== userId.toString());
+        } else {
+            // Add downvote and remove upvote if exists
+            blog.downvotes.push(userId);
+            if (hasUpvoted) {
+                blog.upvotes = blog.upvotes.filter(id => id.toString() !== userId.toString());
+            }
+        }
+
+        await blog.save();
+
+        res.json({
+            upvotes: blog.upvotes.length,
+            downvotes: blog.downvotes.length,
+            userVote: blog.upvotes.includes(userId) ? 'up' : (blog.downvotes.includes(userId) ? 'down' : null)
+        });
+    } catch (error) {
+        console.error('Error downvoting blog:', error);
+        res.status(500).json({ message: 'Failed to downvote blog' });
+    }
+});
+
+// GET /api/blogs/:slug/vote-status - Get user's vote status for a blog
+router.get('/vote/:slug/status', protect, async (req, res) => {
+    try {
+        const blog = await Blog.findOne({ slug: req.params.slug });
+
+        if (!blog) {
+            return res.status(404).json({ message: 'Blog not found' });
+        }
+
+        const userId = req.user._id;
+
+        res.json({
+            upvotes: blog.upvotes.length,
+            downvotes: blog.downvotes.length,
+            userVote: blog.upvotes.includes(userId) ? 'up' : (blog.downvotes.includes(userId) ? 'down' : null)
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to get vote status' });
     }
 });
 
