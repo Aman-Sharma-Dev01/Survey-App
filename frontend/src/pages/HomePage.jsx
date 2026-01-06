@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutGrid, ClipboardList, Brain, Zap, Plus, ArrowRight, RefreshCw, Code2, PenSquare } from 'lucide-react';
+import { LayoutGrid, ClipboardList, Brain, Zap, Plus, ArrowRight, RefreshCw, Code2, PenSquare, Calendar } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 
 /**
@@ -71,13 +71,26 @@ const HomePage = ({ navigate }) => {
         },
         {
             id: 'ai-tools',
-            title: 'AI Tools',
-            description: 'Leverage AI to generate questions, analyze responses, and create content',
+            title: 'Feedback Form ',
+            description: 'Build feedback forms and share them with audiences — coming soon',
             icon: Zap,
             color: 'from-amber-500 to-orange-600',
             lightBg: 'bg-amber-50',
             hoverColor: 'group-hover:from-amber-600 group-hover:to-orange-700',
             lightHover: 'group-hover:bg-amber-100',
+            actionButtons: [
+                { label: 'Coming Soon', action: null, icon: ArrowRight }
+            ]
+        },
+        {
+            id: 'schedule-interview',
+            title: 'Schedule Interview',
+            description: 'Schedule interviews with candidates and manage slots — coming soon',
+            icon: Calendar,
+            color: 'from-emerald-500 to-green-600',
+            lightBg: 'bg-emerald-50',
+            hoverColor: 'group-hover:from-emerald-600 group-hover:to-green-700',
+            lightHover: 'group-hover:bg-emerald-100',
             actionButtons: [
                 { label: 'Coming Soon', action: null, icon: ArrowRight }
             ]
@@ -117,7 +130,7 @@ const HomePage = ({ navigate }) => {
                     {features.map((feature) => {
                         const IconComponent = feature.icon;
                         const isHovered = hoveredBox === feature.id;
-                        
+
                         return (
                             <div
                                 key={feature.id}
@@ -146,11 +159,9 @@ const HomePage = ({ navigate }) => {
                                                 <IconComponent size={32} className="text-white" />
                                             </div>
                                             
-                                            {/* Title & Description */}
+                                            {/* Title & Description (or feedback form for AI Tools) */}
                                             <h2 className="text-2xl font-bold text-white mb-3">{feature.title}</h2>
-                                            <p className="text-white/80 leading-relaxed text-sm sm:text-base">
-                                                {feature.description}
-                                            </p>
+                                            <p className="text-white/80 leading-relaxed text-sm sm:text-base">{feature.description}</p>
                                         </div>
                                         
                                         {/* Action Buttons */}
