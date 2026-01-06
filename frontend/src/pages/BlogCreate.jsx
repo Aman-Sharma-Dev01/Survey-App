@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
     ArrowLeft, 
     Save, 
@@ -9,18 +9,21 @@ import {
     FileText,
     Tag,
     Send,
-    CheckCircle
+    CheckCircle,
+    Edit
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
-import { createBlog, BLOG_CATEGORIES } from '../services/blogService';
+import { createBlog, updateBlog, getBlogById, BLOG_CATEGORIES } from '../services/blogService';
 import { uploadImage, deleteImage } from '../services/uploadService';
 
-const BlogCreate = ({ navigate }) => {
+const BlogCreate = ({ navigate, editId }) => {
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
+    const [initialLoading, setInitialLoading] = useState(!!editId);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
     const [showPreview, setShowPreview] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
     
     const [formData, setFormData] = useState({
         title: '',
@@ -35,6 +38,35 @@ const BlogCreate = ({ navigate }) => {
 
     const fileInputRef = useRef(null);
     const [uploading, setUploading] = useState(false);
+
+    // Load blog data for editing
+    useEffect(() => {
+        if (editId) {
+            setIsEditMode(true);
+            loadBlogData();
+        }
+    }, [editId]);
+
+    const loadBlogData = async () => {
+        try {
+            setInitialLoading(true);
+            const blog = await getBlogById(editId);
+            setFormData({
+                title: blog.title || '',
+                excerpt: blog.excerpt || '',
+                content: blog.content || '',
+                category: blog.category || 'other',
+                tags: blog.tags?.join(', ') || '',
+                coverImage: blog.coverImage || null,
+                metaTitle: blog.metaTitle || '',
+                metaDescription: blog.metaDescription || ''
+            });
+        } catch (err) {
+            setError('Failed to load blog: ' + (err.message || 'Unknown error'));
+        } finally {
+            setInitialLoading(false);
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -110,7 +142,7 @@ const BlogCreate = ({ navigate }) => {
                 .map(t => t.trim().toLowerCase())
                 .filter(t => t.length > 0);
 
-            await createBlog({
+            const blogData = {
                 title: formData.title.trim(),
                 excerpt: formData.excerpt.trim(),
                 content: formData.content.trim(),
@@ -119,7 +151,13 @@ const BlogCreate = ({ navigate }) => {
                 coverImage: formData.coverImage || undefined,
                 metaTitle: formData.metaTitle.trim() || undefined,
                 metaDescription: formData.metaDescription.trim() || undefined
-            });
+            };
+
+            if (isEditMode && editId) {
+                await updateBlog(editId, blogData);
+            } else {
+                await createBlog(blogData);
+            }
 
             setSuccess(true);
         } catch (err) {
@@ -129,6 +167,18 @@ const BlogCreate = ({ navigate }) => {
         }
     };
 
+    // Show loading state while fetching blog data for editing
+    if (initialLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <Loader className="h-8 w-8 text-indigo-600 animate-spin mx-auto mb-4" />
+                    <p className="text-gray-600">Loading blog...</p>
+                </div>
+            </div>
+        );
+    }
+
     if (success) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -136,9 +186,14 @@ const BlogCreate = ({ navigate }) => {
                     <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <CheckCircle className="h-8 w-8 text-green-600" />
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Blog Submitted!</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                        {isEditMode ? 'Blog Updated!' : 'Blog Submitted!'}
+                    </h2>
                     <p className="text-gray-600 mb-6">
-                        Your blog has been submitted for review. It will be published after admin approval.
+                        {isEditMode 
+                            ? 'Your blog has been updated and resubmitted for review.'
+                            : 'Your blog has been submitted for review. It will be published after admin approval.'
+                        }
                     </p>
                     <div className="flex gap-3 justify-center">
                         <button
@@ -177,14 +232,17 @@ const BlogCreate = ({ navigate }) => {
             <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
                 <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
                     <button
-                        onClick={() => navigate('dashboard')}
+                        onClick={() => navigate(isEditMode ? 'my-blogs' : 'dashboard')}
                         className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
                     >
                         <ArrowLeft className="h-5 w-5" />
                         <span className="hidden sm:inline">Back</span>
                     </button>
 
-                    <h1 className="text-xl font-bold text-gray-900">Write a Blog Post</h1>
+                    <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        {isEditMode && <Edit className="h-5 w-5 text-indigo-600" />}
+                        {isEditMode ? 'Edit Blog Post' : 'Write a Blog Post'}
+                    </h1>
 
                     <div className="flex items-center gap-2">
                         <button
@@ -202,10 +260,12 @@ const BlogCreate = ({ navigate }) => {
                         >
                             {loading ? (
                                 <Loader className="h-4 w-4 animate-spin" />
+                            ) : isEditMode ? (
+                                <Save className="h-4 w-4" />
                             ) : (
                                 <Send className="h-4 w-4" />
                             )}
-                            <span className="hidden sm:inline">Submit</span>
+                            <span className="hidden sm:inline">{isEditMode ? 'Update' : 'Submit'}</span>
                         </button>
                     </div>
                 </div>

@@ -115,6 +115,36 @@ export const toggleFeaturedBlog = async (id) => {
     return fetchApi(`/blogs/admin/${id}/feature`, 'PUT', null, true);
 };
 
+/**
+ * Preview any blog by slug (admin only - including unpublished)
+ */
+export const getAdminBlogPreview = async (slug) => {
+    return fetchApi(`/blogs/admin/preview/${slug}`, 'GET', null, true);
+};
+
+// ==================== VOTING API ====================
+
+/**
+ * Upvote a blog post
+ */
+export const upvoteBlog = async (slug) => {
+    return fetchApi(`/blogs/vote/${slug}/upvote`, 'POST', null, true);
+};
+
+/**
+ * Downvote a blog post
+ */
+export const downvoteBlog = async (slug) => {
+    return fetchApi(`/blogs/vote/${slug}/downvote`, 'POST', null, true);
+};
+
+/**
+ * Get vote status for a blog
+ */
+export const getVoteStatus = async (slug) => {
+    return fetchApi(`/blogs/vote/${slug}/status`, 'GET', null, true);
+};
+
 // Blog categories
 export const BLOG_CATEGORIES = [
     { value: 'surveys', label: 'Surveys' },

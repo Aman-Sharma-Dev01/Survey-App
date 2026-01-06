@@ -10,9 +10,11 @@ import {
   ChevronRight,
   Eye,
   Loader,
-  Plus
+  Plus,
+  ThumbsUp,
+  ThumbsDown
 } from "lucide-react";
-import { getBlogs, getBlogBySlug, getBlogTags, getRelatedBlogs, BLOG_CATEGORIES } from "../services/blogService";
+import { getBlogs, getBlogBySlug, getBlogTags, getRelatedBlogs, upvoteBlog, downvoteBlog, getVoteStatus, BLOG_CATEGORIES } from "../services/blogService";
 import { useAuth } from "../context/AuthContext.jsx";
 
 /**
@@ -173,6 +175,10 @@ export default function BlogPage({ navigate, slug }) {
   const [relatedBlogs, setRelatedBlogs] = useState([]);
   const perPage = 9;
 
+  // Voting state
+  const [voteData, setVoteData] = useState({ upvotes: 0, downvotes: 0, userVote: null });
+  const [voteLoading, setVoteLoading] = useState(false);
+
   // ----- Fetch blogs from API -----
   useEffect(() => {
     if (!slug) {
@@ -233,6 +239,49 @@ export default function BlogPage({ navigate, slug }) {
       fetchSingleBlog(slug);
     }
   }, [slug]);
+
+  // ----- Fetch vote status when blog loads -----
+  useEffect(() => {
+    if (slug && singleBlog && isAuthenticated && !singleBlog.isStatic) {
+      fetchVoteStatus(slug);
+    } else if (singleBlog) {
+      // Set initial vote data from blog
+      setVoteData({
+        upvotes: singleBlog.upvotes?.length || 0,
+        downvotes: singleBlog.downvotes?.length || 0,
+        userVote: null
+      });
+    }
+  }, [slug, singleBlog, isAuthenticated]);
+
+  const fetchVoteStatus = async (blogSlug) => {
+    try {
+      const status = await getVoteStatus(blogSlug);
+      setVoteData(status);
+    } catch {
+      // Silently fail
+    }
+  };
+
+  const handleVote = async (type) => {
+    if (!isAuthenticated) {
+      navigate('login');
+      return;
+    }
+    if (voteLoading || singleBlog?.isStatic) return;
+
+    setVoteLoading(true);
+    try {
+      const result = type === 'up' 
+        ? await upvoteBlog(slug)
+        : await downvoteBlog(slug);
+      setVoteData(result);
+    } catch (err) {
+      console.error('Vote failed:', err);
+    } finally {
+      setVoteLoading(false);
+    }
+  };
 
   const fetchSingleBlog = async (blogSlug) => {
     setLoading(true);
@@ -384,6 +433,46 @@ export default function BlogPage({ navigate, slug }) {
               {postContent}
             </div>
           </div>
+
+          {/* Voting Section */}
+          {!singleBlog.isStatic && (
+            <div className="mt-10 pt-8 border-t border-gray-200">
+              <div className="flex items-center justify-center gap-6">
+                <span className="text-gray-600 font-medium">Was this article helpful?</span>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => handleVote('up')}
+                    disabled={voteLoading}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
+                      voteData.userVote === 'up'
+                        ? 'bg-green-100 text-green-700 border-2 border-green-300'
+                        : 'bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-600'
+                    } disabled:opacity-50`}
+                  >
+                    <ThumbsUp className={`h-5 w-5 ${voteData.userVote === 'up' ? 'fill-current' : ''}`} />
+                    <span>{voteData.upvotes}</span>
+                  </button>
+                  <button
+                    onClick={() => handleVote('down')}
+                    disabled={voteLoading}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
+                      voteData.userVote === 'down'
+                        ? 'bg-red-100 text-red-700 border-2 border-red-300'
+                        : 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600'
+                    } disabled:opacity-50`}
+                  >
+                    <ThumbsDown className={`h-5 w-5 ${voteData.userVote === 'down' ? 'fill-current' : ''}`} />
+                    <span>{voteData.downvotes}</span>
+                  </button>
+                </div>
+              </div>
+              {!isAuthenticated && (
+                <p className="text-center text-sm text-gray-500 mt-3">
+                  <a href="#/login" className="text-indigo-600 hover:underline">Sign in</a> to vote on this article
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Related Posts */}
@@ -558,6 +647,15 @@ export default function BlogPage({ navigate, slug }) {
                           <span>{formatDate(post.publishedAt || post.date || post.createdAt)}</span>
                           <span>•</span>
                           <span>{post.readTime || 5} min</span>
+                          {post.viewCount > 0 && (
+                            <>
+                              <span>•</span>
+                              <span className="flex items-center gap-1">
+                                <Eye className="h-3 w-3" />
+                                {post.viewCount}
+                              </span>
+                            </>
+                          )}
                         </div>
 
                         {/* Title */}
