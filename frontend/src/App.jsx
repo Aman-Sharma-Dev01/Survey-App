@@ -95,7 +95,7 @@ const App = () => {
 
   // Protect private pages
   useEffect(() => {
-    const protectedPaths = ['home',,'dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-edit', 'quiz-analytics', 'payment-admin', 'payment-history', 'certificate-admin', 'plan-admin', 'admin-dashboard', 'offer-admin', 'contact-admin'];
+    const protectedPaths = ['home','dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-edit', 'quiz-analytics', 'payment-admin', 'payment-history', 'certificate-admin', 'plan-admin', 'admin-dashboard', 'offer-admin', 'contact-admin'];
     const [pathSegment] = getPathSegments(currentPath);
 
     if (protectedPaths.includes(pathSegment) && !authState.isAuthenticated) {

@@ -66,7 +66,7 @@ const Hero = () => {
   }, [heroImages.length]);
 
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden pt-16 lg:pt-20">
+    <section className="relative min-h-[80vh] flex items-center overflow-hidden pt-12">
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-purple-50"></div>
       
@@ -77,7 +77,7 @@ const Hero = () => {
         <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20 w-full">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 lg:py-4 w-full">
         <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
 
           {/* LEFT SIDE */}
@@ -204,7 +204,7 @@ const Features = () => {
   };
 
   return (
-    <section id="features" className="py-20 lg:py-32 bg-white">
+    <section id="features" className="py-16 lg:py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
@@ -256,7 +256,7 @@ const SurveysSection = () => {
   ];
 
   return (
-    <section id="surveys" className="py-20 lg:py-32 bg-gradient-to-b from-gray-50 to-white">
+    <section id="surveys" className="py-16 lg:py-24 bg-gradient-to-b from-gray-50 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left - Content */}
@@ -355,7 +355,7 @@ const QuizzesSection = () => {
   ];
 
   return (
-    <section id="quizzes" className="py-20 lg:py-32 bg-gradient-to-b from-white to-purple-50">
+    <section id="quizzes" className="py-16 lg:py-24 bg-gradient-to-b from-white to-purple-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left - Visual */}
@@ -489,7 +489,7 @@ const HowItWorks = () => {
   ];
 
   return (
-    <section id="how-it-works" className="py-20 lg:py-32 bg-gray-900">
+    <section id="how-it-works" className="py-16 lg:py-24 bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl lg:text-5xl font-extrabold text-white mb-4">
@@ -551,7 +551,7 @@ const Testimonials = () => {
   ];
 
   return (
-    <section className="py-20 lg:py-32 bg-white">
+    <section className="py-16 lg:py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl lg:text-4xl font-extrabold text-gray-900 mb-4">
@@ -589,7 +589,7 @@ const LatestBlogPosts = () => {
     .slice(0, 3);
 
   return (
-    <section id="blog" className="py-20 lg:py-32 bg-gray-50">
+    <section id="blog" className="py-16 lg:py-24 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12">
           <div>
@@ -642,77 +642,103 @@ const LatestBlogPosts = () => {
 const PricingPreview = () => {
   const plans = [
     {
-      name: 'Free',
+      name: 'Starter',
       price: '₹0',
-      period: 'forever',
-      description: 'Perfect for getting started',
-      features: ['Unlimited Surveys & Quizzes', 'Real-time Analytics', 'Basic Question Types', '100 AI Credits/month', 'Share via Link'],
+      period: '',
+      periodLabel: 'Free forever',
+      description: 'Perfect for trying out AI-powered surveys and quizzes.',
+      features: [
+        '200 AI Credits included',
+        'Unlimited surveys & quizzes',
+        'Unlimited responses',
+        'Basic analytics',
+        'Export to Excel'
+      ],
       cta: 'Get Started Free',
-      popular: false
+      popular: false,
+      ctaLink: '#register'
     },
     {
       name: 'Pro',
-      price: '₹199',
-      period: '/month',
-      description: 'For professionals & educators',
-      features: ['Everything in Free', 'Anti-Cheat Features', 'Auto Certificates', '1000 AI Credits/month', 'Priority Support', 'Image Uploads'],
-      cta: 'Start Pro Trial',
-      popular: true
+      price: '₹10',
+      period: '',
+      periodLabel: '3 months premium',
+      description: 'For educators who need anti-cheating quiz features.',
+      features: [
+        '1,000 AI Credits',
+        'All Starter features',
+        'Anti-cheating features',
+        'Tab switch detection',
+        'Fullscreen mode enforcement',
+        'Document upload for AI'
+      ],
+      cta: 'Get Pro',
+      popular: true,
+      ctaLink: '#pricing'
     },
     {
-      name: 'Enterprise',
-      price: 'Custom',
+      name: 'Power',
+      price: '₹50',
       period: '',
-      description: 'For large organizations',
-      features: ['Everything in Pro', 'Unlimited AI Credits', 'Custom Branding', 'API Access', 'Dedicated Support', 'SSO Integration'],
-      cta: 'Contact Sales',
-      popular: false
+      periodLabel: '2 years premium',
+      description: 'For institutions needing long-term anti-cheating protection.',
+      features: [
+        '10,000 AI Credits',
+        'All Pro features',
+        '2 years premium access',
+        'Priority support',
+        'Prevent duplicate roll numbers',
+        'Sequential answering mode'
+      ],
+      cta: 'Get Power',
+      popular: false,
+      ctaLink: '#pricing'
     },
   ];
 
   return (
-    <section id="pricing" className="py-20 lg:py-32 bg-white">
+    <section id="pricing" className="py-16 lg:py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 rounded-full mb-4">
             <Gift className="h-4 w-4 text-green-600" />
-            <span className="text-sm font-semibold text-green-700">Flexible Pricing</span>
+            <span className="text-sm font-semibold text-green-700">Affordable Pricing</span>
           </div>
           <h2 className="text-3xl lg:text-5xl font-extrabold text-gray-900 mb-4">
             Simple, Transparent Pricing
           </h2>
           <p className="text-lg text-gray-600">
-            Start free and scale as you grow. No hidden fees.
+            Start free and upgrade when you need advanced features. No hidden fees.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {plans.map((plan, i) => (
             <div
               key={i}
-              className={`relative rounded-2xl p-8 ${plan.popular ? 'bg-gradient-to-b from-indigo-600 to-purple-700 text-white shadow-2xl scale-105 z-10' : 'bg-white border border-gray-200'}`}
+              className={`relative rounded-2xl p-6 lg:p-8 flex flex-col ${plan.popular ? 'bg-gradient-to-b from-indigo-600 to-purple-700 text-white shadow-2xl scale-105 z-10' : 'bg-white border border-gray-200 shadow-sm'}`}
             >
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-yellow-400 text-yellow-900 px-4 py-1 rounded-full text-sm font-bold">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-yellow-900 px-4 py-1 rounded-full text-xs font-bold">
                   MOST POPULAR
                 </div>
               )}
               <h3 className={`text-xl font-bold ${plan.popular ? 'text-white' : 'text-gray-900'}`}>{plan.name}</h3>
-              <div className="mt-4 mb-2">
+              <div className="mt-4 mb-1">
                 <span className={`text-4xl font-extrabold ${plan.popular ? 'text-white' : 'text-gray-900'}`}>{plan.price}</span>
-                <span className={`text-sm ${plan.popular ? 'text-indigo-200' : 'text-gray-500'}`}>{plan.period}</span>
               </div>
+              <p className={`text-xs font-medium mb-4 ${plan.popular ? 'text-indigo-200' : 'text-indigo-600'}`}>{plan.periodLabel}</p>
               <p className={`text-sm mb-6 ${plan.popular ? 'text-indigo-200' : 'text-gray-500'}`}>{plan.description}</p>
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-3 mb-6 flex-1">
                 {plan.features.map((feature, j) => (
-                  <li key={j} className="flex items-center gap-2">
-                    <CheckCheck className={`h-4 w-4 flex-shrink-0 ${plan.popular ? 'text-indigo-300' : 'text-indigo-600'}`} />
+                  <li key={j} className="flex items-start gap-2">
+                    <CheckCheck className={`h-4 w-4 flex-shrink-0 mt-0.5 ${plan.popular ? 'text-indigo-300' : 'text-indigo-600'}`} />
                     <span className={`text-sm ${plan.popular ? 'text-white' : 'text-gray-600'}`}>{feature}</span>
                   </li>
                 ))}
               </ul>
               <a
-                href="#pricing"
+                href={plan.ctaLink}
                 className={`block text-center py-3 rounded-xl font-semibold transition-all ${plan.popular ? 'bg-white text-indigo-600 hover:bg-indigo-50' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
               >
                 {plan.cta}
@@ -720,6 +746,10 @@ const PricingPreview = () => {
             </div>
           ))}
         </div>
+
+        <p className="text-center text-sm text-gray-500 mt-8">
+          <a href="#pricing" className="text-indigo-600 hover:underline font-medium">View full pricing details →</a>
+        </p>
       </div>
     </section>
   );
@@ -727,7 +757,7 @@ const PricingPreview = () => {
 
 // ================= FINAL CTA =================
 const FinalCTA = () => (
-  <section className="py-20 lg:py-32 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 relative overflow-hidden">
+  <section className="py-16 lg:py-24 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 relative overflow-hidden">
     {/* Background Pattern */}
     <div className="absolute inset-0 opacity-10">
       <div className="absolute inset-0" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }}></div>
