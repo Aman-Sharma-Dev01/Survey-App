@@ -24,6 +24,9 @@ import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 // ⭐ NEW — Public Share Results Page
 import ShareResultsPage from './pages/ShareResultsPage.jsx';
 
+// ⭐ Coding Test (JS-only, browser)
+import CodingTest from './pages/CodingTest.jsx';
+
 // ⭐ Quiz Pages
 import QuizCreate from './pages/QuizCreate.jsx';
 import QuizDashboard from './pages/QuizDashboard.jsx';
@@ -52,6 +55,12 @@ import ContactAdmin from './pages/ContactAdmin.jsx';
 
 // ⭐ Home Page - Feature Hub
 import HomePage from './pages/HomePage.jsx';
+
+// ⭐ Coding Tests
+import CodingTestDashboard from './pages/CodingTestDashboard.jsx';
+import CodingTestCreate from './pages/CodingTestCreate.jsx';
+import CodingTestTake from './pages/CodingTestTake.jsx';
+import CodingTestAnalytics from './pages/CodingTestAnalytics.jsx';
 
 // Admin email
 const ADMIN_EMAIL = 'support@surveyzen.live';
@@ -92,7 +101,7 @@ const App = () => {
 
   // Protect private pages
   useEffect(() => {
-    const protectedPaths = ['home', 'dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-edit', 'quiz-analytics', 'payment-admin', 'payment-history', 'certificate-admin', 'plan-admin', 'admin-dashboard', 'offer-admin', 'contact-admin'];
+    const protectedPaths = ['home', 'dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-edit', 'quiz-analytics', 'coding-dashboard', 'coding-create', 'coding-analytics', 'payment-admin', 'payment-history', 'certificate-admin', 'plan-admin', 'admin-dashboard', 'offer-admin', 'contact-admin'];
     const [pathSegment] = getPathSegments(currentPath);
 
     if (protectedPaths.includes(pathSegment) && !authState.isAuthenticated) {
@@ -160,6 +169,9 @@ const App = () => {
       case 'home':
         return <HomePage navigate={navigate} />;
 
+      case 'coding-test':
+        return <CodingTest navigate={navigate} />;
+
       case 'dashboard':
         return <Dashboard navigate={navigate} />;
 
@@ -212,6 +224,19 @@ const App = () => {
           <QuizDashboard navigate={navigate} />
         );
 
+      case 'coding-dashboard':
+        return <CodingTestDashboard navigate={navigate} />;
+
+      case 'coding-create':
+        return <CodingTestCreate navigate={navigate} />;
+
+      case 'coding-analytics':
+        return pathId ? (
+          <CodingTestAnalytics codingTestId={pathId} navigate={navigate} />
+        ) : (
+          <CodingTestDashboard navigate={navigate} />
+        );
+
       case 'quiz':
         return pathId ? (
           <QuizTake quizId={pathId} />
@@ -219,6 +244,16 @@ const App = () => {
           <div className="text-center p-10 mt-20">
             <h1 className="text-2xl font-bold text-gray-800">Quiz</h1>
             <p className="text-gray-500">Please use a valid quiz link to participate.</p>
+          </div>
+        );
+
+      case 'coding':
+        return pathId ? (
+          <CodingTestTake codingTestId={pathId} />
+        ) : (
+          <div className="text-center p-10 mt-20">
+            <h1 className="text-2xl font-bold text-gray-800">Coding Test</h1>
+            <p className="text-gray-500">Please use a valid coding test link to participate.</p>
           </div>
         );
 

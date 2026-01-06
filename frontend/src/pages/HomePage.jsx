@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutGrid, ClipboardList, Brain, Zap, Plus, ArrowRight, RefreshCw } from 'lucide-react';
+import { LayoutGrid, ClipboardList, Brain, Zap, Plus, ArrowRight, RefreshCw, Code2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 
 /**
@@ -39,6 +39,20 @@ const HomePage = ({ navigate }) => {
                 { label: 'View Quizzes', action: 'quiz-dashboard', icon: LayoutGrid },
                 { label: 'Create New', action: 'quiz-create', icon: Plus },
                 { label: 'Queued Submissions', action: 'queued-submissions', icon: RefreshCw }
+            ]
+        },
+        {
+            id: 'coding-tests',
+            title: 'Coding Tests',
+            description: 'Run JavaScript-only coding exams with a secure in-browser compiler and anti-cheat guardrails',
+            icon: Code2,
+            color: 'from-cyan-500 to-teal-600',
+            lightBg: 'bg-cyan-50',
+            hoverColor: 'group-hover:from-cyan-600 group-hover:to-teal-700',
+            lightHover: 'group-hover:bg-cyan-100',
+            actionButtons: [
+                { label: 'Dashboard', action: 'coding-dashboard', icon: LayoutGrid },
+                { label: 'Create New', action: 'coding-create', icon: Plus },
             ]
         },
         {
