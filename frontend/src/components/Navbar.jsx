@@ -229,8 +229,20 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                 <nav className="hidden md:flex space-x-4 items-center">
                     {isAuthenticated ? (
                         <>
-                            <NavButton Icon={LayoutDashboard} label="Home" target="home" onClick={() => handleNavigate('home')} current={currentPage} />
-                            <NavButton Icon={PenLine} label="Write Blog" target="blog-create" onClick={() => handleNavigate('blog-create')} current={currentPage} />
+                            <NavButton
+                                Icon={LayoutDashboard}
+                                label="Home"
+                                target={isAuthenticated ? 'home' : ''}
+                                onClick={() => handleNavigate(isAuthenticated ? 'home' : '')}
+                                current={currentPage}
+                            />
+                            <NavButton
+                                Icon={PenLine}
+                                label="Write Blog"
+                                target={isAuthenticated ? 'blog-create' : 'login'}
+                                onClick={() => handleNavigate(isAuthenticated ? 'blog-create' : 'login')}
+                                current={currentPage}
+                            />
                             
                             {/* Credits Display */}
                             <div className="flex items-center px-3 py-1.5 bg-indigo-800 rounded-lg">
@@ -438,16 +450,16 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                                 <NavButton 
                                     Icon={LayoutDashboard} 
                                     label="Home" 
-                                    target="home" 
-                                    onClick={() => handleMobileNavigate('home')} 
+                                    target={isAuthenticated ? 'home' : ''} 
+                                    onClick={() => handleMobileNavigate(isAuthenticated ? 'home' : '')} 
                                     current={currentPage}
                                     mobile
                                 />
                                 <NavButton 
                                     Icon={PenLine} 
                                     label="Write Blog" 
-                                    target="blog-create" 
-                                    onClick={() => handleMobileNavigate('blog-create')} 
+                                    target={isAuthenticated ? 'blog-create' : 'login'} 
+                                    onClick={() => handleMobileNavigate(isAuthenticated ? 'blog-create' : 'login')} 
                                     current={currentPage}
                                     mobile
                                 />

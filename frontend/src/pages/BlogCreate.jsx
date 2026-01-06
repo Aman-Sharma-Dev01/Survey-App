@@ -197,10 +197,10 @@ const BlogCreate = ({ navigate, editId }) => {
                     </p>
                     <div className="flex gap-3 justify-center">
                         <button
-                            onClick={() => navigate('my-blogs')}
+                            onClick={() => navigate('home')}
                             className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700"
                         >
-                            View My Blogs
+                            Back to Home
                         </button>
                         <button
                             onClick={() => {
@@ -232,7 +232,7 @@ const BlogCreate = ({ navigate, editId }) => {
             <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
                 <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
                     <button
-                        onClick={() => navigate(isEditMode ? 'my-blogs' : 'dashboard')}
+                        onClick={() => navigate('home')}
                         className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
                     >
                         <ArrowLeft className="h-5 w-5" />
@@ -479,7 +479,7 @@ const BlogCreate = ({ navigate, editId }) => {
                         <div className="flex justify-end gap-4">
                             <button
                                 type="button"
-                                onClick={() => navigate('dashboard')}
+                                onClick={() => navigate('home')}
                                 className="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-lg font-medium"
                             >
                                 Cancel

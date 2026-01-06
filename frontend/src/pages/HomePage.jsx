@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutGrid, ClipboardList, Brain, Zap, Plus, ArrowRight, RefreshCw, Code2 } from 'lucide-react';
+import { LayoutGrid, ClipboardList, Brain, Zap, Plus, ArrowRight, RefreshCw, Code2, PenSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 
 /**
@@ -54,6 +54,20 @@ const HomePage = ({ navigate }) => {
                 { label: 'Dashboard', action: 'coding-dashboard', icon: LayoutGrid },
                 { label: 'Create New', action: 'coding-create', icon: Plus },
             ]
+        },
+        {
+            id: 'blogs',
+            title: 'Write a Blog',
+            description: 'Publish articles, manage drafts, and keep your readers updated with fresh content',
+            icon: PenSquare,
+            color: 'from-pink-500 to-rose-600',
+            lightBg: 'bg-pink-50',
+            hoverColor: 'group-hover:from-pink-600 group-hover:to-rose-700',
+            lightHover: 'group-hover:bg-pink-100',
+            actionButtons: [
+                { label: 'Write Blog', action: 'blog-create', icon: PenSquare },
+                { label: 'My Blogs', action: 'my-blogs', icon: LayoutGrid },
+            ],
         },
         {
             id: 'ai-tools',
