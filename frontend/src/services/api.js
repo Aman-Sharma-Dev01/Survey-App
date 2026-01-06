@@ -1,8 +1,7 @@
-// Replace with your backend server URL
-
-// export const BASE_URL = 'https://survey-app-egj3.onrender.com/api'; // new backend --Do Not Use
+// Replace with your backend server URL (manual switch)
+// export const BASE_URL = 'https://survey-app-egj3.onrender.com/api'; // new backend -- Do Not Use
 export const BASE_URL = 'https://survey-app-e5xz.onrender.com/api'; // old backend
-// export const BASE_URL = 'http://localhost:5000/api';
+// export const BASE_URL = 'http://localhost:5000/api'; // local dev
 // Helper to access token storage directly (AuthContext stores token in localStorage)
 const getAuthToken = () => localStorage.getItem('token');
 const removeAuthToken = () => localStorage.removeItem('token');
