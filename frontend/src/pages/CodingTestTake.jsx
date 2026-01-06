@@ -31,6 +31,7 @@ const CodingTestTake = ({ codingTestId }) => {
   const [violations, setViolations] = useState(0);
   const [fullscreenViolations, setFullscreenViolations] = useState(0);
   const [splitViolations, setSplitViolations] = useState(0);
+  const [isFullscreenActive, setIsFullscreenActive] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(null);
   const [startedAt, setStartedAt] = useState(null);
@@ -131,6 +132,7 @@ const CodingTestTake = ({ codingTestId }) => {
     if (!hasStarted || submitted || !test?.settings?.fullscreenModeEnabled) return;
     const onChange = () => {
       const inFs = checkFullscreen();
+      setIsFullscreenActive(!!inFs);
       if (!inFs) {
         fullscreenRef.current += 1;
         setFullscreenViolations(fullscreenRef.current);
@@ -290,6 +292,7 @@ const CodingTestTake = ({ codingTestId }) => {
     setStartedAt(new Date());
     if (test.settings?.fullscreenModeEnabled && document.documentElement.requestFullscreen) {
       try { await document.documentElement.requestFullscreen(); } catch (_) { /* ignore */ }
+      setIsFullscreenActive(checkFullscreen());
     }
   };
 
@@ -335,114 +338,184 @@ const CodingTestTake = ({ codingTestId }) => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-emerald-800">{test.title}</h1>
-          <p className="text-gray-600">{test.description}</p>
+    <div className="min-h-screen bg-slate-100">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800">{test.title}</h1>
+            <p className="text-slate-600">{test.description}</p>
+          </div>
+          {test.settings?.timeLimit > 0 && (
+            <div className="flex items-center gap-2 bg-white shadow px-3 py-2 rounded-lg border">
+              <Clock size={18} className="text-indigo-600" />
+              <span className="font-semibold text-slate-800">{hasStarted ? formatTime(timeLeft || 0) : `${test.settings.timeLimit} min`}</span>
+            </div>
+          )}
         </div>
-        {test.settings?.timeLimit > 0 && (
-          <div className="flex items-center gap-2 bg-white shadow px-3 py-2 rounded-lg border">
-            <Clock size={18} className="text-emerald-600" />
-            <span className="font-semibold text-gray-800">{hasStarted ? formatTime(timeLeft || 0) : `${test.settings.timeLimit} min`}</span>
-          </div>
-        )}
-      </div>
 
-      {!hasStarted ? (
-        <div className="bg-white rounded-xl shadow border p-4 space-y-3">
-          <p className="text-sm text-gray-700">Enter your details to begin. Anti-cheat: tab switching and fullscreen exits will auto-submit after 3 violations.</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input value={participantName} onChange={(e) => setParticipantName(e.target.value)} className="border rounded-lg p-2" placeholder="Name (optional)" />
-            <input value={participantClass} onChange={(e) => setParticipantClass(e.target.value)} className="border rounded-lg p-2" placeholder="Class/Section" />
-            <input value={participantRollNo} onChange={(e) => setParticipantRollNo(e.target.value)} className="border rounded-lg p-2" placeholder="Roll No" />
+        {!hasStarted ? (
+          <div className="bg-white rounded-xl shadow border p-4 space-y-3">
+            <p className="text-sm text-slate-700">Enter your details to begin. Anti-cheat: tab switching and fullscreen exits will auto-submit after 3 violations.</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <input value={participantName} onChange={(e) => setParticipantName(e.target.value)} className="border rounded-lg p-2" placeholder="Name (optional)" />
+              <input value={participantClass} onChange={(e) => setParticipantClass(e.target.value)} className="border rounded-lg p-2" placeholder="Class/Section" />
+              <input value={participantRollNo} onChange={(e) => setParticipantRollNo(e.target.value)} className="border rounded-lg p-2" placeholder="Roll No" />
+            </div>
+            {rollNoError && <p className="text-sm text-red-600">{rollNoError}</p>}
+            <button onClick={handleStart} className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+              <Play size={16} /> Start Test
+            </button>
           </div>
-          {rollNoError && <p className="text-sm text-red-600">{rollNoError}</p>}
-          <button onClick={handleStart} className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-            <Play size={16} /> Start Test
-          </button>
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-            <div className="bg-white border rounded-lg p-3">
-              <p className="text-sm text-gray-600">Tab switches</p>
-              <p className={`text-lg font-bold ${violations >= 3 ? 'text-red-600' : 'text-emerald-700'}`}>{violations} / 3</p>
-            </div>
-            <div className="bg-white border rounded-lg p-3">
-              <p className="text-sm text-gray-600">Fullscreen exits</p>
-              <p className={`text-lg font-bold ${fullscreenViolations >= 3 ? 'text-red-600' : 'text-emerald-700'}`}>{fullscreenViolations} / 3</p>
-            </div>
-            <div className="bg-white border rounded-lg p-3">
-              <p className="text-sm text-gray-600">Split-screen</p>
-              <p className={`text-lg font-bold ${splitViolations >= 3 ? 'text-red-600' : 'text-emerald-700'}`}>{splitViolations} / 3</p>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            {test.questions.map((q, idx) => {
-              const qResults = results[q._id] || [];
-              const allPass = qResults.length > 0 && qResults.every((r) => r.pass);
-              return (
-                <div key={q._id} className="bg-white rounded-xl shadow border p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="font-semibold text-gray-800">Q{idx + 1}. {q.title}</div>
-                    {allPass ? (
-                      <span className="flex items-center text-emerald-600 text-sm font-semibold"><CheckCircle size={16} className="mr-1" /> All tests passed</span>
-                    ) : null}
+        ) : (
+          <div className="relative bg-white rounded-xl shadow border overflow-hidden">
+            {test.settings?.fullscreenModeEnabled && !isFullscreenActive && (
+              <div className="absolute inset-0 z-20 bg-black/60 flex items-center justify-center">
+                <div className="bg-white rounded-xl shadow p-6 max-w-md w-full text-center">
+                  <h2 className="text-lg font-bold text-red-600 mb-2">Fullscreen required</h2>
+                  <p className="text-sm text-slate-700 mb-4">Return to fullscreen to continue the test. Exiting fullscreen will be counted as a violation.</p>
+                  <button
+                    onClick={async () => {
+                      try { await document.documentElement.requestFullscreen(); } catch (_) {}
+                      setIsFullscreenActive(checkFullscreen());
+                    }}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                  >
+                    Re-enter Fullscreen
+                  </button>
+                </div>
+              </div>
+            )}
+            {/* Top control bar */}
+            <div className="flex items-center justify-between px-4 py-3 bg-slate-900 text-white">
+              <div className="flex items-center gap-4">
+                <div className="text-sm">Language</div>
+                <div className="px-3 py-1 rounded bg-slate-800 text-xs font-semibold uppercase">JavaScript</div>
+                <div className="text-sm">Compiler</div>
+                <div className="px-3 py-1 rounded bg-slate-800 text-xs font-semibold">JS Sandbox</div>
+              </div>
+              <div className="flex items-center gap-3">
+                {test.settings?.timeLimit > 0 && (
+                  <div className="flex items-center gap-2 px-3 py-1 rounded bg-slate-800 text-sm">
+                    <Clock size={16} className="text-emerald-300" />
+                    <span className="font-semibold">{formatTime(timeLeft || 0)}</span>
                   </div>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{q.prompt}</p>
-                  <div className="text-xs text-gray-600 bg-gray-50 border rounded p-3">
-                    <p className="font-semibold mb-1">Test Cases</p>
-                    {(q.testCases || []).map((tc, i) => (
-                      <div key={i} className="flex flex-col md:flex-row md:items-center md:gap-3 py-1 border-b last:border-0 border-gray-200">
-                        <span className="text-gray-500">#{i + 1}</span>
-                        <span className="font-mono text-gray-800">Input: {tc.input}</span>
-                        {test.settings?.showExpectedOutputs !== false && (
-                          <span className="font-mono text-emerald-700">Expected: {tc.expectedOutput}</span>
-                        )}
+                )}
+                <button
+                  onClick={() => handleSubmit(false, false, false, false)}
+                  disabled={submitting || (test.settings?.fullscreenModeEnabled && !isFullscreenActive)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded hover:bg-emerald-600 disabled:opacity-60"
+                >
+                  {submitting ? <Loader size={16} className="animate-spin" /> : <Play size={16} />}
+                  Submit
+                </button>
+              </div>
+            </div>
+
+            {/* Anti-cheat indicators */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 px-4 py-3 bg-slate-50 border-b">
+              <div className="bg-white border rounded-lg p-3">
+                <p className="text-sm text-slate-600">Tab switches</p>
+                <p className={`text-lg font-bold ${violations >= 3 ? 'text-red-600' : 'text-emerald-700'}`}>{violations} / 3</p>
+              </div>
+              <div className="bg-white border rounded-lg p-3">
+                <p className="text-sm text-slate-600">Fullscreen exits</p>
+                <p className={`text-lg font-bold ${fullscreenViolations >= 3 ? 'text-red-600' : 'text-emerald-700'}`}>{fullscreenViolations} / 3</p>
+              </div>
+              <div className="bg-white border rounded-lg p-3">
+                <p className="text-sm text-slate-600">Split-screen</p>
+                <p className={`text-lg font-bold ${splitViolations >= 3 ? 'text-red-600' : 'text-emerald-700'}`}>{splitViolations} / 3</p>
+              </div>
+            </div>
+
+            {/* Main two-column layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-12">
+              {/* Left: problem + tests */}
+              <div className="lg:col-span-5 border-r bg-white">
+                <div className="p-4 border-b">
+                  <p className="text-sm font-semibold text-slate-800 mb-2">Question</p>
+                  <p className="text-slate-700 whitespace-pre-wrap text-sm leading-relaxed">{test.questions[0]?.prompt}</p>
+                </div>
+                <div className="p-4">
+                  <p className="text-sm font-semibold text-slate-800 mb-2">Test Cases & Output</p>
+                  {test.questions.map((q, idx) => {
+                    const qResults = results[q._id] || [];
+                    return (
+                      <div key={q._id} className="mb-4 border rounded-lg">
+                        <div className="px-3 py-2 bg-slate-50 border-b text-sm font-semibold text-slate-700">Case {idx + 1}</div>
+                        <div className="p-3 space-y-2 text-xs text-slate-700">
+                          <div>
+                            <p className="font-semibold">Input:</p>
+                            <pre className="bg-slate-100 rounded p-2 text-slate-800 whitespace-pre-wrap">{q.testCases?.[0]?.input || ''}</pre>
+                          </div>
+                          <div>
+                            <p className="font-semibold">Expected Output:</p>
+                            <div className="bg-slate-100 rounded p-2 text-emerald-700 whitespace-pre-wrap">
+                              {test.settings?.showExpectedOutputs === false ? 'Hidden by creator' : (q.testCases || []).map((tc, i) => (
+                                <div key={i}>{tc.expectedOutput}</div>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="font-semibold">Console Output:</p>
+                            <div className="bg-slate-100 rounded p-2 text-slate-800 whitespace-pre-wrap h-16 overflow-auto">
+                              {qResults.length === 0 ? 'Empty' : qResults.map((r, i) => (
+                                <div key={i}>{r.output || (r.pass ? 'Pass' : 'Fail')}</div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Right: editor */}
+              <div className="lg:col-span-7 bg-slate-900 text-slate-50 flex flex-col">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 text-xs uppercase tracking-wide text-slate-300">
+                  <span className="font-semibold">Editor</span>
+                  <button
+                    onClick={() => handleRun(test.questions[0])}
+                    disabled={test.settings?.fullscreenModeEnabled && !isFullscreenActive}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-500 text-white rounded hover:bg-emerald-600 text-xs disabled:opacity-60"
+                  >
+                    <RefreshCw size={14} /> Compile & Run
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-auto">
                   <textarea
-                    value={codes[q._id] || ''}
-                    onChange={(e) => setCodes({ ...codes, [q._id]: e.target.value })}
-                    className="w-full h-48 font-mono text-sm bg-slate-900 text-slate-50 rounded-lg p-3"
+                    value={codes[test.questions[0]._id] || ''}
+                    onChange={(e) => setCodes({ ...codes, [test.questions[0]._id]: e.target.value })}
+                    className="w-full min-h-[320px] h-full font-mono text-sm bg-slate-900 text-slate-50 p-4 outline-none"
                     spellCheck={false}
                   />
-                  <div className="flex gap-2">
-                    <button onClick={() => handleRun(q)} className="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 text-white rounded-lg">
-                      <RefreshCw size={16} /> Run Tests
-                    </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-slate-800">
+                  <div className="p-3 text-xs">
+                    <p className="text-emerald-300 font-semibold mb-1">Logs</p>
+                    <div className="bg-slate-950 rounded p-2 h-32 overflow-auto whitespace-pre-wrap">{logs[test.questions[0]._id] || 'Run to see logs'}</div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="bg-slate-900 text-slate-50 rounded-lg p-3 text-xs h-32 overflow-auto">
-                      <p className="text-emerald-300 mb-1">Logs</p>
-                      <pre className="whitespace-pre-wrap">{logs[q._id] || 'Run to see logs'}</pre>
-                    </div>
-                    <div className="bg-white border rounded-lg p-3 text-xs h-32 overflow-auto">
-                      <p className="text-gray-700 font-semibold mb-1">Results</p>
-                      {qResults.length === 0 ? 'Not run yet' : qResults.map((r, i) => (
-                        <div key={i} className={`flex items-center justify-between border-b last:border-0 py-1 ${r.pass ? 'text-emerald-700' : 'text-red-600'}`}>
-                          <span>Test {i + 1}</span>
-                          <span>{r.pass ? 'PASS' : 'FAIL'}</span>
-                        </div>
-                      ))}
+                  <div className="p-3 text-xs">
+                    <p className="text-slate-200 font-semibold mb-1">Results</p>
+                    <div className="bg-slate-950 rounded p-2 h-32 overflow-auto space-y-1">
+                      {(results[test.questions[0]._id] || []).length === 0
+                        ? 'Not run yet'
+                        : (results[test.questions[0]._id] || []).map((r, i) => (
+                            <div key={i} className={`flex items-center justify-between ${r.pass ? 'text-emerald-300' : 'text-red-300'}`}>
+                              <span>Test {i + 1}</span>
+                              <span>{r.pass ? 'PASS' : 'FAIL'}</span>
+                            </div>
+                          ))}
                     </div>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            </div>
           </div>
-
-          <div className="mt-6 flex justify-end">
-            <button onClick={() => handleSubmit(false, false, false, false)} disabled={submitting} className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-700 text-white rounded-lg hover:bg-emerald-800">
-              {submitting ? <Loader size={16} className="animate-spin" /> : <Play size={16} />}
-              Submit Test
-            </button>
-          </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 };

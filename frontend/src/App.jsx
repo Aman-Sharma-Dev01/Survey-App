@@ -152,6 +152,7 @@ const App = () => {
     'about',
     'blog',
     'quiz', // Public quiz taking page
+    'coding', // Public coding test taking page
     'verify-certificate', // Public certificate verification page
   ];
 
