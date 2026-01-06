@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LogOut, PlusCircle, LayoutDashboard, HelpCircle, Menu, X, Coins, ShoppingCart, Crown, Gift, Ticket, CheckCircle, Loader, RefreshCw, GraduationCap, Sparkles, Zap, FileText, BarChart3, Users, Shield, PenLine } from 'lucide-react';
+import { LogOut, PlusCircle, LayoutDashboard, HelpCircle, Menu, X, Coins, ShoppingCart, Crown, Gift, Ticket, CheckCircle, Loader, RefreshCw, GraduationCap, Sparkles, Zap, FileText, BarChart3, Users, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { applyCoupon } from '../services/couponService';
 
@@ -236,13 +236,7 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                                 onClick={() => handleNavigate(isAuthenticated ? 'home' : '')}
                                 current={currentPage}
                             />
-                            <NavButton
-                                Icon={PenLine}
-                                label="Write Blog"
-                                target={isAuthenticated ? 'blog-create' : 'login'}
-                                onClick={() => handleNavigate(isAuthenticated ? 'blog-create' : 'login')}
-                                current={currentPage}
-                            />
+                            {/* Write Blog removed per request */}
                             
                             {/* Credits Display */}
                             <div className="flex items-center px-3 py-1.5 bg-indigo-800 rounded-lg">
@@ -455,14 +449,7 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                                     current={currentPage}
                                     mobile
                                 />
-                                <NavButton 
-                                    Icon={PenLine} 
-                                    label="Write Blog" 
-                                    target={isAuthenticated ? 'blog-create' : 'login'} 
-                                    onClick={() => handleMobileNavigate(isAuthenticated ? 'blog-create' : 'login')} 
-                                    current={currentPage}
-                                    mobile
-                                />
+                                {/* Write Blog removed from mobile menu per request */}
                                 <button
                                     onClick={() => handleMobileNavigate('pricing')}
                                     className="w-full px-3 py-2 text-left text-sm font-medium text-yellow-400 hover:bg-indigo-700 rounded-lg flex items-center"
