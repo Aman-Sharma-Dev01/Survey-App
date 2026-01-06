@@ -135,6 +135,14 @@ const App = () => {
     }
   }, [currentPath, authState.isAuthenticated]);
 
+  // If an authenticated user visits the root/landing route, redirect them to the app home.
+  useEffect(() => {
+    const isRoot = currentPath === '/' || currentPath === '';
+    if (isRoot && authState.isAuthenticated) {
+      navigate('home');
+    }
+  }, [currentPath, authState.isAuthenticated]);
+
   const [pathRoot, pathId] = getPathSegments(currentPath);
 
   // ▢ Pages where navbar should NOT show
@@ -158,7 +166,10 @@ const App = () => {
     'verify-certificate', // Public certificate verification page
   ];
 
-  const shouldShowNavbar = !landingRoutes.includes(pathRoot);
+  // Only show the internal navbar for authenticated users on non-landing routes.
+  // This prevents the logged-in navbar from appearing when an unauthenticated user
+  // manually types an arbitrary hash in the URL (e.g. #w).
+  const shouldShowNavbar = authState?.isAuthenticated && !landingRoutes.includes(pathRoot);
 
   // Router logic
   const renderPage = () => {

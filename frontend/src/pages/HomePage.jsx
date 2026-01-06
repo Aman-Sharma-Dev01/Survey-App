@@ -199,14 +199,8 @@ const HomePage = ({ navigate }) => {
                     })}
                 </div>
 
-                {/* Info Box - How to add new features */}
-                <div className="mt-12 p-6 bg-white rounded-xl shadow-md border-l-4 border-blue-500">
-                    <p className="text-gray-700 text-sm">
-                        <span className="font-semibold text-gray-900">Tip:</span> New features can be easily added to this hub. 
-                        Simply add them to the features array in the HomePage component. No navbar clutter, just a clean, 
-                        organized interface that scales with your product.
-                    </p>
-                </div>
+                
+                
             </div>
         </div>
     );
