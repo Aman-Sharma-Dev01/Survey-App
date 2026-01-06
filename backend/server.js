@@ -13,6 +13,7 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import certificateRoutes from './routes/certificateRoutes.js';
 import couponRoutes from './routes/couponRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
+import blogRoutes from './routes/blogRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -56,6 +57,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/certificates', certificateRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/blogs', blogRoutes);
 
 // Error Handling Middleware (Basic example)
 app.use((err, req, res, next) => {

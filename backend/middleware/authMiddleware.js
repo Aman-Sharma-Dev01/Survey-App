@@ -58,4 +58,28 @@ const requirePremium = async (req, res, next) => {
     }
 };
 
-export { protect, requirePremium };
+// Admin email for admin-only routes
+const ADMIN_EMAIL = 'support@surveyzen.live';
+
+// Middleware to check if user is admin
+const adminOnly = async (req, res, next) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ message: 'Not authorized' });
+        }
+
+        // Check if user email matches admin email or has admin flag
+        const isAdmin = req.user.email === ADMIN_EMAIL || req.user.isAdmin === true;
+        
+        if (!isAdmin) {
+            return res.status(403).json({ message: 'Admin access required' });
+        }
+
+        next();
+    } catch (error) {
+        console.error('Admin check error:', error);
+        res.status(500).json({ message: 'Error checking admin status' });
+    }
+};
+
+export { protect, requirePremium, adminOnly };

@@ -15,7 +15,8 @@ import {
     MailCheck,
     MailX,
     Loader2,
-    MessageSquare
+    MessageSquare,
+    FileText
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import api from '../services/api';
@@ -203,6 +204,13 @@ const AdminDashboard = ({ navigate }) => {
             description: 'View and respond to user messages',
             color: 'teal',
             route: 'contact-admin'
+        },
+        {
+            icon: FileText,
+            title: 'Blog Management',
+            description: 'Approve, reject and manage blog posts',
+            color: 'indigo',
+            route: 'blog-admin'
         }
     ];
 

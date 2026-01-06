@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { PlusCircle, Loader, Settings, AlertTriangle, MessageSquare, Search } from 'lucide-react';
+import { PlusCircle, Loader, Settings, AlertTriangle, MessageSquare, Search, FileText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { fetchApi, deleteSurvey } from '../services/api'; 
 import SurveyCard from '../components/SurveyCard';
@@ -128,6 +128,14 @@ const DashboardPage = ({ navigate }) => {
                     {isRefreshing && (
                         <Loader size={20} className="animate-spin text-indigo-500" title="Refreshing List..." />
                     )}
+
+                    {/* My Blogs Button */}
+                    <button
+                        onClick={() => navigate('my-blogs')}
+                        className="flex items-center px-3 sm:px-4 py-2 sm:py-3 bg-white text-indigo-600 font-semibold text-sm sm:text-base rounded-xl shadow border border-indigo-200 hover:bg-indigo-50 transition"
+                    >
+                        <FileText size={18} className="mr-2" /> My Blogs
+                    </button>
 
                     {/* New Survey Button */}
                     <button

@@ -50,6 +50,11 @@ import OfferAdmin from './pages/OfferAdmin.jsx';
 // ⭐ Contact Admin
 import ContactAdmin from './pages/ContactAdmin.jsx';
 
+// ⭐ Blog Pages
+import BlogCreate from './pages/BlogCreate.jsx';
+import MyBlogs from './pages/MyBlogs.jsx';
+import BlogAdmin from './pages/BlogAdmin.jsx';
+
 // Admin email
 const ADMIN_EMAIL = 'support@surveyzen.live';
 
@@ -89,7 +94,7 @@ const App = () => {
 
   // Protect private pages
   useEffect(() => {
-    const protectedPaths = ['dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-edit', 'quiz-analytics', 'payment-admin', 'payment-history', 'certificate-admin', 'plan-admin', 'admin-dashboard', 'offer-admin', 'contact-admin'];
+    const protectedPaths = ['dashboard', 'create', 'analysis', 'quiz-dashboard', 'quiz-create', 'quiz-edit', 'quiz-analytics', 'payment-admin', 'payment-history', 'certificate-admin', 'plan-admin', 'admin-dashboard', 'offer-admin', 'contact-admin', 'blog-create', 'my-blogs', 'blog-edit', 'blog-admin'];
     const [pathSegment] = getPathSegments(currentPath);
 
     if (protectedPaths.includes(pathSegment) && !authState.isAuthenticated) {
@@ -256,6 +261,24 @@ const App = () => {
       // ⭐ Contact Admin (Admin only - view contact form submissions)
       case 'contact-admin':
         return <ContactAdmin navigate={navigate} />;
+
+      // ⭐ Blog Pages (User)
+      case 'blog-create':
+        return <BlogCreate navigate={navigate} />;
+
+      case 'my-blogs':
+        return <MyBlogs navigate={navigate} />;
+
+      case 'blog-edit':
+        return pathId ? (
+          <BlogCreate navigate={navigate} editId={pathId} />
+        ) : (
+          <MyBlogs navigate={navigate} />
+        );
+
+      // ⭐ Blog Admin (Admin only)
+      case 'blog-admin':
+        return <BlogAdmin navigate={navigate} />;
 
       default:
         return <LandingPage navigate={navigate} />;
