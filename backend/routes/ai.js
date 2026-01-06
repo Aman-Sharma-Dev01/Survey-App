@@ -97,4 +97,103 @@ ${contextInfo}
   }
 });
 
+// POST /api/ai/insights
+// Generates AI-driven insights for survey analytics with a dedicated analytics key
+router.post('/insights', async (req, res) => {
+  try {
+    const {
+      surveyId,
+      surveyTitle = 'Survey',
+      analysis = {},
+      model = 'openai/gpt-4o-mini',
+      temperature = 0.4,
+    } = req.body || {};
+
+    const apiKey = process.env.OPENROUTER_ANALYTICS_API_KEY || process.env.OPENROUTER_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'Analytics OpenRouter API key missing.' });
+    }
+
+    // Build a compact summary payload so we don't send overly large requests
+    const { totalResponses = 0, questions = [] } = analysis;
+
+    const system = {
+      role: 'system',
+      content: `You are an expert Survey Analytics Copilot. Produce concise, actionable insights based ONLY on the provided survey stats.
+
+Output MUST be clean Markdown with these sections:
+1) Executive Summary (3-5 bullet points)
+2) Key Trends & Themes
+3) Risks / Drop-offs / Anomalies
+4) Recommendations (specific and prioritized)
+5) Follow-up Questions (3 short prompts to explore further)
+6) Compact KPI Table (if data permits)
+
+Rules:
+- Do not invent data; rely solely on supplied counts.
+- If free-text samples are provided, summarize themes briefly.
+- Keep under 500 words.
+- Make it skimmable for a PM/insights lead.
+`
+    };
+
+    const user = {
+      role: 'user',
+      content: `Survey Title: ${surveyTitle}
+Survey ID: ${surveyId || 'n/a'}
+Total Responses: ${totalResponses}
+
+Questions:
+${questions
+  .map((q, idx) => {
+    const options = (q.options || [])
+      .map((opt) => `- ${opt.label || opt.option || 'Option'}: count=${opt.count ?? opt.responses ?? 0}${opt.percentage ? ` (${opt.percentage}%)` : ''}`)
+      .join('\n');
+
+    const samples = (q.freeTextSamples || [])
+      .slice(0, 5)
+      .map((s) => `• ${s}`)
+      .join('\n');
+
+    return `${idx + 1}. ${q.text} [${q.type || 'unknown'}]
+Counts:
+${options || '- (no option counts)'}
+Free-text samples:
+${samples || '- none provided'}`;
+  })
+  .join('\n\n')}
+`
+    };
+
+    const payload = {
+      model,
+      messages: [system, user],
+      temperature,
+    };
+
+    const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': process.env.PUBLIC_SITE_URL || 'http://localhost:3000',
+        'X-Title': 'Survey Analytics',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!r.ok) {
+      const text = await r.text();
+      return res.status(r.status).json({ error: text });
+    }
+
+    const data = await r.json();
+    const content = data?.choices?.[0]?.message?.content ?? '';
+    return res.json({ insights: content, raw: data });
+  } catch (err) {
+    console.error('OpenRouter analytics error:', err);
+    res.status(500).json({ error: 'AI analytics request failed' });
+  }
+});
+
 export default router;

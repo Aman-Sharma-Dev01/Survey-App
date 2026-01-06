@@ -41,7 +41,7 @@ const LoginPage = ({ navigate }) => {
     const [googleLoading, setGoogleLoading] = useState(false);
     const { login, user, token } = useAuth();
 
-    // Redirect to dashboard if already logged in
+    // Redirect to home if already logged in
     useEffect(() => {
         const storedToken = localStorage.getItem('token');
         if (storedToken || token) {
@@ -50,7 +50,7 @@ const LoginPage = ({ navigate }) => {
             if (storedUser === ADMIN_EMAIL) {
                 navigate('admin-dashboard');
             } else {
-                navigate('dashboard');
+                navigate('home');
             }
         }
     }, [token, user, navigate]);
@@ -61,8 +61,8 @@ const LoginPage = ({ navigate }) => {
         try {
             const data = await googleAuth(credential);
             login({ email: data.email, name: data.name, avatar: data.avatar }, data.token);
-            // Redirect admin to admin dashboard, others to regular dashboard
-            navigate(data.email === ADMIN_EMAIL ? 'admin-dashboard' : 'dashboard');
+            // Redirect admin to admin dashboard, others to home
+            navigate(data.email === ADMIN_EMAIL ? 'admin-dashboard' : 'home');
         } catch (err) {
             setError(err.message || 'Google sign-in failed. Please try again.');
         } finally {
@@ -95,7 +95,7 @@ const LoginPage = ({ navigate }) => {
                                 const data = await res.json();
                                 if (!res.ok) throw new Error(data.message || 'Google sign-in failed');
                                 login({ email: data.email, name: data.name, avatar: data.avatar }, data.token);
-                                navigate(data.email === ADMIN_EMAIL ? 'admin-dashboard' : 'dashboard');
+                                navigate(data.email === ADMIN_EMAIL ? 'admin-dashboard' : 'home');
                             } catch (err) {
                                 setError(err.message || 'Google sign-in failed. Please try again.');
                             } finally {
@@ -169,8 +169,8 @@ const LoginPage = ({ navigate }) => {
         try {
             const data = await loginCreator({ email, password });
             login({ email: data.email, name: data.name, avatar: data.avatar }, data.token);
-            // Redirect admin to admin dashboard, others to regular dashboard
-            navigate(data.email === ADMIN_EMAIL ? 'admin-dashboard' : 'dashboard');
+            // Redirect admin to admin dashboard, others to home
+            navigate(data.email === ADMIN_EMAIL ? 'admin-dashboard' : 'home');
         } catch (err) {
             const msg = err.message || 'Login failed. Check your credentials.';
             setError(msg);
