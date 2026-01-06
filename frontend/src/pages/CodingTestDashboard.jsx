@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { PlusCircle, Loader, Trash2, BarChart3, Link, Eye, EyeOff, QrCode } from 'lucide-react';
+import { PlusCircle, Loader, Trash2, BarChart3, Link, Eye, EyeOff, QrCode, Pencil } from 'lucide-react';
 import {
   getCreatorCodingTests,
   deleteCodingTest,
@@ -8,7 +8,7 @@ import {
   getCodingTestQRCodeUrl,
 } from '../services/codingTestService';
 
-const CodingCard = ({ test, onPublish, onDelete, onAnalytics, onCopyLink, onShowQR }) => {
+const CodingCard = ({ test, onPublish, onDelete, onAnalytics, onEdit, onCopyLink, onShowQR }) => {
   const [copying, setCopying] = useState(false);
 
   const handleCopy = async () => {
@@ -60,6 +60,10 @@ const CodingCard = ({ test, onPublish, onDelete, onAnalytics, onCopyLink, onShow
 
         <button onClick={() => onAnalytics(test._id)} className="flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 transition">
           <BarChart3 size={16} className="mr-1" /> Analytics
+        </button>
+
+        <button onClick={() => onEdit(test._id)} className="flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 transition">
+          <Pencil size={16} className="mr-1" /> Edit
         </button>
 
         <button onClick={() => onDelete(test._id)} className="flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 transition">
@@ -153,6 +157,7 @@ const CodingTestDashboard = ({ navigate }) => {
               onPublish={handlePublish}
               onDelete={handleDelete}
               onAnalytics={(id) => navigate(`coding-analytics/${id}`)}
+              onEdit={(id) => navigate(`coding-edit/${id}`)}
               onCopyLink={() => {}}
               onShowQR={(test) => {
                 setSelected(test);

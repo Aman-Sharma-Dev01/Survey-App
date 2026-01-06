@@ -60,6 +60,7 @@ import CodingTestDashboard from './pages/CodingTestDashboard.jsx';
 import CodingTestCreate from './pages/CodingTestCreate.jsx';
 import CodingTestTake from './pages/CodingTestTake.jsx';
 import CodingTestAnalytics from './pages/CodingTestAnalytics.jsx';
+import CodingTestEdit from './pages/CodingTestEdit.jsx';
 // ⭐ Blog Pages
 import BlogCreate from './pages/BlogCreate.jsx';
 import MyBlogs from './pages/MyBlogs.jsx';
@@ -115,6 +116,7 @@ const App = () => {
     'coding-dashboard',
     'coding-create',
     'coding-analytics',
+    'coding-edit',
     'payment-admin',
     'payment-history',
     'certificate-admin',
@@ -258,6 +260,13 @@ const App = () => {
       case 'coding-analytics':
         return pathId ? (
           <CodingTestAnalytics codingTestId={pathId} navigate={navigate} />
+        ) : (
+          <CodingTestDashboard navigate={navigate} />
+        );
+
+      case 'coding-edit':
+        return pathId ? (
+          <CodingTestEdit codingTestId={pathId} navigate={navigate} />
         ) : (
           <CodingTestDashboard navigate={navigate} />
         );
