@@ -213,16 +213,20 @@ router.post('/submit/:id', async (req, res) => {
 
     const graded = submissions.map((sub) => {
       const q = test.questions.find((qq) => qq._id.toString() === (sub.questionId || '').toString());
-      const passAll = (sub.results || []).every((r) => r.pass);
-      const pointsEarned = passAll ? (q?.points || 1) : 0;
+      const results = Array.isArray(sub.results) ? sub.results : [];
+      const totalTests = sub.totalTests || results.length || 0;
+      const passedCount = results.filter((r) => r.pass).length;
+      // Only award points when there is at least one test and all passed
+      const passAll = totalTests > 0 && results.length > 0 && passedCount === totalTests && results.every((r) => r.pass);
+      const pointsEarned = passAll && q ? (q.points || 1) : 0;
       totalScore += pointsEarned;
       return {
-        questionId: sub.questionId,
+        questionId: q ? q._id : sub.questionId,
         code: sub.code,
-        passedCount: sub.passedCount || 0,
-        totalTests: sub.totalTests || 0,
+        passedCount,
+        totalTests,
         pointsEarned,
-        results: sub.results || [],
+        results,
       };
     });
 
@@ -280,7 +284,12 @@ router.get('/analytics/:id', protect, async (req, res) => {
 
     const questionStats = test.questions.map((q) => {
       const attempts = responses.flatMap((r) => r.submissions.filter((s) => s.questionId.toString() === q._id.toString()));
-      const correctCount = attempts.filter((a) => (a.results || []).every((res) => res.pass)).length;
+      const correctCount = attempts.filter((a) => {
+        const resList = Array.isArray(a.results) ? a.results : [];
+        const total = a.totalTests || resList.length || 0;
+        const passed = resList.filter((res) => res.pass).length;
+        return total > 0 && passed === total && resList.every((res) => res.pass);
+      }).length;
       return {
         questionId: q._id,
         title: q.title,
