@@ -473,33 +473,57 @@ const CodingTestTake = ({ codingTestId }) => {
                 <div className="p-4">
                   <p className="text-sm font-semibold text-slate-800 mb-2">Test Cases & Output</p>
                   {currentQuestion && (
-                    <div className="mb-4 border rounded-lg">
-                      <div className="px-3 py-2 bg-slate-50 border-b text-sm font-semibold text-slate-700">Case(s)</div>
-                      <div className="p-3 space-y-3 text-xs text-slate-700">
-                        {(currentQuestion.testCases || []).map((tc, idx) => (
-                          <div key={idx} className="space-y-2 border-b pb-2 last:border-0 last:pb-0">
+                    <>
+                      {(currentQuestion.testCases || []).length > 0 && (
+                        <div className="mb-4 border rounded-lg">
+                          <div className="px-3 py-2 bg-slate-50 border-b text-sm font-semibold text-slate-700">Sample Input / Output</div>
+                          <div className="p-3 space-y-3 text-xs text-slate-700">
                             <div>
-                              <p className="font-semibold">Input:</p>
-                              <pre className="bg-slate-100 rounded p-2 text-slate-800 whitespace-pre-wrap">{tc.input}</pre>
+                              <p className="font-semibold">Sample Input</p>
+                              <pre className="bg-slate-100 rounded p-2 text-slate-800 whitespace-pre-wrap">
+                                {currentQuestion.testCases[0].input || 'Not provided'}
+                              </pre>
                             </div>
                             <div>
-                              <p className="font-semibold">Expected Output:</p>
+                              <p className="font-semibold">Sample Output</p>
                               <div className="bg-slate-100 rounded p-2 text-emerald-700 whitespace-pre-wrap">
-                                {test.settings?.showExpectedOutputs === false ? 'Hidden by creator' : tc.expectedOutput}
+                                {test.settings?.showExpectedOutputs === false
+                                  ? 'Hidden by creator'
+                                  : currentQuestion.testCases[0].expectedOutput || 'Not provided'}
                               </div>
                             </div>
                           </div>
-                        ))}
-                        <div>
-                          <p className="font-semibold">Console Output:</p>
-                          <div className="bg-slate-100 rounded p-2 text-slate-800 whitespace-pre-wrap h-16 overflow-auto">
-                            {currentResults.length === 0 ? 'Empty' : currentResults.map((r, i) => (
-                              <div key={i}>{r.output || (r.pass ? 'Pass' : 'Fail')}</div>
-                            ))}
+                        </div>
+                      )}
+
+                      <div className="mb-4 border rounded-lg">
+                        <div className="px-3 py-2 bg-slate-50 border-b text-sm font-semibold text-slate-700">All Test Cases</div>
+                        <div className="p-3 space-y-3 text-xs text-slate-700">
+                          {(currentQuestion.testCases || []).map((tc, idx) => (
+                            <div key={idx} className="space-y-2 border-b pb-2 last:border-0 last:pb-0">
+                              <div>
+                                <p className="font-semibold">Input:</p>
+                                <pre className="bg-slate-100 rounded p-2 text-slate-800 whitespace-pre-wrap">{tc.input}</pre>
+                              </div>
+                              <div>
+                                <p className="font-semibold">Expected Output:</p>
+                                <div className="bg-slate-100 rounded p-2 text-emerald-700 whitespace-pre-wrap">
+                                  {test.settings?.showExpectedOutputs === false ? 'Hidden by creator' : tc.expectedOutput}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          <div>
+                            <p className="font-semibold">Console Output:</p>
+                            <div className="bg-slate-100 rounded p-2 text-slate-800 whitespace-pre-wrap h-16 overflow-auto">
+                              {currentResults.length === 0 ? 'Empty' : currentResults.map((r, i) => (
+                                <div key={i}>{r.output || (r.pass ? 'Pass' : 'Fail')}</div>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </>
                   )}
                 </div>
               </div>
