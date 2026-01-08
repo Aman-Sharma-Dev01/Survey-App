@@ -437,3 +437,166 @@ export const sendContactConfirmationEmail = async (toEmail, name) => {
     `
   });
 };
+
+/**
+ * Sends interview invitation email
+ */
+export const sendInterviewInvitation = async ({ toEmail, participantName, interviewTitle, scheduledAt, duration, hostName, hostEmail, interviewId }) => {
+  const scheduleDate = new Date(scheduledAt);
+  const formattedDate = scheduleDate.toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+  const formattedTime = scheduleDate.toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: true 
+  });
+
+  return sendEmail({
+    to: toEmail,
+    subject: `📅 Interview Invitation: ${interviewTitle} - SurveyZen`,
+    html: `
+    <div style="font-family: Arial, sans-serif; background:#f7f7f7; padding: 40px;">
+      <div style="max-width:600px; margin:0 auto; background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+
+        <div style="text-align:center; padding:20px 0; background:#ffffff;">
+          <img src="https://surveyzen.live/logo3.png" alt="SurveyZen Logo" style="width:150px; height:auto; display:block; margin:0 auto;" />
+        </div>
+
+        <div style="padding: 30px 40px; color:#333333;">
+          <h2 style="margin-top:0; font-size:24px; font-weight:600; text-align:center; color:#222;">
+            You're Invited to an Interview! 🎯
+          </h2>
+
+          <p style="font-size:16px; margin-bottom:16px;">
+            Hi ${participantName},
+          </p>
+
+          <p style="font-size:16px; margin-bottom:16px;">
+            <strong>${hostName}</strong> has invited you to an interview on SurveyZen.
+          </p>
+
+          <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:20px; margin:25px 0;">
+            <h3 style="margin:0 0 15px 0; color:#166534; font-size:18px;">📋 Interview Details</h3>
+            <p style="margin:5px 0; font-size:15px;"><strong>Title:</strong> ${interviewTitle}</p>
+            <p style="margin:5px 0; font-size:15px;"><strong>Date:</strong> ${formattedDate}</p>
+            <p style="margin:5px 0; font-size:15px;"><strong>Time:</strong> ${formattedTime}</p>
+            <p style="margin:5px 0; font-size:15px;"><strong>Duration:</strong> ${duration} minutes</p>
+            <p style="margin:5px 0; font-size:15px;"><strong>Host:</strong> ${hostName} (${hostEmail})</p>
+          </div>
+
+          <div style="text-align:center; margin:32px 0;">
+            <a href="https://surveyzen.live/#interview-dashboard" 
+              style="background:#10b981; color:#ffffff; text-decoration:none; padding:14px 28px; border-radius:6px; font-size:16px; display:inline-block; font-weight:600;">
+              View Interview in Dashboard
+            </a>
+          </div>
+
+          <p style="font-size:14px; color:#666; margin-top:20px; text-align:center;">
+            ⚠️ You can join the interview 15 minutes before the scheduled time.<br>
+            Make sure to log in with this email address: <strong>${toEmail}</strong>
+          </p>
+
+          <p style="font-size:16px; margin-top:32px;">
+            Best of luck! 🍀<br>
+            <strong>Team SurveyZen</strong>
+          </p>
+        </div>
+
+        <div style="text-align:center; padding:20px 0;">
+          <img src="https://surveyzen.live/logo1.png" alt="SurveyZen Logo" style="width:120px; height:auto; opacity:0.85;" />
+        </div>
+
+        <div style="background:#f2f2f2; text-align:center; padding:15px; font-size:13px; color:#666;">
+          © ${new Date().getFullYear()} SurveyZen. All rights reserved.
+        </div>
+
+      </div>
+    </div>
+    `
+  });
+};
+
+/**
+ * Sends interview reminder email
+ */
+export const sendInterviewReminder = async ({ toEmail, participantName, interviewTitle, scheduledAt, minutesBefore, hostName }) => {
+  const scheduleDate = new Date(scheduledAt);
+  const formattedDate = scheduleDate.toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+  const formattedTime = scheduleDate.toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: true 
+  });
+
+  const reminderText = minutesBefore >= 60 
+    ? `${Math.floor(minutesBefore / 60)} hour${minutesBefore >= 120 ? 's' : ''}` 
+    : `${minutesBefore} minutes`;
+
+  return sendEmail({
+    to: toEmail,
+    subject: `⏰ Reminder: Interview "${interviewTitle}" starts in ${reminderText} - SurveyZen`,
+    html: `
+    <div style="font-family: Arial, sans-serif; background:#f7f7f7; padding: 40px;">
+      <div style="max-width:600px; margin:0 auto; background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+
+        <div style="text-align:center; padding:20px 0; background:#ffffff;">
+          <img src="https://surveyzen.live/logo3.png" alt="SurveyZen Logo" style="width:150px; height:auto; display:block; margin:0 auto;" />
+        </div>
+
+        <div style="padding: 30px 40px; color:#333333;">
+          <h2 style="margin-top:0; font-size:24px; font-weight:600; text-align:center; color:#222;">
+            ⏰ Interview Reminder
+          </h2>
+
+          <p style="font-size:16px; margin-bottom:16px;">
+            Hi ${participantName},
+          </p>
+
+          <p style="font-size:16px; margin-bottom:16px;">
+            This is a friendly reminder that your interview <strong>"${interviewTitle}"</strong> with ${hostName} starts in <strong>${reminderText}</strong>.
+          </p>
+
+          <div style="background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; padding:20px; margin:25px 0;">
+            <p style="margin:5px 0; font-size:15px;"><strong>📅 Date:</strong> ${formattedDate}</p>
+            <p style="margin:5px 0; font-size:15px;"><strong>🕐 Time:</strong> ${formattedTime}</p>
+          </div>
+
+          <div style="text-align:center; margin:32px 0;">
+            <a href="https://surveyzen.live/#interview-dashboard" 
+              style="background:#f59e0b; color:#ffffff; text-decoration:none; padding:14px 28px; border-radius:6px; font-size:16px; display:inline-block; font-weight:600;">
+              Go to Interview Dashboard
+            </a>
+          </div>
+
+          <p style="font-size:14px; color:#666; margin-top:20px; text-align:center;">
+            Make sure your camera and microphone are working properly before joining.
+          </p>
+
+          <p style="font-size:16px; margin-top:32px;">
+            Good luck! 🍀<br>
+            <strong>Team SurveyZen</strong>
+          </p>
+        </div>
+
+        <div style="text-align:center; padding:20px 0;">
+          <img src="https://surveyzen.live/logo1.png" alt="SurveyZen Logo" style="width:120px; height:auto; opacity:0.85;" />
+        </div>
+
+        <div style="background:#f2f2f2; text-align:center; padding:15px; font-size:13px; color:#666;">
+          © ${new Date().getFullYear()} SurveyZen. All rights reserved.
+        </div>
+
+      </div>
+    </div>
+    `
+  });
+};

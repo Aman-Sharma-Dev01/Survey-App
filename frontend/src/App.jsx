@@ -65,6 +65,13 @@ import CodingTestEdit from './pages/CodingTestEdit.jsx';
 import BlogCreate from './pages/BlogCreate.jsx';
 import MyBlogs from './pages/MyBlogs.jsx';
 import BlogAdmin from './pages/BlogAdmin.jsx';
+
+// ⭐ Interview Pages (Pro Feature)
+import InterviewDashboard from './pages/InterviewDashboard.jsx';
+import InterviewSchedule from './pages/InterviewSchedule.jsx';
+import InterviewRoom from './pages/InterviewRoom.jsx';
+import InterviewDetails from './pages/InterviewDetails.jsx';
+
 // Admin email
 const ADMIN_EMAIL = 'support@surveyzen.live';
 
@@ -127,6 +134,10 @@ const App = () => {
     'blog-create',
     'my-blogs',
     'blog-admin',
+    'interview-dashboard',
+    'interview-schedule',
+    'interview-room',
+    'interview-details',
   ];
     const [pathSegment] = getPathSegments(currentPath);
 
@@ -360,6 +371,27 @@ const App = () => {
       // ⭐ Blog Admin (Admin only)
       case 'blog-admin':
         return <BlogAdmin navigate={navigate} />;
+
+      // ⭐ Interview Routes (Pro Feature)
+      case 'interview-dashboard':
+        return <InterviewDashboard navigate={navigate} />;
+
+      case 'interview-schedule':
+        return <InterviewSchedule navigate={navigate} />;
+
+      case 'interview-room':
+        return pathId ? (
+          <InterviewRoom interviewId={pathId} navigate={navigate} />
+        ) : (
+          <InterviewDashboard navigate={navigate} />
+        );
+
+      case 'interview-details':
+        return pathId ? (
+          <InterviewDetails interviewId={pathId} navigate={navigate} />
+        ) : (
+          <InterviewDashboard navigate={navigate} />
+        );
 
       default:
         return <LandingPage navigate={navigate} />;

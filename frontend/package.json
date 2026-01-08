@@ -18,7 +18,8 @@
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.9.5",
     "react-snowfall": "^2.4.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "socket.io-client": "^4.7.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

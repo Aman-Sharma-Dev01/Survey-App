@@ -85,14 +85,18 @@ const HomePage = ({ navigate }) => {
         {
             id: 'schedule-interview',
             title: 'Schedule Interview',
-            description: 'Schedule interviews with candidates and manage slots — coming soon',
+            description: 'Schedule and conduct live video interviews with candidates directly in the app',
             icon: Calendar,
             color: 'from-emerald-500 to-green-600',
             lightBg: 'bg-emerald-50',
             hoverColor: 'group-hover:from-emerald-600 group-hover:to-green-700',
             lightHover: 'group-hover:bg-emerald-100',
-            actionButtons: [
-                { label: 'Coming Soon', action: null, icon: ArrowRight }
+            isPro: true,
+            actionButtons: user?.plan !== 'free' || user?.email?.endsWith('@mru.edu.in') ? [
+                { label: 'Dashboard', action: 'interview-dashboard', icon: LayoutGrid },
+                { label: 'Schedule New', action: 'interview-schedule', icon: Plus }
+            ] : [
+                { label: 'Pro Feature', action: 'pricing', icon: ArrowRight }
             ]
         },
         // New features can be easily added here
@@ -149,11 +153,18 @@ const HomePage = ({ navigate }) => {
                                     <div className="relative h-full p-8 flex flex-col justify-between z-10">
                                         {/* Top Content */}
                                         <div>
-                                            {/* Icon */}
-                                            <div className={`w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mb-6 transition-all duration-300 ${
-                                                isHovered ? 'bg-white/30 scale-110' : ''
-                                            }`}>
-                                                <IconComponent size={32} className="text-white" />
+                                            {/* Icon and Pro Badge */}
+                                            <div className="flex items-start justify-between mb-6">
+                                                <div className={`w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center transition-all duration-300 ${
+                                                    isHovered ? 'bg-white/30 scale-110' : ''
+                                                }`}>
+                                                    <IconComponent size={32} className="text-white" />
+                                                </div>
+                                                {feature.isPro && (
+                                                    <span className="px-3 py-1 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full shadow-lg">
+                                                        PRO
+                                                    </span>
+                                                )}
                                             </div>
                                             
                                             {/* Title & Description (or feedback form for AI Tools) */}
