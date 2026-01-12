@@ -124,23 +124,30 @@
       "author": {
         "@type": "Organization",
         "name": "SurveyZen",
-        "founder": {
-          "@type": "Person",
-          "name": "Shivam Kumar Yadav",
-          "url": "https://www.linkedin.com/in/shivamkrydv/"
-        }
+        "founder": [
+          {
+            "@type": "Person",
+            "name": "Shivam Kumar Yadav",
+            "url": "https://www.linkedin.com/in/shivamkrydv/"
+          },
+          {
+            "@type": "Person",
+            "name": "Aman Sharma",
+            "url": "https://www.linkedin.com/in/aman-sharma-dev01/"
+          }
+        ]
       }
     }
     </script>
 
-    <!-- Structured Data: Founder/Creator -->
+    <!-- Structured Data: Co-Founder 1 -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Person",
       "name": "Shivam Kumar Yadav",
       "url": "https://www.linkedin.com/in/shivamkrydv/",
-      "jobTitle": "Founder & CEO",
+      "jobTitle": "Co-Founder & CEO",
       "worksFor": {
         "@type": "Organization",
         "name": "SurveyZen",
@@ -149,8 +156,29 @@
       "sameAs": [
         "https://www.linkedin.com/in/shivamkrydv/"
       ],
-      "description": "Founder of SurveyZen - AI-powered survey and quiz builder platform",
-      "knowsAbout": ["Survey Software", "Quiz Builder", "EdTech", "SaaS", "Web Development"]
+      "description": "Co-Founder of SurveyZen - AI-powered survey and quiz builder platform",
+      "knowsAbout": ["Survey Software", "Quiz Builder", "EdTech", "SaaS", "Web Development", "Product Strategy"]
+    }
+    </script>
+
+    <!-- Structured Data: Co-Founder 2 -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Aman Sharma",
+      "url": "https://www.linkedin.com/in/aman-sharma-dev01/",
+      "jobTitle": "Co-Founder & CTO",
+      "worksFor": {
+        "@type": "Organization",
+        "name": "SurveyZen",
+        "url": "https://surveyzen.live"
+      },
+      "sameAs": [
+        "https://www.linkedin.com/in/aman-sharma-dev01/"
+      ],
+      "description": "Co-Founder of SurveyZen - AI-powered survey and quiz builder platform",
+      "knowsAbout": ["Backend Architecture", "System Design", "DevOps", "Software Engineering", "Web Development"]
     }
     </script>
 
@@ -166,17 +194,25 @@
       "sameAs": [
         "https://www.producthunt.com/products/surveyzen",
         "https://twitter.com/surveyzen",
-        "https://www.linkedin.com/in/shivamkrydv/"
+        "https://www.linkedin.com/in/shivamkrydv/",
+        "https://www.linkedin.com/in/aman-sharma-dev01/"
       ],
-      "founder": {
-        "@type": "Person",
-        "name": "Shivam Kumar Yadav",
-        "url": "https://www.linkedin.com/in/shivamkrydv/",
-        "sameAs": [
-          "https://www.linkedin.com/in/shivamkrydv/"
-        ],
-        "jobTitle": "Founder & CEO"
-      },
+      "founder": [
+        {
+          "@type": "Person",
+          "name": "Shivam Kumar Yadav",
+          "url": "https://www.linkedin.com/in/shivamkrydv/",
+          "sameAs": ["https://www.linkedin.com/in/shivamkrydv/"],
+          "jobTitle": "Co-Founder & CEO"
+        },
+        {
+          "@type": "Person",
+          "name": "Aman Sharma",
+          "url": "https://www.linkedin.com/in/aman-sharma-dev01/",
+          "sameAs": ["https://www.linkedin.com/in/aman-sharma-dev01/"],
+          "jobTitle": "Co-Founder & CTO"
+        }
+      ],
       "contactPoint": {
         "@type": "ContactPoint",
         "contactType": "customer service",

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useState } from 'react';
 import {
   ClipboardList,
@@ -8,7 +8,11 @@ import {
   X,
   MousePointerClick,
   CheckCircle2,
-  Rocket
+  Rocket,
+  Linkedin,
+  Github,
+  Mail,
+  ExternalLink
 } from 'lucide-react';
 const footerSections = [
     {
@@ -140,6 +144,62 @@ const Navbar = () => {
 
 
 export default function AboutSurveyZen() {
+  // SEO: Set page title and meta tags
+  useEffect(() => {
+    document.title = 'About SurveyZen - Meet Our Founders | Shivam Kumar Yadav & Aman Sharma';
+    
+    // Update meta description
+    let metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Learn about SurveyZen, the AI-powered survey and quiz builder. Founded by Shivam Kumar Yadav and Aman Sharma - passionate developers building the future of feedback collection.');
+    }
+    
+    // Add structured data for AboutPage
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = 'about-page-schema';
+    script.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "AboutPage",
+      "name": "About SurveyZen",
+      "description": "Learn about SurveyZen and its founders",
+      "mainEntity": {
+        "@type": "Organization",
+        "name": "SurveyZen",
+        "url": "https://surveyzen.live",
+        "founder": [
+          {
+            "@type": "Person",
+            "name": "Shivam Kumar Yadav",
+            "jobTitle": "Co-Founder & CEO",
+            "url": "https://www.linkedin.com/in/shivamkrydv/",
+            "sameAs": ["https://www.linkedin.com/in/shivamkrydv/"]
+          },
+          {
+            "@type": "Person",
+            "name": "Aman Sharma",
+            "jobTitle": "Co-Founder & CTO",
+            "url": "https://www.linkedin.com/in/aman-sharma-dev01/",
+            "sameAs": ["https://www.linkedin.com/in/aman-sharma-dev01/"]
+          }
+        ]
+      }
+    });
+    
+    // Only add if not already present
+    if (!document.getElementById('about-page-schema')) {
+      document.head.appendChild(script);
+    }
+    
+    return () => {
+      // Cleanup on unmount
+      const existingScript = document.getElementById('about-page-schema');
+      if (existingScript) {
+        existingScript.remove();
+      }
+    };
+  }, []);
+
   return (
     <main className="min-h-screen bg-gray-50 text-slate-900 antialiased">
       <Navbar/>
@@ -152,10 +212,7 @@ export default function AboutSurveyZen() {
               Build better surveys. Get honest answers. Learn faster.
             </h1>
             <p className="mt-6 text-lg text-slate-700 max-w-xl">
-              SurveyZen is a lightweight, privacy-first survey builder for teams, educators,
-              and creators who want beautiful, usable surveys without the complexity.
-              We combine a minimal interface with powerful features so you can collect
-              reliable responses quickly and focus on what matters — the insights.
+           SurveyZen is a lightweight, privacy-first platform that lets teams, educators, recruiters, and creators build surveys, quizzes, and online interview sessions with ease. It combines a clean, minimal interface with powerful tools for fast survey creation, interactive quiz making, structured candidate interviews, and real-time response collection. Designed for simplicity, speed, and usability, SurveyZen helps you gather reliable insights without complexity—so you can focus on decisions, not setup.
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -290,42 +347,128 @@ n
         </div>
       </section>
 
-      {/* Team & Values */}
-      <section className="bg-white border-t border-slate-100">
-        <div className="max-w-6xl mx-auto px-6 py-12">
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold">Meet the team</h2>
-            <p className="mt-3 text-slate-600 max-w-2xl mx-auto">Small team, big focus — designers, engineers and community folks who care about research and privacy.</p>
+      {/* Founders Section */}
+      <section className="bg-gradient-to-b from-white to-indigo-50 border-t border-slate-100">
+        <div className="max-w-6xl mx-auto px-6 py-16">
+          <div className="text-center mb-12">
+            <p className="inline-block px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-sm font-semibold mb-4">Our Leadership</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">Meet the Founders</h2>
+            <p className="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">SurveyZen was founded by two passionate developers who believe in making feedback collection simple, beautiful, and accessible for everyone.</p>
           </div>
 
-          <div className="mt-8 grid sm:grid-cols-2 md:grid-cols-4 gap-6">
-            {/** Example team cards - replace with real photos & names */}
-            <div className="p-6 bg-slate-50 rounded-lg text-center">
-              <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-indigo-200 to-indigo-400 flex items-center justify-center text-white font-bold">SKY</div>
-              <h4 className="mt-4 font-semibold">Shivam kumar Yadav</h4>
-              <p className="text-sm text-slate-600">Founder & Product</p>
-            </div>
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Founder 1 - Shivam Kumar Yadav */}
+            <article className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300" itemScope itemType="https://schema.org/Person">
+              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 h-24"></div>
+              <div className="px-6 pb-6 -mt-12">
+                <div className="relative">
+                  <img 
+                    src="https://media.licdn.com/dms/image/v2/D4D03AQGRxT9dH59vhg/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1718821044029?e=1742428800&v=beta&t=pChKLLU-HJ9aW0rMwfA9wPa4kkBiNxcb8bZiZaKcKTg" 
+                    alt="Shivam Kumar Yadav - Co-Founder & CEO of SurveyZen"
+                    className="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover bg-gradient-to-br from-indigo-200 to-indigo-400"
+                    itemProp="image"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234f46e5" width="100" height="100"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="32" font-weight="bold">SKY</text></svg>';
+                    }}
+                  />
+                </div>
+                <div className="mt-4">
+                  <h3 className="text-xl font-bold text-slate-900" itemProp="name">Shivam Kumar Yadav</h3>
+                  <p className="text-indigo-600 font-medium" itemProp="jobTitle">Co-Founder & CEO</p>
+                </div>
+                <p className="mt-4 text-slate-600 text-sm leading-relaxed" itemProp="description">
+                  Full-stack developer with a passion for building products that solve real-world problems. 
+                  Shivam leads product vision and strategy at SurveyZen, focusing on creating intuitive 
+                  user experiences and driving innovation in the survey and feedback space.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">Product Strategy</span>
+                  <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">Full-Stack Development</span>
+                  <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">UI/UX</span>
+                </div>
+                <div className="mt-6 flex items-center gap-3">
+                  <a 
+                    href="https://www.linkedin.com/in/shivamkrydv/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#0A66C2] text-white text-sm font-medium rounded-lg hover:bg-[#004182] transition-colors"
+                    itemProp="sameAs"
+                    aria-label="Connect with Shivam Kumar Yadav on LinkedIn"
+                  >
+                    <Linkedin className="w-4 h-4" />
+                    Connect on LinkedIn
+                  </a>
+                </div>
+                <meta itemProp="url" content="https://www.linkedin.com/in/shivamkrydv/" />
+                <link itemProp="sameAs" href="https://www.linkedin.com/in/shivamkrydv/" />
+              </div>
+            </article>
 
-            <div className="p-6 bg-slate-50 rounded-lg text-center">
-              <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-indigo-200 to-indigo-400 flex items-center justify-center text-white font-bold">AS</div>
-              <h4 className="mt-4 font-semibold">Aman Sharma</h4>
-              <p className="text-sm text-slate-600">Product Lead</p>
-            </div>
+            {/* Founder 2 - Aman Sharma */}
+            <article className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300" itemScope itemType="https://schema.org/Person">
+              <div className="bg-gradient-to-r from-purple-600 to-pink-600 h-24"></div>
+              <div className="px-6 pb-6 -mt-12">
+                <div className="relative">
+                  <img 
+                    src="https://media.licdn.com/dms/image/v2/D5603AQFvZWO-0gYKcg/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1718910974410?e=1742428800&v=beta&t=G9Nj3U5e2btAZO7sVvl5nVVbOkVBuXDUhPE3KyAg6Sg" 
+                    alt="Aman Sharma - Co-Founder & CTO of SurveyZen"
+                    className="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover bg-gradient-to-br from-purple-200 to-purple-400"
+                    itemProp="image"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%239333ea" width="100" height="100"/><text x="50" y="60" text-anchor="middle" fill="white" font-size="32" font-weight="bold">AS</text></svg>';
+                    }}
+                  />
+                </div>
+                <div className="mt-4">
+                  <h3 className="text-xl font-bold text-slate-900" itemProp="name">Aman Sharma</h3>
+                  <p className="text-purple-600 font-medium" itemProp="jobTitle">Co-Founder & CTO</p>
+                </div>
+                <p className="mt-4 text-slate-600 text-sm leading-relaxed" itemProp="description">
+                  Experienced software engineer with expertise in building scalable web applications. 
+                  Aman leads the technical architecture at SurveyZen, ensuring robust infrastructure, 
+                  security, and seamless performance for millions of survey responses.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">Backend Architecture</span>
+                  <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">System Design</span>
+                  <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">DevOps</span>
+                </div>
+                <div className="mt-6 flex items-center gap-3">
+                  <a 
+                    href="https://www.linkedin.com/in/aman-sharma-dev01/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#0A66C2] text-white text-sm font-medium rounded-lg hover:bg-[#004182] transition-colors"
+                    itemProp="sameAs"
+                    aria-label="Connect with Aman Sharma on LinkedIn"
+                  >
+                    <Linkedin className="w-4 h-4" />
+                    Connect on LinkedIn
+                  </a>
+                </div>
+                <meta itemProp="url" content="https://www.linkedin.com/in/aman-sharma-dev01/" />
+                <link itemProp="sameAs" href="https://www.linkedin.com/in/aman-sharma-dev01/" />
+              </div>
+            </article>
+          </div>
 
-            <div className="p-6 bg-slate-50 rounded-lg text-center">
-              <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-indigo-200 to-indigo-400 flex items-center justify-center text-white font-bold">KS</div>
-              <h4 className="mt-4 font-semibold">Karan Sharma</h4>
-              <p className="text-sm text-slate-600">Research</p>
-            </div>
-
-            <div className="p-6 bg-slate-50 rounded-lg text-center">
-              <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-indigo-200 to-indigo-400 flex items-center justify-center text-white font-bold">AS</div>
-              <h4 className="mt-4 font-semibold">Aryan Singh</h4>
-              <p className="text-sm text-slate-600">Community</p>
-            </div>
+          {/* Founding Story */}
+          <div className="mt-16 max-w-3xl mx-auto text-center">
+            <h3 className="text-2xl font-bold text-slate-900 mb-4">Our Founding Story</h3>
+            <p className="text-slate-600 leading-relaxed">
+              SurveyZen was born from a simple observation: existing survey tools were either too complex 
+              for everyday users or lacked the features needed by professionals. Shivam and Aman, having 
+              worked together on various projects, decided to build a survey platform that combines 
+              simplicity with power. What started as a side project to help educators collect feedback 
+              has grown into a full-featured platform used by thousands of users worldwide.
+            </p>
           </div>
         </div>
       </section>
+
+     
 
       {/* Testimonials / Social proof */}
       <section className="max-w-6xl mx-auto px-6 py-12">
