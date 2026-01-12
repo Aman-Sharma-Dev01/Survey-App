@@ -147,14 +147,47 @@ export default function AboutSurveyZen() {
   // SEO: Set page title and meta tags
   useEffect(() => {
     document.title = 'About SurveyZen - Meet Our Founders | Shivam Kumar Yadav & Aman Sharma';
-    
+
     // Update meta description
     let metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
       metaDescription.setAttribute('content', 'Learn about SurveyZen, the AI-powered survey and quiz builder. Founded by Shivam Kumar Yadav and Aman Sharma - passionate developers building the future of feedback collection.');
     }
-    
-    // Add structured data for AboutPage
+
+    // Ensure rel=author and rel=me link elements exist for Shivam (helps identity linking)
+    const ensureLink = (rel, href) => {
+      let l = document.querySelector(`link[rel="${rel}"]`);
+      if (l) {
+        // update if different
+        if (l.getAttribute('href') !== href) l.setAttribute('href', href);
+      } else {
+        const nl = document.createElement('link');
+        nl.setAttribute('rel', rel);
+        nl.setAttribute('href', href);
+        document.head.appendChild(nl);
+      }
+    };
+    ensureLink('author', 'https://www.linkedin.com/in/shivamkrydv/');
+    ensureLink('me', 'https://www.linkedin.com/in/shivamkrydv/');
+
+    // Ensure profile meta tags exist
+    const ensureMeta = (name, content) => {
+      let m = document.querySelector(`meta[name="${name}"]`);
+      if (m) {
+        if (m.getAttribute('content') !== content) m.setAttribute('content', content);
+      } else {
+        const nm = document.createElement('meta');
+        nm.setAttribute('name', name);
+        nm.setAttribute('content', content);
+        document.head.appendChild(nm);
+      }
+    };
+    ensureMeta('profile:first_name', 'Shivam');
+    ensureMeta('profile:last_name', 'Kumar Yadav');
+    ensureMeta('profile:username', 'shivamkrydv');
+    ensureMeta('article:author', 'https://www.linkedin.com/in/shivamkrydv/');
+
+    // Add structured data for AboutPage (JSON-LD)
     const script = document.createElement('script');
     script.type = 'application/ld+json';
     script.id = 'about-page-schema';
@@ -185,18 +218,27 @@ export default function AboutSurveyZen() {
         ]
       }
     });
-    
+
     // Only add if not already present
     if (!document.getElementById('about-page-schema')) {
       document.head.appendChild(script);
     }
-    
+
     return () => {
       // Cleanup on unmount
       const existingScript = document.getElementById('about-page-schema');
       if (existingScript) {
         existingScript.remove();
       }
+      // remove rel links/meta added by this hook if present
+      const la = document.querySelectorAll('link[rel="author"], link[rel="me"]');
+      la.forEach((el) => {
+        if (el && el.getAttribute('href') && el.getAttribute('href').includes('shivamkrydv')) el.remove();
+      });
+      ['profile:first_name','profile:last_name','profile:username','article:author'].forEach((n) => {
+        const m = document.querySelector(`meta[name="${n}"]`);
+        if (m && m.getAttribute('content') && m.getAttribute('content').includes('Shivam')) m.remove();
+      });
     };
   }, []);
 
