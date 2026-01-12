@@ -363,7 +363,7 @@ n
               <div className="px-6 pb-6 -mt-12">
                 <div className="relative">
                   <img 
-                    src="https://media.licdn.com/dms/image/v2/D4D03AQGRxT9dH59vhg/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1718821044029?e=1742428800&v=beta&t=pChKLLU-HJ9aW0rMwfA9wPa4kkBiNxcb8bZiZaKcKTg" 
+                    src="/team/shivam-kumar-yadav.jpg" 
                     alt="Shivam Kumar Yadav - Co-Founder & CEO of SurveyZen"
                     className="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover bg-gradient-to-br from-indigo-200 to-indigo-400"
                     itemProp="image"
@@ -411,7 +411,7 @@ n
               <div className="px-6 pb-6 -mt-12">
                 <div className="relative">
                   <img 
-                    src="https://media.licdn.com/dms/image/v2/D5603AQFvZWO-0gYKcg/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1718910974410?e=1742428800&v=beta&t=G9Nj3U5e2btAZO7sVvl5nVVbOkVBuXDUhPE3KyAg6Sg" 
+                    src="/team/aman-sharma.jpg" 
                     alt="Aman Sharma - Co-Founder & CTO of SurveyZen"
                     className="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover bg-gradient-to-br from-purple-200 to-purple-400"
                     itemProp="image"
