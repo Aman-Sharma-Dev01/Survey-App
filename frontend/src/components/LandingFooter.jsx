@@ -6,33 +6,33 @@ const LandingFooter = () => {
     {
       title: 'Product',
       links: [
-        { name: 'Features', href: '#features' },
-        { name: 'Pricing', href: '#pricing' },
+        { name: 'Features', href: '/features' },
+        { name: 'Pricing', href: '/pricing' },
         
-        { name: 'Examples', href: '#' },
+        { name: 'Examples', href: '/' },
       ],
     },
     {
       title: 'Company',
       links: [
-        { name: 'About Us', href: '#about' },
-        { name: 'Blog', href: '#/blog' },
-        { name: 'Contact', href: '#contact' },
+        { name: 'About Us', href: '/about' },
+        { name: 'Blog', href: '/blog' },
+        { name: 'Contact', href: '/contact' },
       ],
     },
     {
       title: 'Resources',
       links: [
-        { name: 'Help Center', href: '#' },
-        { name: 'Templates', href: '#' },
-        { name: 'Security', href: '#' },
+        { name: 'Help Center', href: '/' },
+        { name: 'Templates', href: '/' },
+        { name: 'Security', href: '/' },
       ],
     },
     {
       title: 'Legal',
       links: [
-        { name: 'Privacy Policy', href: '#' },
-        { name: 'Terms of Service', href: '#' },
+        { name: 'Privacy Policy', href: '/' },
+        { name: 'Terms of Service', href: '/' },
       ],
     },
   ];

@@ -63,7 +63,7 @@ const AnalysisPage = ({ surveyId }) => {
 
   // Copy the public share link
   const copyShareLink = () => {
-    const shareURL = `${window.location.origin}/#/share/${surveyId}`;
+    const shareURL = `${window.location.origin}/share/${surveyId}`;
     navigator.clipboard.writeText(shareURL);
     alert("Public share link copied!");
   };

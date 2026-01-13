@@ -8,7 +8,7 @@ const QuizCard = ({ quiz, onPublish, onDelete, onAnalytics, onEdit, onCopyLink, 
 
     const handleCopy = async () => {
         setCopying(true);
-        const link = `${window.location.origin}/#quiz/${quiz._id}`;
+        const link = `${window.location.origin}/quiz/${quiz._id}`;
         try {
             await navigator.clipboard.writeText(link);
             setTimeout(() => setCopying(false), 1500);

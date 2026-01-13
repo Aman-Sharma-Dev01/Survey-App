@@ -15,10 +15,10 @@ const LandingNavbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { name: 'Features', href: '#features' },
-    { name: 'How it Works', href: '#how-it-works' },
-    { name: 'Pricing', href: '#pricing' },
-    { name: 'Blog', href: '#blog' }, // ⭐ Added
+    { name: 'Features', href: '/features' },
+    { name: 'How it Works', href: '/how-it-works' },
+    { name: 'Pricing', href: '/pricing' },
+    { name: 'Blog', href: '/blog' }, // ⭐ Added
   ];
 
   return (
@@ -45,14 +45,14 @@ const LandingNavbar = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-3">
-            <a href="#contact" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+            <a href="/contact" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
               Contact
             </a>
-             <a href="#login" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+             <a href="/login" className="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
               Log In
             </a>
             
-            <a href="#register" className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
+            <a href="/register" className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
               Sign Up Free
             </a>
           </div>
@@ -84,10 +84,10 @@ const LandingNavbar = () => {
           </div>
 
           <div className="px-4 py-3 border-t border-gray-200 space-y-3">
-            <a href="#register" className="block text-center bg-indigo-600 text-white px-4 py-2 rounded-md text-base hover:bg-indigo-700">
+            <a href="/register" className="block text-center bg-indigo-600 text-white px-4 py-2 rounded-md text-base hover:bg-indigo-700">
               Sign Up Free
             </a>
-            <a href="#login" className="block text-center text-gray-600 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-md text-base">
+            <a href="/login" className="block text-center text-gray-600 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-md text-base">
               Log In
             </a>
           </div>

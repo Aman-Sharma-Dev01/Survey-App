@@ -214,7 +214,7 @@ const CodingTest = ({ navigate }) => {
   };
 
   const copyShareLink = async () => {
-    const url = `${window.location.origin}/#/coding-test`;
+    const url = `${window.location.origin}/coding-test`;
     try {
       await navigator.clipboard.writeText(url);
       setShareStatus('Link copied');
@@ -415,7 +415,7 @@ const CodingTest = ({ navigate }) => {
               <div className="flex items-center gap-2">
                 <input
                   readOnly
-                  value={`${window.location.origin}/#/coding-test`}
+                  value={`${window.location.origin}/coding-test`}
                   className="flex-1 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-700"
                 />
                 <button

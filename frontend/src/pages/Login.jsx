@@ -321,7 +321,7 @@ const LoginPage = ({ navigate }) => {
                         <p className="text-sm text-gray-600">
                             Don't have an account?{' '}
                             <a 
-                                href="#register" 
+                                href="/register" 
                                 onClick={(e) => { e.preventDefault(); navigate('register'); }} 
                                 className="font-bold text-indigo-600 hover:text-indigo-500 transition-colors"
                             >

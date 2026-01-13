@@ -221,7 +221,7 @@ const Navbar = ({ currentPage, handleNavigate }) => {
     return (
         <header className="bg-indigo-700 shadow-lg sticky top-0 z-20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
-                <a href="#home" className="text-2xl font-extrabold text-white tracking-wider">
+                <a href="/home" className="text-2xl font-extrabold text-white tracking-wider">
                     SurveyZen
                 </a>
                 

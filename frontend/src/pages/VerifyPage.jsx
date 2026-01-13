@@ -23,7 +23,7 @@ const ErrorIcon = () => (
 );
 
 /**
- * Helper to extract token from hash or query
+ * Helper to extract token from pathname or query
  */
 const getTokenFromLocation = () => {
     try {
@@ -32,14 +32,13 @@ const getTokenFromLocation = () => {
         if (qToken) return qToken;
     } catch (e) {}
 
-    const hash = window.location.hash || '';
-    const parts = hash.replace(/^#\/?/, '').split('/');
-    const verifyIndex = parts.indexOf('verify');
-    if (verifyIndex !== -1 && parts.length > verifyIndex + 1) {
-        return parts[verifyIndex + 1];
+    // Try pathname for clean URLs like /verify/TOKEN
+    const pathname = window.location.pathname || '';
+    const pathParts = pathname.replace(/^\//, '').split('/');
+    if (pathParts[0] === 'verify' && pathParts[1]) {
+        return pathParts[1];
     }
 
-    if (parts[0] === 'verify' && parts[1]) return parts[1];
     return null;
 };
 

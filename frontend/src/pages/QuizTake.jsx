@@ -689,7 +689,7 @@ const QuizTakePage = ({ quizId }) => {
                 <p className="text-sm text-gray-600 mb-4">Reference ID: <span className="font-mono text-gray-800">{results.id}</span></p>
                 <div className="mt-6">
                     <button
-                        onClick={() => window.location.hash = '#'}
+                        onClick={() => { window.history.pushState({}, '', '/'); window.dispatchEvent(new PopStateEvent('popstate')); }}
                         className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium"
                     >
                         Back to Home
@@ -767,7 +767,7 @@ const QuizTakePage = ({ quizId }) => {
 
                 <div className="mt-8 text-center">
                     <button
-                        onClick={() => window.location.hash = '#'}
+                        onClick={() => { window.history.pushState({}, '', '/'); window.dispatchEvent(new PopStateEvent('popstate')); }}
                         className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium"
                     >
                         Back to Home

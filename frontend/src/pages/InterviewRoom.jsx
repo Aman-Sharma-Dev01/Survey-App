@@ -504,7 +504,7 @@ const InterviewRoom = ({ interviewId, navigate }) => {
     };
 
     const copyRoomLink = () => {
-        const link = `${window.location.origin}/#interview-room/${interviewId}`;
+        const link = `${window.location.origin}/interview-room/${interviewId}`;
         navigator.clipboard.writeText(link);
         setCopied(true);
         toast.success('Link copied!');

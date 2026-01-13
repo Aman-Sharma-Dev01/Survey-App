@@ -22,7 +22,8 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setToken(null);
         setCredits(0);
-        window.location.hash = '#login';
+        window.history.pushState({}, '', '/login');
+        window.dispatchEvent(new PopStateEvent('popstate'));
     }, []);
 
     // Fetch user profile to get credits

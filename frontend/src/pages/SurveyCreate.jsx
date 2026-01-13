@@ -94,7 +94,7 @@ const SurveyCreatePage = ({ handleNavigate }) => {
     try {
       await fetchApi('/surveys', 'POST', { title, description, questions: payloadQuestions }, true);
       setStatus('Survey created successfully! Redirecting to dashboard...');
-      setTimeout(() => window.location.hash = '#dashboard' , 1200);
+      setTimeout(() => { window.history.pushState({}, '', '/dashboard'); window.dispatchEvent(new PopStateEvent('popstate')); }, 1200);
     } catch (err) {
       setStatus(`Error creating survey: ${err.message}`);
     } finally {

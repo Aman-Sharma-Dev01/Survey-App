@@ -308,12 +308,12 @@ const CertificateVerify = ({ certificateId, navigate }) => {
                                 </p>
                                 <p className="text-[10px] sm:text-xs text-center mt-1">
                                     <a 
-                                        href={`https://surveyzen.live/#/verify-certificate/${certificate.certificateId}`}
+                                        href={`https://surveyzen.live/verify-certificate/${certificate.certificateId}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-amber-600 hover:text-amber-700 underline print:text-amber-700"
                                     >
-                                        https://surveyzen.live/#/verify-certificate/{certificate.certificateId}
+                                        https://surveyzen.live/verify-certificate/{certificate.certificateId}
                                     </a>
                                 </p>
                             </div>

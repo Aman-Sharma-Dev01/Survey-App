@@ -9,15 +9,15 @@ const getTokenFromLocation = () => {
     if (qToken) return qToken;
   } catch (e) {}
 
-  const hash = window.location.hash || '';
-  const parts = hash.replace(/^#\/?/, '').split('/');
-  const resetIndex = parts.indexOf('reset-password');
-  if (resetIndex !== -1 && parts.length > resetIndex + 1) {
-    return parts[resetIndex + 1];
+  // Try pathname for clean URLs like /reset-password/TOKEN
+  const pathname = window.location.pathname || '';
+  const pathParts = pathname.replace(/^\//, '').split('/');
+  if (pathParts[0] === 'reset-password' && pathParts[1]) {
+    return pathParts[1];
   }
-  // also try 'reset' or 'reset/<token>'
-  if (parts[0] === 'reset' && parts[1]) return parts[1];
-  if (parts[0] === 'reset-password' && parts[1]) return parts[1];
+  if (pathParts[0] === 'reset' && pathParts[1]) {
+    return pathParts[1];
+  }
 
   return null;
 };

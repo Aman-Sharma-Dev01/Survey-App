@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 const SurveyCard = ({ survey, onAnalyze, onPublish, onUnpublish, onDelete }) => {
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
 
-    const surveyLink = `${window.location.origin}/#respond/${survey._id}`;
+    const surveyLink = `${window.location.origin}/respond/${survey._id}`;
     const qrURL = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
         surveyLink
     )}`;

@@ -413,7 +413,8 @@ const App = () => {
 
   const handleBuyClick = (plan) => {
     if (!isAuthenticated) {
-      window.location.hash = 'login';
+      window.history.pushState({}, '', '/login');
+      window.dispatchEvent(new PopStateEvent('popstate'));
       return;
     }
     setSelectedPlan(plan);
@@ -553,7 +554,7 @@ const App = () => {
               Our team is happy to answer your questions. We usually reply
               within a few hours.
             </p>
-            <a href="#contact" className="h-auto w-max bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm hover:shadow-md flex items-center gap-2 mx-auto">
+            <a href="/contact" className="h-auto w-max bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm hover:shadow-md flex items-center gap-2 mx-auto">
               {/* <HelpCircle size={18} /> */}
               Contact Support
             </a>

@@ -118,7 +118,7 @@ const Hero = () => {
             {/* CTA */}
             <div className="mt-8 sm:mt-10 flex justify-center md:justify-start">
               <a
-                href="#register"
+                href="/register"
                 className="bg-indigo-600 text-white px-6 sm:px-8 py-3 rounded-md text-base sm:text-lg hover:bg-indigo-700 shadow-lg transition duration-300"
               >
                 Create Your First Survey
@@ -290,7 +290,7 @@ const SurveysSection = () => {
               ))}
             </div>
 
-            <a href="#register" className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors">
+            <a href="/register" className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors">
               Create Your First Survey
               <ArrowRight className="h-4 w-4" />
             </a>
@@ -444,7 +444,7 @@ const QuizzesSection = () => {
               ))}
             </div>
 
-            <a href="#register" className="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-purple-700 transition-colors">
+            <a href="/register" className="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-purple-700 transition-colors">
               Create Your First Quiz
               <ArrowRight className="h-4 w-4" />
             </a>
@@ -748,7 +748,7 @@ const PricingPreview = () => {
         </div>
 
         <p className="text-center text-sm text-gray-500 mt-8">
-          <a href="#pricing" className="text-indigo-600 hover:underline font-medium">View full pricing details →</a>
+          <a href="/pricing" className="text-indigo-600 hover:underline font-medium">View full pricing details →</a>
         </p>
       </div>
     </section>
@@ -772,11 +772,11 @@ const FinalCTA = () => (
       </p>
 
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="#register" className="inline-flex items-center justify-center gap-2 bg-white text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-xl hover:shadow-white/20 transition-all duration-300 transform hover:-translate-y-1">
+        <a href="/register" className="inline-flex items-center justify-center gap-2 bg-white text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-xl hover:shadow-white/20 transition-all duration-300 transform hover:-translate-y-1">
           Start Free Today
           <ArrowRight className="h-5 w-5" />
         </a>
-        <a href="#contact" className="inline-flex items-center justify-center gap-2 border-2 border-white/30 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white/10 transition-all duration-300">
+        <a href="/contact" className="inline-flex items-center justify-center gap-2 border-2 border-white/30 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white/10 transition-all duration-300">
           Contact Sales
         </a>
       </div>
@@ -794,37 +794,37 @@ const Footer = () => {
     {
       title: 'Product',
       links: [
-        { name: 'Features', href: '#features' },
-        { name: 'Surveys', href: '#surveys' },
-        { name: 'Quizzes', href: '#quizzes' },
-        { name: 'Pricing', href: '#pricing' },
+        { name: 'Features', href: '/features' },
+        { name: 'Surveys', href: '/surveys' },
+        { name: 'Quizzes', href: '/quizzes' },
+        { name: 'Pricing', href: '/pricing' },
       ],
     },
     {
       title: 'Company',
       links: [
-        { name: 'About Us', href: '#about' },
-        { name: 'Blog', href: '#/blog' },
-        { name: 'Contact', href: '#contact' },
-        { name: 'Careers', href: '#' },
+        { name: 'About Us', href: '/about' },
+        { name: 'Blog', href: '/blog' },
+        { name: 'Contact', href: '/contact' },
+        { name: 'Careers', href: '/' },
       ],
     },
     {
       title: 'Resources',
       links: [
-        { name: 'Help Center', href: '#' },
-        { name: 'Templates', href: '#' },
-        { name: 'API Docs', href: '#' },
-        { name: 'Security', href: '#' },
+        { name: 'Help Center', href: '/' },
+        { name: 'Templates', href: '/' },
+        { name: 'API Docs', href: '/' },
+        { name: 'Security', href: '/' },
       ],
     },
     {
       title: 'Legal',
       links: [
-        { name: 'Privacy Policy', href: '#' },
-        { name: 'Terms of Service', href: '#' },
-        { name: 'Cookie Policy', href: '#' },
-        { name: 'GDPR', href: '#' },
+        { name: 'Privacy Policy', href: '/' },
+        { name: 'Terms of Service', href: '/' },
+        { name: 'Cookie Policy', href: '/' },
+        { name: 'GDPR', href: '/' },
       ],
     },
   ];
@@ -837,7 +837,7 @@ const Footer = () => {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
             {/* Brand Column */}
             <div className="col-span-2 md:col-span-1">
-              <a href="#" className="flex items-center gap-2 mb-4">
+              <a href="/" className="flex items-center gap-2 mb-4">
                 <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-2 rounded-xl">
                   <Rocket className="h-5 w-5 text-white" />
                 </div>
@@ -848,7 +848,7 @@ const Footer = () => {
               </p>
               <div className="flex gap-3">
                 {['twitter', 'linkedin', 'github'].map((social) => (
-                  <a key={social} href="#" className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-indigo-600 transition-all">
+                  <a key={social} href="/" className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-indigo-600 transition-all">
                     <Globe className="h-4 w-4" />
                   </a>
                 ))}

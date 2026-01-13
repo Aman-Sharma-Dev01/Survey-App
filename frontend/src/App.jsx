@@ -79,18 +79,18 @@ const ADMIN_EMAIL = 'support@surveyzen.live';
 import Navbar from './components/Navbar';
 import OfflineBanner from './components/OfflineBanner';
 
-// Helper for navigation (hash routing)
+// Helper for navigation (clean URLs using pushState)
 const navigate = (path) => {
-  const cleaned = String(path).replace(/^#/, '');
-  window.location.hash = cleaned;
+  const cleaned = '/' + String(path).replace(/^\/|#/g, '');
+  window.history.pushState({}, '', cleaned);
+  window.dispatchEvent(new PopStateEvent('popstate'));
 };
 
 const App = () => {
-  // Support both hash-based routing (existing) and plain pathname routes
+  // Clean URL routing using pathname
   const getInitialPath = () => {
-    const hash = window.location.hash.slice(1);
-    const pathname = window.location.pathname === '/' ? '' : window.location.pathname;
-    return hash || pathname || '/';
+    const pathname = window.location.pathname;
+    return pathname || '/';
   };
 
   const [currentPath, setCurrentPath] = useState(getInitialPath());
@@ -102,20 +102,17 @@ const App = () => {
     return cleaned === '' ? [''] : cleaned.split('/');
   };
 
-  // Listen for hash changes
+  // Listen for navigation changes
   useEffect(() => {
     const handleLocationChange = () => {
-      const hash = window.location.hash.slice(1);
-      const pathname = window.location.pathname === '/' ? '' : window.location.pathname;
-      setCurrentPath(hash || pathname || '/');
+      const pathname = window.location.pathname;
+      setCurrentPath(pathname || '/');
     };
 
-    window.addEventListener('hashchange', handleLocationChange);
     window.addEventListener('popstate', handleLocationChange);
     // Run once to initialize
     handleLocationChange();
     return () => {
-      window.removeEventListener('hashchange', handleLocationChange);
       window.removeEventListener('popstate', handleLocationChange);
     };
   }, []);
