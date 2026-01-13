@@ -405,7 +405,7 @@ n
               <div className="px-6 pb-6 -mt-12">
                 <div className="relative">
                   <img 
-                    src="/team/shivam-kumar-yadav.jpg" 
+                    src="/team/shivam-kumar-yadav.jpeg" 
                     alt="Shivam Kumar Yadav - Co-Founder & CEO of SurveyZen"
                     className="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover bg-gradient-to-br from-indigo-200 to-indigo-400"
                     itemProp="image"
