@@ -86,9 +86,14 @@ const navigate = (path) => {
 };
 
 const App = () => {
-  const [currentPath, setCurrentPath] = useState(
-    window.location.hash.slice(1) || '/'
-  );
+  // Support both hash-based routing (existing) and plain pathname routes
+  const getInitialPath = () => {
+    const hash = window.location.hash.slice(1);
+    const pathname = window.location.pathname === '/' ? '' : window.location.pathname;
+    return hash || pathname || '/';
+  };
+
+  const [currentPath, setCurrentPath] = useState(getInitialPath());
 
   const authState = useAuth();
 
@@ -99,14 +104,20 @@ const App = () => {
 
   // Listen for hash changes
   useEffect(() => {
-    const handleHashChange = () => {
-      setCurrentPath(window.location.hash.slice(1) || '/');
+    const handleLocationChange = () => {
+      const hash = window.location.hash.slice(1);
+      const pathname = window.location.pathname === '/' ? '' : window.location.pathname;
+      setCurrentPath(hash || pathname || '/');
     };
 
-    window.addEventListener('hashchange', handleHashChange);
-    handleHashChange();
-    return () =>
-      window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    window.addEventListener('popstate', handleLocationChange);
+    // Run once to initialize
+    handleLocationChange();
+    return () => {
+      window.removeEventListener('hashchange', handleLocationChange);
+      window.removeEventListener('popstate', handleLocationChange);
+    };
   }, []);
 
   // Protect private pages
