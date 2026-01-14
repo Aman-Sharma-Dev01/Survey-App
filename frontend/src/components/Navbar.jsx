@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LogOut, PlusCircle, LayoutDashboard, HelpCircle, Menu, X, Coins, ShoppingCart, Crown, Gift, Ticket, CheckCircle, Loader, RefreshCw, GraduationCap, Sparkles, Zap, FileText, BarChart3, Users, Shield } from 'lucide-react';
+import { LogOut, PlusCircle, LayoutDashboard, HelpCircle, Menu, X, Coins, ShoppingCart, Crown, Gift, Ticket, CheckCircle, Loader, RefreshCw, GraduationCap, Sparkles, Zap, FileText, BarChart3, Users, Shield, PenLine } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { applyCoupon } from '../services/couponService';
 
@@ -221,7 +221,7 @@ const Navbar = ({ currentPage, handleNavigate }) => {
     return (
         <header className="bg-indigo-700 shadow-lg sticky top-0 z-20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
-                <a href="/home" className="text-2xl font-extrabold text-white tracking-wider">
+                <a href="#home" className="text-2xl font-extrabold text-white tracking-wider">
                     SurveyZen
                 </a>
                 
@@ -229,14 +229,8 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                 <nav className="hidden md:flex space-x-4 items-center">
                     {isAuthenticated ? (
                         <>
-                            <NavButton
-                                Icon={LayoutDashboard}
-                                label="Home"
-                                target={isAuthenticated ? 'home' : ''}
-                                onClick={() => handleNavigate(isAuthenticated ? 'home' : '')}
-                                current={currentPage}
-                            />
-                            {/* Write Blog removed per request */}
+                            <NavButton Icon={LayoutDashboard} label="Home" target="home" onClick={() => handleNavigate('home')} current={currentPage} />
+                            <NavButton Icon={PenLine} label="Write Blog" target="blog-create" onClick={() => handleNavigate('blog-create')} current={currentPage} />
                             
                             {/* Credits Display */}
                             <div className="flex items-center px-3 py-1.5 bg-indigo-800 rounded-lg">
@@ -444,12 +438,19 @@ const Navbar = ({ currentPage, handleNavigate }) => {
                                 <NavButton 
                                     Icon={LayoutDashboard} 
                                     label="Home" 
-                                    target={isAuthenticated ? 'home' : ''} 
-                                    onClick={() => handleMobileNavigate(isAuthenticated ? 'home' : '')} 
+                                    target="home" 
+                                    onClick={() => handleMobileNavigate('home')} 
                                     current={currentPage}
                                     mobile
                                 />
-                                {/* Write Blog removed from mobile menu per request */}
+                                <NavButton 
+                                    Icon={PenLine} 
+                                    label="Write Blog" 
+                                    target="blog-create" 
+                                    onClick={() => handleMobileNavigate('blog-create')} 
+                                    current={currentPage}
+                                    mobile
+                                />
                                 <button
                                     onClick={() => handleMobileNavigate('pricing')}
                                     className="w-full px-3 py-2 text-left text-sm font-medium text-yellow-400 hover:bg-indigo-700 rounded-lg flex items-center"
