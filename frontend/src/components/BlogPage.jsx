@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
+import LandingFooter from '../components/LandingFooter.jsx';
+import LandingNavbar from '../components/LandingNavbar.jsx';
 import { 
   BookOpen, 
   Calendar, 
@@ -516,6 +518,7 @@ export default function BlogPage({ navigate, slug }) {
   // ---------------------- LIST VIEW ----------------------
   return (
     <div className="min-h-screen bg-gray-50">
+      <LandingNavbar />
       {/* Header */}
       <header className="bg-gradient-to-b from-indigo-600 to-indigo-700 text-white py-16 lg:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center">
@@ -550,6 +553,7 @@ export default function BlogPage({ navigate, slug }) {
           )}
         </div>
       </header>
+      
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
         <div className="lg:grid lg:grid-cols-4 lg:gap-8">
@@ -708,6 +712,7 @@ export default function BlogPage({ navigate, slug }) {
           </div>
         </div>
       </main>
+        <LandingFooter />
     </div>
   );
 }

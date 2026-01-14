@@ -39,6 +39,7 @@ import {
 
 import { blogPostsMeta } from "./BlogPage.jsx";
 import LandingNavbar from './LandingNavbar.jsx';
+import LandingFooter from './LandingFooter.jsx';
 
 // ================= NAVBAR =================
 <LandingNavbar/>
@@ -788,137 +789,6 @@ const FinalCTA = () => (
   </section>
 );
 
-// ================= FOOTER =================
-const Footer = () => {
-  const footerSections = [
-    {
-      title: 'Product',
-      links: [
-        { name: 'Features', href: '/features' },
-        { name: 'Surveys', href: '/surveys' },
-        { name: 'Quizzes', href: '/quizzes' },
-        { name: 'Pricing', href: '/pricing' },
-      ],
-    },
-    {
-      title: 'Company',
-      links: [
-        { name: 'About Us', href: '/about' },
-        { name: 'Blog', href: '/blog' },
-        { name: 'Contact', href: '/contact' },
-        { name: 'Careers', href: '/' },
-      ],
-    },
-    {
-      title: 'Resources',
-      links: [
-        { name: 'Help Center', href: '/' },
-        { name: 'Templates', href: '/' },
-        { name: 'API Docs', href: '/' },
-        { name: 'Security', href: '/' },
-      ],
-    },
-    {
-      title: 'Legal',
-      links: [
-        { name: 'Privacy Policy', href: '/' },
-        { name: 'Terms of Service', href: '/' },
-        { name: 'Cookie Policy', href: '/' },
-        { name: 'GDPR', href: '/' },
-      ],
-    },
-  ];
-
-  return (
-    <footer className="bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Main Footer */}
-        <div className="py-12 lg:py-16">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
-            {/* Brand Column */}
-            <div className="col-span-2 md:col-span-1">
-              <a href="/" className="flex items-center gap-2 mb-4">
-                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-2 rounded-xl">
-                  <Rocket className="h-5 w-5 text-white" />
-                </div>
-                <span className="text-xl font-bold text-white">SurveyZen</span>
-              </a>
-              <p className="text-gray-400 text-sm mb-4">
-                Create stunning surveys and quizzes in minutes with AI-powered tools.
-              </p>
-              <div className="flex gap-3">
-                {['twitter', 'linkedin', 'github'].map((social) => (
-                  <a key={social} href="/" className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-indigo-600 transition-all">
-                    <Globe className="h-4 w-4" />
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            {/* Links Columns */}
-            {footerSections.map((section) => (
-              <div key={section.title}>
-                <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
-                  {section.title}
-                </h3>
-                <ul className="space-y-3">
-                  {section.links.map((link) => (
-                    <li key={link.name}>
-                      <a href={link.href} className="text-gray-400 hover:text-white transition-colors text-sm">
-                        {link.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Badges Section */}
-        <div className="py-8 border-t border-gray-800">
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
-            <a
-              href="//www.dmca.com/Protection/Status.aspx?ID=3b429a82-a1ac-45e2-8d4e-29804753a560"
-              title="DMCA.com Protection Status"
-              className="hover:opacity-80 transition-opacity"
-            >
-              <img
-                src="https://images.dmca.com/Badges/DMCA_badge_trn_60w.png?ID=3b429a82-a1ac-45e2-8d4e-29804753a560"
-                alt="DMCA.com Protection Status"
-              />
-            </a>
-            
-            <a
-              href="https://www.producthunt.com/products/surveyzen?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-surveyzen"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:opacity-80 transition-opacity"
-            >
-              <img
-                src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1041372&theme=light&t=1763890037404"
-                alt="SurveyZen - The minimalist survey builder for modern creators. | Product Hunt"
-                style={{ width: '180px', height: '40px' }}
-              />
-            </a>
-          </div>
-        </div>
-
-        {/* Copyright */}
-        <div className="py-6 border-t border-gray-800">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-gray-400 text-sm">
-              &copy; {new Date().getFullYear()} SurveyZen. All rights reserved.
-            </p>
-            <p className="text-gray-500 text-sm">
-              Made with ❤️ for better data collection
-            </p>
-          </div>
-        </div>
-      </div>
-    </footer>
-  );
-};
 
 // ================= MAIN LANDING PAGE =================
 export default function LandingPage({ navigate }) {
@@ -936,7 +806,7 @@ export default function LandingPage({ navigate }) {
         <LatestBlogPosts />
         <FinalCTA />
       </main>
-      <Footer />
+      <LandingFooter />
     </div>
   );
 }
