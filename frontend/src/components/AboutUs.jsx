@@ -93,7 +93,7 @@ export default function AboutSurveyZen() {
           {
             "@type": "Person",
             "name": "Aman Sharma",
-            "jobTitle": "Co-Founder & CTO",
+            "jobTitle": "Co-Founder & CEO",
             "url": "https://www.linkedin.com/in/aman-sharma-dev01/",
             "sameAs": ["https://www.linkedin.com/in/aman-sharma-dev01/"]
           }
