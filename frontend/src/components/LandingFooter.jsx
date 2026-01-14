@@ -15,7 +15,7 @@ const LandingFooter = () => {
     {
       title: 'Company',
       links: [
-        { name: 'About Us', href: '' },
+        { name: 'About Us', href: '/about' },
         { name: 'Blog', href: '/blog' },
         { name: 'Contact', href: '/contact' },
       ],
