@@ -81,7 +81,11 @@ import OfflineBanner from './components/OfflineBanner';
 
 // Helper for navigation (clean URLs using pushState)
 const navigate = (path) => {
-  const cleaned = '/' + String(path).replace(/^\/|#/g, '');
+  let cleaned = '/' + String(path).replace(/^\/|#/g, '');
+  // Remove trailing slash (except for root path)
+  if (cleaned !== '/' && cleaned.endsWith('/')) {
+    cleaned = cleaned.slice(0, -1);
+  }
   window.history.pushState({}, '', cleaned);
   window.dispatchEvent(new PopStateEvent('popstate'));
 };
@@ -89,7 +93,13 @@ const navigate = (path) => {
 const App = () => {
   // Clean URL routing using pathname
   const getInitialPath = () => {
-    const pathname = window.location.pathname;
+    let pathname = window.location.pathname;
+    // Normalize: remove trailing slash (except for root)
+    if (pathname !== '/' && pathname.endsWith('/')) {
+      pathname = pathname.slice(0, -1);
+      // Redirect to normalized URL without trailing slash
+      window.history.replaceState({}, '', pathname + window.location.search + window.location.hash);
+    }
     return pathname || '/';
   };
 
@@ -105,7 +115,13 @@ const App = () => {
   // Listen for navigation changes
   useEffect(() => {
     const handleLocationChange = () => {
-      const pathname = window.location.pathname;
+      let pathname = window.location.pathname;
+      // Normalize: remove trailing slash (except for root)
+      if (pathname !== '/' && pathname.endsWith('/')) {
+        pathname = pathname.slice(0, -1);
+        // Redirect to normalized URL without trailing slash
+        window.history.replaceState({}, '', pathname + window.location.search + window.location.hash);
+      }
       setCurrentPath(pathname || '/');
     };
 

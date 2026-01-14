@@ -1,14 +1,26 @@
 // SurveyZen Service Worker - Handles offline functionality
-const CACHE_NAME = 'surveyzen-offline-v1';
+// IMPORTANT: Increment version whenever you deploy new changes to force cache refresh
+const CACHE_VERSION = 'v3';
+const CACHE_NAME = `surveyzen-offline-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
-// Files to cache for offline use
+// Files to cache for offline use - only static assets, NOT HTML pages
 const PRECACHE_ASSETS = [
     '/offline.html',
     '/favicon.ico',
     '/logo.svg',
     '/android-chrome-192x192.png'
 ];
+
+// Normalize URLs - remove trailing slashes for consistency
+const normalizeUrl = (url) => {
+    const urlObj = new URL(url);
+    // Remove trailing slash except for root
+    if (urlObj.pathname !== '/' && urlObj.pathname.endsWith('/')) {
+        urlObj.pathname = urlObj.pathname.slice(0, -1);
+    }
+    return urlObj.href;
+};
 
 // Install event - cache offline page
 self.addEventListener('install', (event) => {
@@ -45,11 +57,25 @@ self.addEventListener('activate', (event) => {
 });
 
 // Fetch event - serve offline page when network fails
+// NETWORK-FIRST strategy for HTML to always get fresh content
 self.addEventListener('fetch', (event) => {
+    const requestUrl = new URL(event.request.url);
+    
+    // Skip caching for API requests and external resources
+    if (requestUrl.origin !== location.origin || 
+        requestUrl.pathname.startsWith('/api')) {
+        return;
+    }
+
     // Only handle navigation requests (page loads)
     if (event.request.mode === 'navigate') {
         event.respondWith(
-            fetch(event.request)
+            // Always try network first for navigation - ensures fresh content
+            fetch(event.request, { cache: 'no-store' })
+                .then((response) => {
+                    // Got a response from network, return it
+                    return response;
+                })
                 .catch(() => {
                     // Network failed, serve offline page
                     return caches.open(CACHE_NAME)
@@ -61,7 +87,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // For non-navigation requests, try network first, then cache
+    // For non-navigation requests (assets), try network first, then cache
     event.respondWith(
         fetch(event.request)
             .catch(() => {

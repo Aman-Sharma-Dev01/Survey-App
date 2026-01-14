@@ -1,1 +1,5 @@
+# Redirect trailing slashes to non-trailing slash versions
+/*/ /:splat 301
+
+# SPA fallback - all routes go to index.html
 /* /index.html 200
