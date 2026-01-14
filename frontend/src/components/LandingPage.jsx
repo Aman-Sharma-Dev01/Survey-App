@@ -605,7 +605,7 @@ const LatestBlogPosts = () => {
               Expert tips on surveys, quizzes, and data-driven decision making.
             </p>
           </div>
-          <a href="#/blog" className="mt-4 md:mt-0 inline-flex items-center gap-2 text-indigo-600 font-semibold hover:text-indigo-700">
+          <a href="/blog" className="mt-4 md:mt-0 inline-flex items-center gap-2 text-indigo-600 font-semibold hover:text-indigo-700">
             View All Articles
             <ArrowRight className="h-4 w-4" />
           </a>
