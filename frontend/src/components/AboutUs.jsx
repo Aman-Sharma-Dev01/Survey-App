@@ -336,7 +336,7 @@ n
                 <div className="relative">
                   <img 
                     src="/team/aman-sharma.jpg" 
-                    alt="Aman Sharma - Co-Founder & CTO of SurveyZen"
+                    alt="Aman Sharma - Co-Founder & CEO of SurveyZen"
                     className="w-24 h-24 rounded-full border-4 border-white shadow-md object-cover bg-gradient-to-br from-purple-200 to-purple-400"
                     itemProp="image"
                     onError={(e) => {
@@ -347,7 +347,7 @@ n
                 </div>
                 <div className="mt-4">
                   <h3 className="text-xl font-bold text-slate-900" itemProp="name">Aman Sharma</h3>
-                  <p className="text-purple-600 font-medium" itemProp="jobTitle">Co-Founder & CTO</p>
+                  <p className="text-purple-600 font-medium" itemProp="jobTitle">Co-Founder & CEO</p>
                 </div>
                 <p className="mt-4 text-slate-600 text-sm leading-relaxed" itemProp="description">
                   Experienced software engineer with expertise in building scalable web applications. 
