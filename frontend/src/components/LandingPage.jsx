@@ -85,7 +85,7 @@ const Hero = () => {
           <div className="w-full md:w-6/12 text-center md:text-left">
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight">
-              Get the feedbackkkkkk
+              Get the feedback
               <span className="block text-indigo-600">
                 you need, instantly.
               </span>
