@@ -78,16 +78,6 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/interviews', interviewRoutes);
 
-// Serve a static, crawlable about page (helps crawlers find founder info)
-app.get(['/about', '/about/'], (req, res) => {
-    const aboutPath = path.join(__dirname, '..', 'frontend', 'public', 'about', 'index.html');
-    res.sendFile(aboutPath, (err) => {
-        if (err) {
-            res.status(500).send('Could not load about page');
-        }
-    });
-});
-
 // Error Handling Middleware (Basic example)
 app.use((err, req, res, next) => {
     console.error(err.stack);
