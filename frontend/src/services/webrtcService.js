@@ -331,28 +331,27 @@ class WebRTCService {
         
         const pc = this.createPeerConnection(remoteSocketId);
         
-        // The onnegotiationneeded event will fire and send the offer
-        // But if no tracks are added, we need to create offer manually
-        if (!this.localStream || this.localStream.getTracks().length === 0) {
-            try {
-                this.makingOffer.set(remoteSocketId, true);
-                const offer = await pc.createOffer({
-                    offerToReceiveAudio: true,
-                    offerToReceiveVideo: true
-                });
-                await pc.setLocalDescription(offer);
-                
-                this.socket?.emit('offer', {
-                    roomId: this.roomId,
-                    offer: pc.localDescription,
-                    toSocketId: remoteSocketId
-                });
-            } catch (err) {
-                console.error('[WebRTC] Error creating offer:', err);
-                this.onError?.(err);
-            } finally {
-                this.makingOffer.set(remoteSocketId, false);
-            }
+        // Always create and send offer manually to ensure connection starts
+        // The onnegotiationneeded event may not fire if tracks were added during creation
+        try {
+            this.makingOffer.set(remoteSocketId, true);
+            const offer = await pc.createOffer({
+                offerToReceiveAudio: true,
+                offerToReceiveVideo: true
+            });
+            await pc.setLocalDescription(offer);
+            
+            console.log('[WebRTC] Sending offer to:', remoteSocketId);
+            this.socket?.emit('offer', {
+                roomId: this.roomId,
+                offer: pc.localDescription,
+                toSocketId: remoteSocketId
+            });
+        } catch (err) {
+            console.error('[WebRTC] Error creating offer:', err);
+            this.onError?.(err);
+        } finally {
+            this.makingOffer.set(remoteSocketId, false);
         }
     }
 

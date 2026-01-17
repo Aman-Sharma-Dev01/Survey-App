@@ -180,11 +180,11 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                 }
 
                 // 4. Initialize media
-                await initializeMedia();
+                const mediaStream = await initializeMedia();
                 if (!mounted) return;
                 
-                // 5. Connect socket
-                await connectSocket(joinResult.roomId);
+                // 5. Connect socket (pass stream directly to avoid closure issues)
+                await connectSocket(joinResult.roomId, mediaStream);
                 
             } catch (err) {
                 console.error('Error initializing interview:', err);
@@ -216,12 +216,27 @@ const InterviewRoom = ({ interviewId, navigate }) => {
 
     // Update local video element when stream changes
     useEffect(() => {
-        if (localStream && localVideoRef.current) {
-            localVideoRef.current.srcObject = localStream;
-            localVideoRef.current.play().catch(e => {
-                console.warn('Local video play blocked:', e);
-            });
+        const videoElement = localVideoRef.current;
+        if (videoElement && localStream) {
+            console.log('[Room] Attaching local stream to video element');
+            videoElement.srcObject = localStream;
+            
+            // Force play with user gesture handling
+            const playVideo = async () => {
+                try {
+                    await videoElement.play();
+                    console.log('[Room] Local video playing');
+                } catch (e) {
+                    console.warn('[Room] Local video play blocked:', e.message);
+                    // Video might auto-play when user interacts
+                }
+            };
+            playVideo();
         }
+        
+        return () => {
+            // Don't clear srcObject on cleanup - it causes flickering
+        };
     }, [localStream]);
 
     // Scroll chat to bottom
@@ -283,7 +298,7 @@ const InterviewRoom = ({ interviewId, navigate }) => {
         }
     };
 
-    const connectSocket = async (roomId) => {
+    const connectSocket = async (roomId, mediaStream) => {
         return new Promise((resolve, reject) => {
             const socketUrl = getSocketUrl();
             console.log('[Socket] Connecting to:', socketUrl);
@@ -291,9 +306,12 @@ const InterviewRoom = ({ interviewId, navigate }) => {
             socketRef.current = io(socketUrl, {
                 transports: ['websocket', 'polling'],
                 reconnection: true,
-                reconnectionAttempts: 5,
+                reconnectionAttempts: 10,
                 reconnectionDelay: 1000,
-                timeout: 10000
+                reconnectionDelayMax: 5000,
+                timeout: 20000,
+                pingTimeout: 30000,
+                pingInterval: 25000
             });
 
             const socket = socketRef.current;
@@ -320,9 +338,10 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                     }
                 });
                 
-                // Set local stream in WebRTC service
-                if (webRTCService.localStream || localStream) {
-                    webRTCService.setLocalStream(webRTCService.localStream || localStream);
+                // Set local stream in WebRTC service (use passed stream, not state)
+                if (mediaStream) {
+                    console.log('[Room] Setting local stream in WebRTC service');
+                    webRTCService.setLocalStream(mediaStream);
                 }
                 
                 // Join the room
@@ -726,11 +745,13 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                                 autoPlay
                                 muted
                                 playsInline
-                                className={`w-full h-full object-cover ${!isVideoOn ? 'hidden' : ''}`}
+                                style={{ opacity: isVideoOn && localStream ? 1 : 0 }}
+                                className="w-full h-full object-cover absolute inset-0 z-10"
                             />
                             
-                            {!isVideoOn && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800">
+                            {/* Avatar fallback - show when video is off OR no stream */}
+                            {(!isVideoOn || !localStream) && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800 z-0">
                                     <div className="w-20 h-20 bg-emerald-600 rounded-full flex items-center justify-center shadow-lg">
                                         <span className="text-3xl text-white font-bold">
                                             {user?.name?.[0]?.toUpperCase() || 'U'}
