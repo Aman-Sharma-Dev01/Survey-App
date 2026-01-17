@@ -62,6 +62,49 @@ const ICE_SERVERS = {
     iceCandidatePoolSize: 10
 };
 
+// Component to handle remote video stream properly
+const RemoteVideo = ({ stream, participantName }) => {
+    const videoRef = useRef(null);
+    
+    useEffect(() => {
+        if (videoRef.current && stream) {
+            // Only set srcObject if it's different
+            if (videoRef.current.srcObject !== stream) {
+                videoRef.current.srcObject = stream;
+                // Play with user interaction consideration
+                const playPromise = videoRef.current.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(() => {
+                        // Auto-play was prevented, video will play when user interacts
+                        console.log('Auto-play prevented for remote video, will play on interaction');
+                    });
+                }
+            }
+        }
+    }, [stream]);
+
+    if (!stream) {
+        return (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-700">
+                <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-3xl text-white font-bold">
+                        {participantName?.[0]?.toUpperCase() || 'P'}
+                    </span>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            className="w-full h-full object-cover"
+        />
+    );
+};
+
 const InterviewRoom = ({ interviewId, navigate }) => {
     const { user } = useAuth();
     const [interview, setInterview] = useState(null);
@@ -101,6 +144,7 @@ const InterviewRoom = ({ interviewId, navigate }) => {
     const localStreamRef = useRef(null); // Keep track of stream in ref for reliable access
     const screenStreamRef = useRef(null);
     const roomIdRef = useRef(null); // Keep track of roomId in ref to avoid stale closures
+    const pendingIceCandidatesRef = useRef({}); // Queue ICE candidates until remote description is set
 
     const isHost = interview?.hostEmail?.toLowerCase() === user?.email?.toLowerCase();
 
@@ -326,10 +370,14 @@ const InterviewRoom = ({ interviewId, navigate }) => {
             const validParticipants = existingParticipants.filter(p => p && p.email && p.email !== user?.email);
             setParticipants(validParticipants);
             
-            // Create peer connections to existing participants
+            // DON'T create offers here - wait for existing participants to send us offers
+            // The existing participants will receive 'user-joined' and initiate the connection
+            // We just prepare empty peer connections that will receive offers
             validParticipants.forEach(participant => {
                 if (participant.socketId) {
-                    createPeerConnection(participant.socketId, true);
+                    // Create peer connection but DON'T initiate (initiator=false)
+                    // We will receive an offer from them
+                    console.log('Preparing to receive offer from:', participant.name);
                 }
             });
         });
@@ -343,9 +391,10 @@ const InterviewRoom = ({ interviewId, navigate }) => {
             toast.success(`${participant.name || 'Someone'} joined the interview`);
             setParticipants(prev => [...prev.filter(p => p?.email !== participant.email), participant]);
             
-            // Create peer connection and initiate as the existing user
-            // The new user will receive the offer
+            // WE are the existing user, so WE initiate the connection
+            // Create peer connection and send offer to the new participant
             if (participant.socketId) {
+                console.log('Initiating connection to new participant:', participant.name);
                 createPeerConnection(participant.socketId, true);
             }
         });
@@ -359,6 +408,11 @@ const InterviewRoom = ({ interviewId, navigate }) => {
             if (peerConnectionsRef.current[socketId]) {
                 peerConnectionsRef.current[socketId].close();
                 delete peerConnectionsRef.current[socketId];
+            }
+            
+            // Clean up pending ICE candidates
+            if (pendingIceCandidatesRef.current[socketId]) {
+                delete pendingIceCandidatesRef.current[socketId];
             }
             
             setRemoteStreams(prev => {
@@ -473,14 +527,37 @@ const InterviewRoom = ({ interviewId, navigate }) => {
     };
 
     const handleOffer = async (offer, fromSocketId) => {
-        const pc = await createPeerConnection(fromSocketId, false);
+        console.log('Handling offer from:', fromSocketId);
+        
+        // Check if we already have a peer connection in a conflicting state
+        let pc = peerConnectionsRef.current[fromSocketId];
+        
+        if (pc) {
+            // If we already have a connection and it's not in the right state, reset it
+            if (pc.signalingState !== 'stable' && pc.signalingState !== 'have-local-offer') {
+                console.log('Existing PC in state:', pc.signalingState, '- will handle offer');
+            }
+            // If we sent an offer too (glare), we need to rollback
+            if (pc.signalingState === 'have-local-offer') {
+                console.log('Glare detected - rolling back local offer');
+                await pc.setLocalDescription({ type: 'rollback' });
+            }
+        } else {
+            // Create new peer connection (we're receiving, not initiating)
+            pc = await createPeerConnection(fromSocketId, false);
+        }
         
         try {
             await pc.setRemoteDescription(new RTCSessionDescription(offer));
+            
+            // Process any queued ICE candidates
+            await processQueuedIceCandidates(fromSocketId);
+            
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
             
             if (roomIdRef.current) {
+                console.log('Sending answer to:', fromSocketId);
                 socketRef.current?.emit('answer', {
                     roomId: roomIdRef.current,
                     answer,
@@ -494,23 +571,73 @@ const InterviewRoom = ({ interviewId, navigate }) => {
 
     const handleAnswer = async (answer, fromSocketId) => {
         const pc = peerConnectionsRef.current[fromSocketId];
-        if (pc) {
-            try {
-                await pc.setRemoteDescription(new RTCSessionDescription(answer));
-            } catch (err) {
-                console.error('Error handling answer:', err);
+        if (!pc) {
+            console.warn('No peer connection found for answer from:', fromSocketId);
+            return;
+        }
+        
+        // Only set remote description if we're in the right state
+        if (pc.signalingState !== 'have-local-offer') {
+            console.warn('Received answer but signaling state is:', pc.signalingState);
+            return;
+        }
+        
+        try {
+            console.log('Setting remote answer from:', fromSocketId);
+            await pc.setRemoteDescription(new RTCSessionDescription(answer));
+            
+            // Process any queued ICE candidates
+            await processQueuedIceCandidates(fromSocketId);
+        } catch (err) {
+            console.error('Error handling answer:', err);
+        }
+    };
+
+    const processQueuedIceCandidates = async (socketId) => {
+        const candidates = pendingIceCandidatesRef.current[socketId] || [];
+        if (candidates.length > 0) {
+            console.log(`Processing ${candidates.length} queued ICE candidates for:`, socketId);
+            const pc = peerConnectionsRef.current[socketId];
+            if (pc) {
+                for (const candidate of candidates) {
+                    try {
+                        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                    } catch (err) {
+                        console.warn('Error adding queued ICE candidate:', err);
+                    }
+                }
             }
+            pendingIceCandidatesRef.current[socketId] = [];
         }
     };
 
     const handleIceCandidate = async (candidate, fromSocketId) => {
         const pc = peerConnectionsRef.current[fromSocketId];
-        if (pc) {
-            try {
-                await pc.addIceCandidate(new RTCIceCandidate(candidate));
-            } catch (err) {
-                console.error('Error adding ICE candidate:', err);
+        
+        if (!pc) {
+            // Queue candidate - peer connection not created yet
+            console.log('Queueing ICE candidate - no peer connection yet');
+            if (!pendingIceCandidatesRef.current[fromSocketId]) {
+                pendingIceCandidatesRef.current[fromSocketId] = [];
             }
+            pendingIceCandidatesRef.current[fromSocketId].push(candidate);
+            return;
+        }
+        
+        // Only add ICE candidate if remote description is set
+        if (!pc.remoteDescription) {
+            console.log('Queueing ICE candidate - remote description not set');
+            if (!pendingIceCandidatesRef.current[fromSocketId]) {
+                pendingIceCandidatesRef.current[fromSocketId] = [];
+            }
+            pendingIceCandidatesRef.current[fromSocketId].push(candidate);
+            return;
+        }
+        
+        try {
+            await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (err) {
+            console.error('Error adding ICE candidate:', err);
         }
     };
 
@@ -889,32 +1016,10 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                                 key={participant.socketId} 
                                 className="relative bg-gray-800 rounded-xl overflow-hidden aspect-video"
                             >
-                                {remoteStreams[participant.socketId] ? (
-                                    <video
-                                        autoPlay
-                                        playsInline
-                                        webkit-playsinline="true"
-                                        ref={(el) => {
-                                            if (el && remoteStreams[participant.socketId]) {
-                                                el.srcObject = remoteStreams[participant.socketId];
-                                                // Ensure video plays
-                                                el.play().catch(err => console.warn('Remote video play failed:', err));
-                                            }
-                                        }}
-                                        className="w-full h-full object-cover"
-                                        onLoadedMetadata={(e) => {
-                                            e.target.play().catch(err => console.warn('Remote video play failed:', err));
-                                        }}
-                                    />
-                                ) : (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-gray-700">
-                                        <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center">
-                                            <span className="text-3xl text-white font-bold">
-                                                {participant.name?.[0]?.toUpperCase() || 'P'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
+                                <RemoteVideo 
+                                    stream={remoteStreams[participant.socketId]} 
+                                    participantName={participant.name}
+                                />
                                 <div className="absolute bottom-3 left-3">
                                     <span className="px-2 py-1 bg-black/60 text-white text-sm rounded">
                                         {participant.name}
