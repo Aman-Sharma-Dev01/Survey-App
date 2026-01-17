@@ -11,7 +11,6 @@ const blogSchema = mongoose.Schema(
         slug: { 
             type: String, 
             required: true, 
-            unique: true,
             lowercase: true,
             trim: true
         },
@@ -128,7 +127,7 @@ blogSchema.virtual('formattedDate').get(function() {
 });
 
 // Indexes for better query performance
-blogSchema.index({ slug: 1 });
+blogSchema.index({ slug: 1 }, { unique: true });
 blogSchema.index({ author: 1 });
 blogSchema.index({ status: 1, publishedAt: -1 });
 blogSchema.index({ tags: 1 });

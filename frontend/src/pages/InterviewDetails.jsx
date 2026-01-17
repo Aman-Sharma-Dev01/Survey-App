@@ -41,6 +41,7 @@ const InterviewDetails = ({ interviewId, navigate }) => {
 
     useEffect(() => {
         fetchInterview();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [interviewId]);
 
     const fetchInterview = async () => {

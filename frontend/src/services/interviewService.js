@@ -139,12 +139,17 @@ export const getChatHistory = async (interviewId) => {
  * @returns {string} WebSocket URL
  */
 export const getSocketUrl = () => {
-    // Extract base URL without /api
-    const wsUrl = BASE_URL.replace('/api', '').replace('http', 'ws');
-    // For production, use wss
-    return BASE_URL.includes('localhost') 
-        ? BASE_URL.replace('/api', '') 
-        : BASE_URL.replace('/api', '').replace('http:', 'https:');
+    // Extract base URL without /api path
+    // Socket.io connects to the root URL, not /api
+    const baseWithoutApi = BASE_URL.replace('/api', '');
+    
+    // For local development, use http; for production, ensure https
+    if (baseWithoutApi.includes('localhost') || baseWithoutApi.includes('127.0.0.1')) {
+        return baseWithoutApi;
+    }
+    
+    // For production, ensure we use https
+    return baseWithoutApi.replace('http:', 'https:');
 };
 
 /**

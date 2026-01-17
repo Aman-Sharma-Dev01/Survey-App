@@ -45,6 +45,7 @@ const InterviewDashboard = ({ navigate }) => {
             return;
         }
         fetchInterviews();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hasPremium]);
 
     const fetchInterviews = async () => {

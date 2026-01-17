@@ -57,7 +57,7 @@ const interviewSchema = mongoose.Schema(
         },
 
         // Room/Meeting ID (unique identifier for the WebRTC room)
-        roomId: { type: String, unique: true, required: true },
+        roomId: { type: String, required: true },
 
         // Chat history
         chatMessages: [chatMessageSchema],
@@ -158,7 +158,7 @@ interviewSchema.set('toObject', { virtuals: true });
 // Indexes for efficient queries
 interviewSchema.index({ host: 1, scheduledAt: -1 });
 interviewSchema.index({ 'participants.email': 1 });
-interviewSchema.index({ roomId: 1 });
+interviewSchema.index({ roomId: 1 }, { unique: true });
 interviewSchema.index({ status: 1, scheduledAt: 1 });
 
 const Interview = mongoose.model('Interview', interviewSchema);

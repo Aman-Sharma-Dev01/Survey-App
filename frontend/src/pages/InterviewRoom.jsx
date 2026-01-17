@@ -217,22 +217,26 @@ const InterviewRoom = ({ interviewId, navigate }) => {
     // Update local video element when stream changes
     useEffect(() => {
         const videoElement = localVideoRef.current;
-        if (videoElement && localStream) {
-            console.log('[Room] Attaching local stream to video element');
-            videoElement.srcObject = localStream;
-            
-            // Force play with user gesture handling
-            const playVideo = async () => {
-                try {
-                    await videoElement.play();
-                    console.log('[Room] Local video playing');
-                } catch (e) {
-                    console.warn('[Room] Local video play blocked:', e.message);
-                    // Video might auto-play when user interacts
-                }
-            };
-            playVideo();
-        }
+        if (!videoElement || !localStream) return;
+        
+        // Only update if different stream
+        if (videoElement.srcObject === localStream) return;
+        
+        console.log('[Room] Attaching local stream to video element');
+        videoElement.srcObject = localStream;
+        
+        // Force play with user gesture handling
+        const playVideo = async () => {
+            try {
+                videoElement.muted = true; // Must be muted for autoplay
+                await videoElement.play();
+                console.log('[Room] Local video playing');
+            } catch (e) {
+                console.warn('[Room] Local video play blocked:', e.message);
+                // Video might auto-play when user interacts
+            }
+        };
+        playVideo();
         
         return () => {
             // Don't clear srcObject on cleanup - it causes flickering
@@ -504,7 +508,7 @@ const InterviewRoom = ({ interviewId, navigate }) => {
         }
     }, [localStream]);
 
-    const toggleScreenShare = async () => {
+    const toggleScreenShare = useCallback(async () => {
         if (isScreenSharing) {
             // Stop screen sharing
             webRTCService.stopScreenShare();
@@ -536,13 +540,21 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                 
                 // Handle user stopping share via browser UI
                 screenTrack.onended = () => {
-                    toggleScreenShare();
+                    setIsScreenSharing(false);
+                    // Restore camera track
+                    if (localStream) {
+                        const videoTrack = localStream.getVideoTracks()[0];
+                        if (videoTrack) {
+                            webRTCService.replaceVideoTrack(videoTrack);
+                        }
+                    }
+                    socketRef.current?.emit('screen-share-stop', { roomId: roomIdRef.current });
                 };
                 
                 socketRef.current?.emit('screen-share-start', { roomId: roomIdRef.current });
             }
         }
-    };
+    }, [isScreenSharing, localStream]);
 
     const handleSendMessage = async () => {
         if (!newMessage.trim()) return;
@@ -741,20 +753,12 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                         {/* Local video */}
                         <div className="relative bg-gray-800 rounded-xl overflow-hidden aspect-video">
                             <video
-                                ref={(el) => {
-                                    localVideoRef.current = el;
-                                    // Directly attach stream when ref is set
-                                    if (el && localStream && el.srcObject !== localStream) {
-                                        console.log('[Room] Direct attaching stream to video');
-                                        el.srcObject = localStream;
-                                        el.play().catch(e => console.warn('Play error:', e));
-                                    }
-                                }}
+                                ref={localVideoRef}
                                 autoPlay
                                 muted
                                 playsInline
                                 style={{ 
-                                    opacity: localStream ? 1 : 0,
+                                    opacity: localStream && isVideoOn ? 1 : 0,
                                     transform: 'scaleX(-1)' // Mirror for selfie view
                                 }}
                                 className="w-full h-full object-cover absolute inset-0 z-10"
