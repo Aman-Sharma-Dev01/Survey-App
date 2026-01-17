@@ -357,7 +357,7 @@ export default function BlogPage({ navigate, slug }) {
           <BookOpen className="h-16 w-16 text-gray-300 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Article not found</h2>
           <p className="text-gray-500 mb-6">The blog post you're looking for doesn't exist or has been removed.</p>
-          <a href="#/blog" className="inline-flex items-center gap-2 text-indigo-600 font-medium hover:underline">
+          <a href="/blog" className="inline-flex items-center gap-2 text-indigo-600 font-medium hover:underline">
             <ArrowLeft className="h-4 w-4" />
             Return to Blog
           </a>
@@ -370,7 +370,7 @@ export default function BlogPage({ navigate, slug }) {
         {/* Header */}
         <header className="bg-gradient-to-b from-indigo-50 to-white py-12 lg:py-20">
           <div className="max-w-4xl mx-auto px-4 sm:px-6">
-            <a href="#/blog" className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-6">
+            <a href="/blog" className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 mb-6">
               <ArrowLeft className="h-4 w-4" />
               Back to Blog
             </a>
@@ -470,7 +470,7 @@ export default function BlogPage({ navigate, slug }) {
               </div>
               {!isAuthenticated && (
                 <p className="text-center text-sm text-gray-500 mt-3">
-                  <a href="#/login" className="text-indigo-600 hover:underline">Sign in</a> to vote on this article
+                  <a href="/login" className="text-indigo-600 hover:underline">Sign in</a> to vote on this article
                 </p>
               )}
             </div>
@@ -485,7 +485,7 @@ export default function BlogPage({ navigate, slug }) {
               {relatedBlogs.map((related, i) => (
                 <a 
                   key={i}
-                  href={`#/blog/${related.slug}`}
+                  href={`/blog/${related.slug}`}
                   className="group bg-gray-50 rounded-xl p-4 hover:bg-indigo-50 transition"
                 >
                   <h4 className="font-semibold text-gray-900 group-hover:text-indigo-600 line-clamp-2 mb-2">
@@ -503,7 +503,7 @@ export default function BlogPage({ navigate, slug }) {
           <div className="max-w-4xl mx-auto px-4 text-center">
             <h3 className="text-2xl font-bold text-white mb-4">Ready to create your own surveys?</h3>
             <a 
-              href="#register" 
+              href="/register" 
               className="inline-flex items-center gap-2 bg-white text-indigo-600 px-6 py-3 rounded-lg font-semibold hover:bg-indigo-50 transition"
             >
               Get Started Free
@@ -543,7 +543,7 @@ export default function BlogPage({ navigate, slug }) {
           {isAuthenticated && (
             <div className="mt-6">
               <a 
-                href="#blog-create" 
+                href="/blog-create" 
                 className="inline-flex items-center gap-2 bg-white text-indigo-600 px-5 py-2 rounded-lg font-semibold hover:bg-indigo-50 transition"
               >
                 <Plus className="h-4 w-4" />
@@ -664,7 +664,7 @@ export default function BlogPage({ navigate, slug }) {
 
                         {/* Title */}
                         <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-indigo-600 transition-colors">
-                          <a href={`#/blog/${post.slug}`}>{post.title}</a>
+                          <a href={`/blog/${post.slug}`}>{post.title}</a>
                         </h3>
 
                         {/* Excerpt */}
@@ -674,7 +674,7 @@ export default function BlogPage({ navigate, slug }) {
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-gray-500">{post.authorName || post.author}</span>
                           <a 
-                            href={`#/blog/${post.slug}`}
+                            href={`/blog/${post.slug}`}
                             className="inline-flex items-center gap-1 text-indigo-600 text-sm font-medium hover:gap-2 transition-all"
                           >
                             Read <ChevronRight className="h-3 w-3" />
