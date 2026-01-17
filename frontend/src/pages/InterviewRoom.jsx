@@ -34,7 +34,7 @@ import {
 } from '../services/interviewService.js';
 import toast from 'react-hot-toast';
 
-// ICE servers for WebRTC (use free STUN servers, add TURN servers for production)
+// ICE servers for WebRTC (STUN + free TURN servers for better connectivity)
 const ICE_SERVERS = {
     iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -42,7 +42,24 @@ const ICE_SERVERS = {
         { urls: 'stun:stun2.l.google.com:19302' },
         { urls: 'stun:stun3.l.google.com:19302' },
         { urls: 'stun:stun4.l.google.com:19302' },
-    ]
+        // Free TURN servers from OpenRelay (for users behind strict NATs)
+        {
+            urls: 'turn:openrelay.metered.ca:80',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+        },
+        {
+            urls: 'turn:openrelay.metered.ca:443',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+        },
+        {
+            urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+        }
+    ],
+    iceCandidatePoolSize: 10
 };
 
 const InterviewRoom = ({ interviewId, navigate }) => {
@@ -83,6 +100,7 @@ const InterviewRoom = ({ interviewId, navigate }) => {
     const chatContainerRef = useRef(null);
     const localStreamRef = useRef(null); // Keep track of stream in ref for reliable access
     const screenStreamRef = useRef(null);
+    const roomIdRef = useRef(null); // Keep track of roomId in ref to avoid stale closures
 
     const isHost = interview?.hostEmail?.toLowerCase() === user?.email?.toLowerCase();
 
@@ -94,6 +112,17 @@ const InterviewRoom = ({ interviewId, navigate }) => {
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [interviewId]);
+
+    // Set video source when stream is ready and video element is mounted
+    useEffect(() => {
+        if (localStream && localVideoRef.current) {
+            console.log('Setting local video srcObject');
+            localVideoRef.current.srcObject = localStream;
+            localVideoRef.current.play().catch(err => {
+                console.warn('Could not auto-play local video:', err);
+            });
+        }
+    }, [localStream]);
 
     // Scroll chat to bottom
     useEffect(() => {
@@ -113,6 +142,9 @@ const InterviewRoom = ({ interviewId, navigate }) => {
             // Join interview
             const joinResult = await joinInterview(interviewId);
             
+            // Store roomId in ref for reliable access in callbacks
+            roomIdRef.current = joinResult.roomId;
+            
             // Load chat history
             try {
                 const chatHistory = await getChatHistory(interviewId);
@@ -121,10 +153,11 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                 console.warn('Could not load chat history:', e);
             }
 
-            // Initialize media
+            // Initialize media FIRST before connecting socket
+            // This ensures we have tracks to add to peer connections
             await initializeMedia();
             
-            // Connect to socket
+            // Connect to socket after media is ready
             connectSocket(joinResult.roomId);
             
         } catch (err) {
@@ -281,19 +314,21 @@ const InterviewRoom = ({ interviewId, navigate }) => {
             // Join the room
             socket.emit('join-room', {
                 roomId,
-                userEmail: user.email,
-                userName: user.name,
-                userId: user._id
+                userEmail: user?.email || '',
+                userName: user?.name || 'Anonymous',
+                userId: user?._id || ''
             });
         });
 
         socket.on('room-participants', (existingParticipants) => {
             console.log('Existing participants:', existingParticipants);
-            setParticipants(existingParticipants.filter(p => p.email !== user.email));
+            // Filter out self and any invalid participants
+            const validParticipants = existingParticipants.filter(p => p && p.email && p.email !== user?.email);
+            setParticipants(validParticipants);
             
             // Create peer connections to existing participants
-            existingParticipants.forEach(participant => {
-                if (participant.email !== user.email) {
+            validParticipants.forEach(participant => {
+                if (participant.socketId) {
                     createPeerConnection(participant.socketId, true);
                 }
             });
@@ -301,12 +336,18 @@ const InterviewRoom = ({ interviewId, navigate }) => {
 
         socket.on('user-joined', (participant) => {
             console.log('User joined:', participant);
-            toast.success(`${participant.name} joined the interview`);
-            setParticipants(prev => [...prev.filter(p => p.email !== participant.email), participant]);
+            if (!participant || !participant.email) {
+                console.warn('Invalid participant data received');
+                return;
+            }
+            toast.success(`${participant.name || 'Someone'} joined the interview`);
+            setParticipants(prev => [...prev.filter(p => p?.email !== participant.email), participant]);
             
             // Create peer connection and initiate as the existing user
             // The new user will receive the offer
-            createPeerConnection(participant.socketId, true);
+            if (participant.socketId) {
+                createPeerConnection(participant.socketId, true);
+            }
         });
 
         socket.on('user-left', ({ socketId, name }) => {
@@ -375,11 +416,11 @@ const InterviewRoom = ({ interviewId, navigate }) => {
             console.warn('No local stream available when creating peer connection');
         }
 
-        // Handle ICE candidates
+        // Handle ICE candidates - use roomIdRef for reliable access
         pc.onicecandidate = (event) => {
-            if (event.candidate) {
+            if (event.candidate && roomIdRef.current) {
                 socketRef.current?.emit('ice-candidate', {
-                    roomId: interview?.roomId,
+                    roomId: roomIdRef.current,
                     candidate: event.candidate,
                     toSocketId: remoteSocketId
                 });
@@ -410,7 +451,7 @@ const InterviewRoom = ({ interviewId, navigate }) => {
         };
 
         // If initiator, create and send offer
-        if (initiator) {
+        if (initiator && roomIdRef.current) {
             try {
                 const offer = await pc.createOffer({
                     offerToReceiveAudio: true,
@@ -419,7 +460,7 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                 await pc.setLocalDescription(offer);
                 
                 socketRef.current?.emit('offer', {
-                    roomId: interview?.roomId,
+                    roomId: roomIdRef.current,
                     offer,
                     toSocketId: remoteSocketId
                 });
@@ -439,11 +480,13 @@ const InterviewRoom = ({ interviewId, navigate }) => {
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
             
-            socketRef.current?.emit('answer', {
-                roomId: interview?.roomId,
-                answer,
-                toSocketId: fromSocketId
-            });
+            if (roomIdRef.current) {
+                socketRef.current?.emit('answer', {
+                    roomId: roomIdRef.current,
+                    answer,
+                    toSocketId: fromSocketId
+                });
+            }
         } catch (err) {
             console.error('Error handling offer:', err);
         }
@@ -486,15 +529,17 @@ const InterviewRoom = ({ interviewId, navigate }) => {
             
             console.log('Video toggled:', newEnabled ? 'ON' : 'OFF');
             
-            socketRef.current?.emit('toggle-media', {
-                roomId: interview?.roomId,
-                mediaType: 'video',
-                enabled: newEnabled
-            });
+            if (roomIdRef.current) {
+                socketRef.current?.emit('toggle-media', {
+                    roomId: roomIdRef.current,
+                    mediaType: 'video',
+                    enabled: newEnabled
+                });
+            }
         } else {
             toast.error('No video track available');
         }
-    }, [interview?.roomId]);
+    }, []);
 
     const toggleAudio = useCallback(() => {
         const stream = localStreamRef.current;
@@ -511,15 +556,17 @@ const InterviewRoom = ({ interviewId, navigate }) => {
             
             console.log('Audio toggled:', newEnabled ? 'ON' : 'OFF');
             
-            socketRef.current?.emit('toggle-media', {
-                roomId: interview?.roomId,
-                mediaType: 'audio',
-                enabled: newEnabled
-            });
+            if (roomIdRef.current) {
+                socketRef.current?.emit('toggle-media', {
+                    roomId: roomIdRef.current,
+                    mediaType: 'audio',
+                    enabled: newEnabled
+                });
+            }
         } else {
             toast.error('No audio track available');
         }
-    }, [interview?.roomId]);
+    }, []);
 
     const toggleScreenShare = async () => {
         if (isScreenSharing) {
@@ -543,7 +590,9 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                 });
             }
             
-            socketRef.current?.emit('screen-share-stop', { roomId: interview?.roomId });
+            if (roomIdRef.current) {
+                socketRef.current?.emit('screen-share-stop', { roomId: roomIdRef.current });
+            }
         } else {
             // Start screen sharing
             try {
@@ -571,7 +620,9 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                     toggleScreenShare();
                 };
                 
-                socketRef.current?.emit('screen-share-start', { roomId: interview?.roomId });
+                if (roomIdRef.current) {
+                    socketRef.current?.emit('screen-share-start', { roomId: roomIdRef.current });
+                }
             } catch (err) {
                 console.error('Error starting screen share:', err);
                 if (err.name !== 'AbortError') { // Don't show error if user cancelled
@@ -588,12 +639,14 @@ const InterviewRoom = ({ interviewId, navigate }) => {
         setNewMessage('');
 
         // Emit via socket for real-time
-        socketRef.current?.emit('chat-message', {
-            roomId: interview?.roomId,
-            message,
-            senderEmail: user.email,
-            senderName: user.name
-        });
+        if (roomIdRef.current) {
+            socketRef.current?.emit('chat-message', {
+                roomId: roomIdRef.current,
+                message,
+                senderEmail: user.email,
+                senderName: user.name
+            });
+        }
 
         // Save to database
         try {
@@ -655,10 +708,15 @@ const InterviewRoom = ({ interviewId, navigate }) => {
         
         // Disconnect socket
         if (socketRef.current) {
-            socketRef.current.emit('leave-room', { roomId: interview?.roomId });
+            if (roomIdRef.current) {
+                socketRef.current.emit('leave-room', { roomId: roomIdRef.current });
+            }
             socketRef.current.disconnect();
         }
-    }, [interview?.roomId]);
+        
+        // Clear roomId ref
+        roomIdRef.current = null;
+    }, []);
 
     const copyRoomLink = () => {
         const link = `${window.location.origin}/interview-room/${interviewId}`;
