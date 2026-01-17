@@ -84,7 +84,7 @@ const RemoteVideoTile = ({ stream, participantName, connectionState }) => {
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                     <div className="text-center">
                         <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                        <p className="text-white text-sm">Connecting...</p>
+                        <p className="text-white text-sm">Connecting to {participantName || 'participant'}...</p>
                     </div>
                 </div>
             )}
@@ -346,8 +346,17 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                 
                 setParticipants(others);
                 
-                // Don't initiate connections - wait for existing users to send offers
-                // This prevents the "glare" condition where both sides send offers
+                // Proactively initiate connections to existing participants to avoid long "connecting" states
+                // Perfect negotiation in webrtcService will handle glare conditions safely.
+                others.forEach((participant, idx) => {
+                    if (participant?.socketId) {
+                        const delay = 200 * idx; // stagger a bit
+                        setTimeout(() => {
+                            console.log('[Room] Initiating connection to existing participant:', participant.socketId);
+                            webRTCService.initiateConnection(participant.socketId);
+                        }, delay);
+                    }
+                });
             });
 
             socket.on('user-joined', (participant) => {
