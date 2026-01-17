@@ -741,17 +741,39 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                         {/* Local video */}
                         <div className="relative bg-gray-800 rounded-xl overflow-hidden aspect-video">
                             <video
-                                ref={localVideoRef}
+                                ref={(el) => {
+                                    localVideoRef.current = el;
+                                    // Directly attach stream when ref is set
+                                    if (el && localStream && el.srcObject !== localStream) {
+                                        console.log('[Room] Direct attaching stream to video');
+                                        el.srcObject = localStream;
+                                        el.play().catch(e => console.warn('Play error:', e));
+                                    }
+                                }}
                                 autoPlay
                                 muted
                                 playsInline
-                                style={{ opacity: isVideoOn && localStream ? 1 : 0 }}
+                                style={{ 
+                                    opacity: localStream ? 1 : 0,
+                                    transform: 'scaleX(-1)' // Mirror for selfie view
+                                }}
                                 className="w-full h-full object-cover absolute inset-0 z-10"
                             />
                             
-                            {/* Avatar fallback - show when video is off OR no stream */}
-                            {(!isVideoOn || !localStream) && (
+                            {/* Avatar fallback - show when no stream */}
+                            {!localStream && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800 z-0">
+                                    <div className="w-20 h-20 bg-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+                                        <span className="text-3xl text-white font-bold">
+                                            {user?.name?.[0]?.toUpperCase() || 'U'}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {/* Camera off overlay */}
+                            {localStream && !isVideoOn && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800 z-20">
                                     <div className="w-20 h-20 bg-emerald-600 rounded-full flex items-center justify-center shadow-lg">
                                         <span className="text-3xl text-white font-bold">
                                             {user?.name?.[0]?.toUpperCase() || 'U'}
