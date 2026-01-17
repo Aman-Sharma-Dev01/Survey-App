@@ -235,6 +235,28 @@ class WebRTCService {
             });
         }
 
+        // Ensure we can receive remote tracks even if local tracks are off
+        const hasLocalVideo = !!(this.localStream && this.localStream.getVideoTracks().length > 0);
+        const hasLocalAudio = !!(this.localStream && this.localStream.getAudioTracks().length > 0);
+
+        if (!hasLocalVideo) {
+            try {
+                pc.addTransceiver('video', { direction: 'recvonly' });
+                console.log('[WebRTC] Added recvonly video transceiver');
+            } catch (e) {
+                console.warn('[WebRTC] Failed to add video transceiver:', e);
+            }
+        }
+
+        if (!hasLocalAudio) {
+            try {
+                pc.addTransceiver('audio', { direction: 'recvonly' });
+                console.log('[WebRTC] Added recvonly audio transceiver');
+            } catch (e) {
+                console.warn('[WebRTC] Failed to add audio transceiver:', e);
+            }
+        }
+
         // Handle ICE candidates
         pc.onicecandidate = (event) => {
             if (event.candidate) {
