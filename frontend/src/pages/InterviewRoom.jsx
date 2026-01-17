@@ -18,7 +18,8 @@ import {
     Crown,
     Clock,
     Copy,
-    Check
+    Check,
+    RefreshCw
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -52,14 +53,16 @@ const InterviewRoom = ({ interviewId, navigate }) => {
     
     // Media states
     const [localStream, setLocalStream] = useState(null);
-    const [screenStream, setScreenStream] = useState(null);
+    // Note: screenStream state is managed via screenStreamRef for reliable access
     const [isVideoOn, setIsVideoOn] = useState(true);
     const [isAudioOn, setIsAudioOn] = useState(true);
     const [isScreenSharing, setIsScreenSharing] = useState(false);
+    const [mediaError, setMediaError] = useState(null);
+    const [isMediaInitializing, setIsMediaInitializing] = useState(true);
     
     // Participants and connections
     const [participants, setParticipants] = useState([]);
-    const [peerConnections, setPeerConnections] = useState({});
+    // Note: peerConnections are managed via peerConnectionsRef for reliable access
     const [remoteStreams, setRemoteStreams] = useState({});
     
     // Chat
@@ -73,11 +76,13 @@ const InterviewRoom = ({ interviewId, navigate }) => {
     const [showEndConfirm, setShowEndConfirm] = useState(false);
     const [copied, setCopied] = useState(false);
     
-    // Refs
+    // Refs - Use refs for media stream to avoid stale closure issues
     const localVideoRef = useRef(null);
     const socketRef = useRef(null);
     const peerConnectionsRef = useRef({});
     const chatContainerRef = useRef(null);
+    const localStreamRef = useRef(null); // Keep track of stream in ref for reliable access
+    const screenStreamRef = useRef(null);
 
     const isHost = interview?.hostEmail?.toLowerCase() === user?.email?.toLowerCase();
 
@@ -87,6 +92,7 @@ const InterviewRoom = ({ interviewId, navigate }) => {
         return () => {
             cleanup();
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [interviewId]);
 
     // Scroll chat to bottom
@@ -135,32 +141,129 @@ const InterviewRoom = ({ interviewId, navigate }) => {
     };
 
     const initializeMedia = async () => {
+        setIsMediaInitializing(true);
+        setMediaError(null);
+        
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: true
-            });
+            // First check if mediaDevices is available
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('Media devices are not supported in this browser');
+            }
+
+            // Request permissions with explicit constraints
+            const constraints = {
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: 'user'
+                },
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
+            };
+
+            console.log('Requesting media with constraints:', constraints);
             
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            
+            console.log('Got media stream:', stream.getTracks().map(t => ({ kind: t.kind, label: t.label, enabled: t.enabled })));
+            
+            // Store in both state and ref
+            localStreamRef.current = stream;
             setLocalStream(stream);
             
+            // Check which tracks we actually got
+            const videoTracks = stream.getVideoTracks();
+            const audioTracks = stream.getAudioTracks();
+            
+            setIsVideoOn(videoTracks.length > 0 && videoTracks[0].enabled);
+            setIsAudioOn(audioTracks.length > 0 && audioTracks[0].enabled);
+            
+            // Set video element source
             if (localVideoRef.current) {
                 localVideoRef.current.srcObject = stream;
+                // Ensure the video plays
+                try {
+                    await localVideoRef.current.play();
+                } catch (playError) {
+                    console.warn('Auto-play blocked, user may need to interact:', playError);
+                }
             }
+            
+            setMediaError(null);
+            return stream;
         } catch (err) {
             console.error('Error accessing media devices:', err);
-            toast.error('Could not access camera/microphone. Please check permissions.');
             
-            // Try audio only
+            let errorMessage = 'Could not access camera/microphone.';
+            
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                errorMessage = 'Camera/microphone permission denied. Please allow access in your browser settings.';
+            } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                errorMessage = 'No camera or microphone found. Please connect a device.';
+            } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+                errorMessage = 'Camera/microphone is already in use by another application.';
+            } else if (err.name === 'OverconstrainedError') {
+                errorMessage = 'Could not satisfy media constraints. Trying with defaults...';
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+            
+            setMediaError(errorMessage);
+            toast.error(errorMessage);
+            
+            // Try fallback: audio only
             try {
+                console.log('Trying audio-only fallback...');
                 const audioStream = await navigator.mediaDevices.getUserMedia({
                     video: false,
                     audio: true
                 });
+                
+                localStreamRef.current = audioStream;
                 setLocalStream(audioStream);
                 setIsVideoOn(false);
+                setIsAudioOn(true);
+                setMediaError('Camera unavailable, using audio only');
+                toast.success('Connected with audio only');
+                return audioStream;
             } catch (audioErr) {
                 console.error('Could not access audio either:', audioErr);
+                setIsVideoOn(false);
+                setIsAudioOn(false);
+                setMediaError('Could not access camera or microphone. You can still view others and use chat.');
+                return null;
             }
+        } finally {
+            setIsMediaInitializing(false);
+        }
+    };
+
+    // Function to retry media access
+    const retryMediaAccess = async () => {
+        // Stop any existing streams first
+        if (localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach(track => track.stop());
+            localStreamRef.current = null;
+            setLocalStream(null);
+        }
+        
+        const stream = await initializeMedia();
+        
+        // If we have a stream and peer connections, update them with new tracks
+        if (stream && Object.keys(peerConnectionsRef.current).length > 0) {
+            stream.getTracks().forEach(track => {
+                Object.values(peerConnectionsRef.current).forEach(pc => {
+                    const sender = pc.getSenders().find(s => s.track?.kind === track.kind);
+                    if (sender) {
+                        sender.replaceTrack(track);
+                    } else {
+                        pc.addTrack(track, stream);
+                    }
+                });
+            });
         }
     };
 
@@ -201,10 +304,12 @@ const InterviewRoom = ({ interviewId, navigate }) => {
             toast.success(`${participant.name} joined the interview`);
             setParticipants(prev => [...prev.filter(p => p.email !== participant.email), participant]);
             
-            // Create peer connection (don't initiate, wait for them)
+            // Create peer connection and initiate as the existing user
+            // The new user will receive the offer
+            createPeerConnection(participant.socketId, true);
         });
 
-        socket.on('user-left', ({ socketId, email, name }) => {
+        socket.on('user-left', ({ socketId, name }) => {
             console.log('User left:', name);
             toast.info(`${name} left the interview`);
             setParticipants(prev => prev.filter(p => p.socketId !== socketId));
@@ -222,7 +327,7 @@ const InterviewRoom = ({ interviewId, navigate }) => {
             });
         });
 
-        socket.on('offer', async ({ offer, fromSocketId, fromEmail, fromName }) => {
+        socket.on('offer', async ({ offer, fromSocketId, fromName }) => {
             console.log('Received offer from:', fromName);
             await handleOffer(offer, fromSocketId);
         });
@@ -240,7 +345,7 @@ const InterviewRoom = ({ interviewId, navigate }) => {
             setChatMessages(prev => [...prev, message]);
         });
 
-        socket.on('peer-media-toggle', ({ socketId, email, mediaType, enabled }) => {
+        socket.on('peer-media-toggle', ({ email, mediaType, enabled }) => {
             // Handle remote peer media toggle (for UI updates)
             console.log(`${email} turned ${mediaType} ${enabled ? 'on' : 'off'}`);
         });
@@ -259,11 +364,15 @@ const InterviewRoom = ({ interviewId, navigate }) => {
         const pc = new RTCPeerConnection(ICE_SERVERS);
         peerConnectionsRef.current[remoteSocketId] = pc;
 
-        // Add local tracks
-        if (localStream) {
-            localStream.getTracks().forEach(track => {
-                pc.addTrack(track, localStream);
+        // Add local tracks - use ref for reliable access
+        const stream = localStreamRef.current;
+        if (stream) {
+            stream.getTracks().forEach(track => {
+                console.log('Adding track to peer connection:', track.kind, track.label);
+                pc.addTrack(track, stream);
             });
+        } else {
+            console.warn('No local stream available when creating peer connection');
         }
 
         // Handle ICE candidates
@@ -279,21 +388,34 @@ const InterviewRoom = ({ interviewId, navigate }) => {
 
         // Handle remote stream
         pc.ontrack = (event) => {
-            console.log('Received remote track:', event.streams);
-            setRemoteStreams(prev => ({
-                ...prev,
-                [remoteSocketId]: event.streams[0]
-            }));
+            console.log('Received remote track:', event.track.kind, event.streams);
+            if (event.streams && event.streams[0]) {
+                setRemoteStreams(prev => ({
+                    ...prev,
+                    [remoteSocketId]: event.streams[0]
+                }));
+            }
         };
 
         pc.onconnectionstatechange = () => {
             console.log(`Connection state with ${remoteSocketId}:`, pc.connectionState);
+            if (pc.connectionState === 'failed') {
+                console.error('Peer connection failed, attempting to restart ICE');
+                pc.restartIce();
+            }
+        };
+
+        pc.oniceconnectionstatechange = () => {
+            console.log(`ICE connection state with ${remoteSocketId}:`, pc.iceConnectionState);
         };
 
         // If initiator, create and send offer
         if (initiator) {
             try {
-                const offer = await pc.createOffer();
+                const offer = await pc.createOffer({
+                    offerToReceiveAudio: true,
+                    offerToReceiveVideo: true
+                });
                 await pc.setLocalDescription(offer);
                 
                 socketRef.current?.emit('offer', {
@@ -349,50 +471,70 @@ const InterviewRoom = ({ interviewId, navigate }) => {
         }
     };
 
-    const toggleVideo = () => {
-        if (localStream) {
-            const videoTrack = localStream.getVideoTracks()[0];
-            if (videoTrack) {
-                videoTrack.enabled = !videoTrack.enabled;
-                setIsVideoOn(videoTrack.enabled);
-                
-                socketRef.current?.emit('toggle-media', {
-                    roomId: interview?.roomId,
-                    mediaType: 'video',
-                    enabled: videoTrack.enabled
-                });
-            }
+    const toggleVideo = useCallback(() => {
+        const stream = localStreamRef.current;
+        if (!stream) {
+            toast.error('Camera not available. Click retry to enable camera.');
+            return;
         }
-    };
+        
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack) {
+            const newEnabled = !videoTrack.enabled;
+            videoTrack.enabled = newEnabled;
+            setIsVideoOn(newEnabled);
+            
+            console.log('Video toggled:', newEnabled ? 'ON' : 'OFF');
+            
+            socketRef.current?.emit('toggle-media', {
+                roomId: interview?.roomId,
+                mediaType: 'video',
+                enabled: newEnabled
+            });
+        } else {
+            toast.error('No video track available');
+        }
+    }, [interview?.roomId]);
 
-    const toggleAudio = () => {
-        if (localStream) {
-            const audioTrack = localStream.getAudioTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = !audioTrack.enabled;
-                setIsAudioOn(audioTrack.enabled);
-                
-                socketRef.current?.emit('toggle-media', {
-                    roomId: interview?.roomId,
-                    mediaType: 'audio',
-                    enabled: audioTrack.enabled
-                });
-            }
+    const toggleAudio = useCallback(() => {
+        const stream = localStreamRef.current;
+        if (!stream) {
+            toast.error('Microphone not available. Click retry to enable microphone.');
+            return;
         }
-    };
+        
+        const audioTrack = stream.getAudioTracks()[0];
+        if (audioTrack) {
+            const newEnabled = !audioTrack.enabled;
+            audioTrack.enabled = newEnabled;
+            setIsAudioOn(newEnabled);
+            
+            console.log('Audio toggled:', newEnabled ? 'ON' : 'OFF');
+            
+            socketRef.current?.emit('toggle-media', {
+                roomId: interview?.roomId,
+                mediaType: 'audio',
+                enabled: newEnabled
+            });
+        } else {
+            toast.error('No audio track available');
+        }
+    }, [interview?.roomId]);
 
     const toggleScreenShare = async () => {
         if (isScreenSharing) {
             // Stop screen sharing
-            if (screenStream) {
-                screenStream.getTracks().forEach(track => track.stop());
-                setScreenStream(null);
+            const currentScreenStream = screenStreamRef.current;
+            if (currentScreenStream) {
+                currentScreenStream.getTracks().forEach(track => track.stop());
+                screenStreamRef.current = null;
             }
             setIsScreenSharing(false);
             
             // Replace screen track with camera track in all peer connections
-            if (localStream) {
-                const videoTrack = localStream.getVideoTracks()[0];
+            const stream = localStreamRef.current;
+            if (stream) {
+                const videoTrack = stream.getVideoTracks()[0];
                 Object.values(peerConnectionsRef.current).forEach(pc => {
                     const sender = pc.getSenders().find(s => s.track?.kind === 'video');
                     if (sender && videoTrack) {
@@ -405,16 +547,18 @@ const InterviewRoom = ({ interviewId, navigate }) => {
         } else {
             // Start screen sharing
             try {
-                const stream = await navigator.mediaDevices.getDisplayMedia({ 
-                    video: true,
+                const displayStream = await navigator.mediaDevices.getDisplayMedia({ 
+                    video: {
+                        cursor: 'always'
+                    },
                     audio: true 
                 });
                 
-                setScreenStream(stream);
+                screenStreamRef.current = displayStream;
                 setIsScreenSharing(true);
                 
                 // Replace camera track with screen track in all peer connections
-                const screenTrack = stream.getVideoTracks()[0];
+                const screenTrack = displayStream.getVideoTracks()[0];
                 Object.values(peerConnectionsRef.current).forEach(pc => {
                     const sender = pc.getSenders().find(s => s.track?.kind === 'video');
                     if (sender) {
@@ -422,7 +566,7 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                     }
                 });
                 
-                // Handle screen share stop
+                // Handle screen share stop (when user clicks browser's stop sharing button)
                 screenTrack.onended = () => {
                     toggleScreenShare();
                 };
@@ -430,7 +574,9 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                 socketRef.current?.emit('screen-share-start', { roomId: interview?.roomId });
             } catch (err) {
                 console.error('Error starting screen share:', err);
-                toast.error('Could not start screen sharing');
+                if (err.name !== 'AbortError') { // Don't show error if user cancelled
+                    toast.error('Could not start screen sharing');
+                }
             }
         }
     };
@@ -481,19 +627,30 @@ const InterviewRoom = ({ interviewId, navigate }) => {
         }
     };
 
-    const cleanup = () => {
+    const cleanup = useCallback(() => {
         // Stop local stream
-        if (localStream) {
-            localStream.getTracks().forEach(track => track.stop());
+        if (localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach(track => {
+                track.stop();
+                console.log('Stopped track:', track.kind);
+            });
+            localStreamRef.current = null;
         }
         
         // Stop screen stream
-        if (screenStream) {
-            screenStream.getTracks().forEach(track => track.stop());
+        if (screenStreamRef.current) {
+            screenStreamRef.current.getTracks().forEach(track => track.stop());
+            screenStreamRef.current = null;
         }
         
         // Close all peer connections
-        Object.values(peerConnectionsRef.current).forEach(pc => pc.close());
+        Object.values(peerConnectionsRef.current).forEach(pc => {
+            try {
+                pc.close();
+            } catch (e) {
+                console.warn('Error closing peer connection:', e);
+            }
+        });
         peerConnectionsRef.current = {};
         
         // Disconnect socket
@@ -501,7 +658,7 @@ const InterviewRoom = ({ interviewId, navigate }) => {
             socketRef.current.emit('leave-room', { roomId: interview?.roomId });
             socketRef.current.disconnect();
         }
-    };
+    }, [interview?.roomId]);
 
     const copyRoomLink = () => {
         const link = `${window.location.origin}/interview-room/${interviewId}`;
@@ -528,6 +685,9 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                 <div className="text-center">
                     <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                     <p className="text-white text-lg">Joining interview...</p>
+                    {isMediaInitializing && (
+                        <p className="text-gray-400 text-sm mt-2">Setting up camera and microphone...</p>
+                    )}
                 </div>
             </div>
         );
@@ -554,6 +714,23 @@ const InterviewRoom = ({ interviewId, navigate }) => {
 
     return (
         <div className="h-screen bg-gray-900 flex flex-col">
+            {/* Media error banner */}
+            {mediaError && (
+                <div className="bg-yellow-900/50 border-b border-yellow-700 px-4 py-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-yellow-200">
+                        <AlertCircle size={18} />
+                        <span className="text-sm">{mediaError}</span>
+                    </div>
+                    <button
+                        onClick={retryMediaAccess}
+                        className="flex items-center gap-1 px-3 py-1 bg-yellow-600 hover:bg-yellow-500 text-white text-sm rounded transition-all"
+                    >
+                        <RefreshCw size={14} />
+                        Retry
+                    </button>
+                </div>
+            )}
+
             {/* Header */}
             <div className="bg-gray-800 px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -606,7 +783,12 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                                 autoPlay
                                 muted
                                 playsInline
+                                webkit-playsinline="true"
                                 className={`w-full h-full object-cover ${!isVideoOn ? 'hidden' : ''}`}
+                                onLoadedMetadata={(e) => {
+                                    // Ensure video plays when metadata is loaded
+                                    e.target.play().catch(err => console.warn('Video play failed:', err));
+                                }}
                             />
                             {!isVideoOn && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-gray-700">
@@ -615,6 +797,18 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                                             {user?.name?.[0]?.toUpperCase() || 'U'}
                                         </span>
                                     </div>
+                                </div>
+                            )}
+                            {/* Media retry button on video when no stream */}
+                            {!localStream && !isMediaInitializing && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-gray-700">
+                                    <button
+                                        onClick={retryMediaAccess}
+                                        className="flex flex-col items-center gap-2 p-4 bg-gray-600 hover:bg-gray-500 rounded-xl transition-all"
+                                    >
+                                        <RefreshCw size={32} className="text-white" />
+                                        <span className="text-white text-sm">Enable Camera</span>
+                                    </button>
                                 </div>
                             )}
                             <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
@@ -641,12 +835,18 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                                     <video
                                         autoPlay
                                         playsInline
+                                        webkit-playsinline="true"
                                         ref={(el) => {
                                             if (el && remoteStreams[participant.socketId]) {
                                                 el.srcObject = remoteStreams[participant.socketId];
+                                                // Ensure video plays
+                                                el.play().catch(err => console.warn('Remote video play failed:', err));
                                             }
                                         }}
                                         className="w-full h-full object-cover"
+                                        onLoadedMetadata={(e) => {
+                                            e.target.play().catch(err => console.warn('Remote video play failed:', err));
+                                        }}
                                     />
                                 ) : (
                                     <div className="absolute inset-0 flex items-center justify-center bg-gray-700">
@@ -807,12 +1007,15 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                     {/* Audio toggle */}
                     <button
                         onClick={toggleAudio}
+                        disabled={!localStream && !isMediaInitializing}
                         className={`p-4 rounded-full transition-all ${
-                            isAudioOn 
-                                ? 'bg-gray-700 hover:bg-gray-600 text-white' 
-                                : 'bg-red-500 hover:bg-red-600 text-white'
+                            !localStream && !isMediaInitializing
+                                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                : isAudioOn 
+                                    ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+                                    : 'bg-red-500 hover:bg-red-600 text-white'
                         }`}
-                        title={isAudioOn ? 'Mute' : 'Unmute'}
+                        title={!localStream ? 'Microphone unavailable' : isAudioOn ? 'Mute' : 'Unmute'}
                     >
                         {isAudioOn ? <Mic size={24} /> : <MicOff size={24} />}
                     </button>
@@ -820,15 +1023,29 @@ const InterviewRoom = ({ interviewId, navigate }) => {
                     {/* Video toggle */}
                     <button
                         onClick={toggleVideo}
+                        disabled={!localStream && !isMediaInitializing}
                         className={`p-4 rounded-full transition-all ${
-                            isVideoOn 
-                                ? 'bg-gray-700 hover:bg-gray-600 text-white' 
-                                : 'bg-red-500 hover:bg-red-600 text-white'
+                            !localStream && !isMediaInitializing
+                                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                : isVideoOn 
+                                    ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+                                    : 'bg-red-500 hover:bg-red-600 text-white'
                         }`}
-                        title={isVideoOn ? 'Turn off camera' : 'Turn on camera'}
+                        title={!localStream ? 'Camera unavailable' : isVideoOn ? 'Turn off camera' : 'Turn on camera'}
                     >
                         {isVideoOn ? <Video size={24} /> : <VideoOff size={24} />}
                     </button>
+
+                    {/* Retry media button when no stream */}
+                    {!localStream && !isMediaInitializing && (
+                        <button
+                            onClick={retryMediaAccess}
+                            className="p-4 rounded-full bg-yellow-600 hover:bg-yellow-500 text-white transition-all"
+                            title="Retry camera/microphone access"
+                        >
+                            <RefreshCw size={24} />
+                        </button>
+                    )}
 
                     {/* Screen share */}
                     {interview?.settings?.enableScreenShare && (
