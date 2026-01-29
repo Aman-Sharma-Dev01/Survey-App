@@ -92,6 +92,21 @@ const LandingFooter = () => {
               height="99"
             />
           </a>
+
+          {/* Kabada Badge */}
+          <a
+            href="https://kabada.surveyzen.live"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Kabada - By SurveyZen"
+            className="hover:opacity-80 transition-all hover:scale-105"
+          >
+            <img
+              src="/kabada-logo.png"
+              alt="Kabada"
+              className="h-10 w-auto"
+            />
+          </a>
         </div>
 
         {/* Copyright Section */}
