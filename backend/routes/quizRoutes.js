@@ -44,7 +44,8 @@ router.get('/', protect, async (req, res) => {
             .sort({ createdAt: -1 });
         res.json(quizzes);
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching quizzes' });
+        console.error('Error in GET /api/quizzes:', error);
+        res.status(500).json({ message: 'Error fetching quizzes', error: error.message });
     }
 });
 
@@ -68,7 +69,7 @@ router.get('/public/:id', async (req, res) => {
         if (quiz.isScheduled) {
             const now = new Date();
             if (quiz.startAt && now < quiz.startAt) {
-                return res.status(403).json({ 
+                return res.status(403).json({
                     message: 'This quiz is scheduled for a future time',
                     isScheduled: true,
                     startAt: quiz.startAt,
@@ -77,7 +78,7 @@ router.get('/public/:id', async (req, res) => {
                 });
             }
             if (quiz.endAt && now > quiz.endAt) {
-                return res.status(403).json({ 
+                return res.status(403).json({
                     message: 'This quiz has ended',
                     isScheduled: true,
                     startAt: quiz.startAt || null,
@@ -151,8 +152,8 @@ router.post('/check-rollno/:id', async (req, res) => {
         });
 
         if (existingResponse) {
-            return res.json({ 
-                exists: true, 
+            return res.json({
+                exists: true,
                 message: `Response already recorded for roll no "${rollNo}"`
             });
         }
@@ -185,7 +186,7 @@ router.post('/submit/:id', async (req, res) => {
         if (quiz.isScheduled) {
             const now = new Date();
             if (quiz.startAt && now < quiz.startAt) {
-                return res.status(403).json({ 
+                return res.status(403).json({
                     message: 'This quiz is scheduled for a future time',
                     isScheduled: true,
                     startAt: quiz.startAt,
@@ -194,7 +195,7 @@ router.post('/submit/:id', async (req, res) => {
                 });
             }
             if (quiz.endAt && now > quiz.endAt) {
-                return res.status(403).json({ 
+                return res.status(403).json({
                     message: 'This quiz has ended',
                     isScheduled: true,
                     startAt: quiz.startAt || null,
@@ -210,9 +211,9 @@ router.post('/submit/:id', async (req, res) => {
                 quiz: req.params.id,
                 participantRollNo: participantRollNo.trim()
             });
-            
+
             if (existingResponse) {
-                return res.status(400).json({ 
+                return res.status(400).json({
                     message: `Response already recorded for roll no "${participantRollNo}"`,
                     rollNoExists: true
                 });
@@ -225,7 +226,7 @@ router.post('/submit/:id', async (req, res) => {
 
         const gradedAnswers = answers.map(answer => {
             const question = quiz.questions.find(q => q._id.toString() === answer.questionId);
-            
+
             if (!question) {
                 return { ...answer, isCorrect: false, pointsEarned: 0 };
             }
@@ -237,7 +238,7 @@ router.post('/submit/:id', async (req, res) => {
 
             // Check if answer is correct
             let isCorrect = false;
-            
+
             if (question.questionType === 'MULTIPLE') {
                 // For multiple choice, all correct options must be selected and no incorrect ones
                 const selected = answer.selectedOptions || [];
@@ -337,7 +338,7 @@ router.get('/analytics/:id', protect, async (req, res) => {
         // Calculate analytics
         const totalResponses = responses.length;
         const passedCount = responses.filter(r => r.passed).length;
-        const avgScore = totalResponses > 0 
+        const avgScore = totalResponses > 0
             ? Math.round(responses.reduce((sum, r) => sum + r.percentage, 0) / totalResponses)
             : 0;
         const avgTime = totalResponses > 0
@@ -346,20 +347,30 @@ router.get('/analytics/:id', protect, async (req, res) => {
 
         // Question-level analytics
         const questionStats = quiz.questions.map(question => {
-            const questionResponses = responses.flatMap(r => 
+            const questionResponses = responses.flatMap(r =>
                 r.answers.filter(a => a.questionId.toString() === question._id.toString())
             );
             const correctCount = questionResponses.filter(a => a.isCorrect).length;
-            
-            return {
+
+            const stats = {
                 questionId: question._id,
                 questionText: question.questionText,
+                questionType: question.questionType,
                 totalAttempts: questionResponses.length,
                 correctCount,
-                accuracy: questionResponses.length > 0 
-                    ? Math.round((correctCount / questionResponses.length) * 100) 
+                accuracy: questionResponses.length > 0
+                    ? Math.round((correctCount / questionResponses.length) * 100)
                     : 0
             };
+
+            if (question.questionType === 'RATING') {
+                const totalRating = questionResponses.reduce((sum, r) => sum + (parseInt(r.selectedOptions?.[0]) || 0), 0);
+                stats.averageRating = questionResponses.length > 0
+                    ? parseFloat((totalRating / questionResponses.length).toFixed(1))
+                    : 0;
+            }
+
+            return stats;
         });
 
         // Get unique classes from responses

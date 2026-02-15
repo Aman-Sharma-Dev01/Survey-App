@@ -116,7 +116,7 @@ export const deleteSurvey = async (surveyId) => {
     return fetchApi(`/surveys/${surveyId}`, 'DELETE', null, true);
 };
 // Utility to create small temporary IDs used for client-side keys
-export const generateTempId = () => `t_${Math.random().toString(36).slice(2,9)}_${Date.now().toString(36)}`;
+export const generateTempId = () => `t_${Math.random().toString(36).slice(2, 9)}_${Date.now().toString(36)}`;
 
 // Default export compatibility wrapper
 // Provides a simple `api.get/post/put/del` interface used across the frontend

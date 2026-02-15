@@ -9,10 +9,11 @@ const quizQuestionSchema = mongoose.Schema({
     },
     questionType: { 
         type: String, 
-        enum: ['SINGLE', 'MULTIPLE', 'TRUE_FALSE'], 
+        enum: ['SINGLE', 'MULTIPLE', 'TRUE_FALSE', 'RATING', 'SHORT_TEXT', 'LONG_TEXT', 'DATE'], 
         default: 'SINGLE',
         required: true 
     },
+    ratingScale: { type: Number, default: 5 }, // For RATING type (e.g., 5 or 10 stars)
     options: [{
         optionText: { type: String, required: true },
         optionImage: {

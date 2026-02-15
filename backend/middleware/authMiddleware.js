@@ -20,7 +20,11 @@ const protect = async (req, res, next) => {
 
             // Attach user to the request object (excluding password)
             req.user = await User.findById(decoded.id).select('-password');
-            
+
+            if (!req.user) {
+                return res.status(401).json({ message: 'Not authorized, user not found' });
+            }
+
             next();
         } catch (error) {
             console.error(error);
@@ -43,11 +47,11 @@ const requirePremium = async (req, res, next) => {
 
         // Check if user has premium access (mru.edu.in email or active paid plan)
         const hasPremium = isPremiumDomain(req.user.email) || req.user.hasPremiumFeatures();
-        
+
         if (!hasPremium) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 message: 'This feature requires a Pro subscription',
-                requiresPremium: true 
+                requiresPremium: true
             });
         }
 
@@ -70,7 +74,7 @@ const adminOnly = async (req, res, next) => {
 
         // Check if user email matches admin email or has admin flag
         const isAdmin = req.user.email === ADMIN_EMAIL || req.user.isAdmin === true;
-        
+
         if (!isAdmin) {
             return res.status(403).json({ message: 'Admin access required' });
         }

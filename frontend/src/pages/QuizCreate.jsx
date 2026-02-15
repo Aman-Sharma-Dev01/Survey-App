@@ -55,9 +55,9 @@ const ImageUploader = ({ image, onUpload, onRemove, label }) => {
         <div className="relative">
             {image?.url ? (
                 <div className="relative inline-block">
-                    <img 
-                        src={image.url} 
-                        alt={label} 
+                    <img
+                        src={image.url}
+                        alt={label}
                         className="max-w-full max-h-48 rounded-lg border border-gray-200 object-contain"
                     />
                     <button
@@ -104,7 +104,11 @@ const ImageUploader = ({ image, onUpload, onRemove, label }) => {
 const QUESTION_TYPES = [
     { value: 'SINGLE', label: 'Single Choice', description: 'One correct answer' },
     { value: 'MULTIPLE', label: 'Multiple Choice', description: 'Multiple correct answers' },
-    { value: 'TRUE_FALSE', label: 'True/False', description: 'Binary choice' }
+    { value: 'TRUE_FALSE', label: 'True/False', description: 'Binary choice' },
+    { value: 'RATING', label: 'Rating', description: 'Star rating' },
+    { value: 'SHORT_TEXT', label: 'Short Answer', description: 'One line text' },
+    { value: 'LONG_TEXT', label: 'Paragraph', description: 'Multi-line text' },
+    { value: 'DATE', label: 'Date', description: 'Date picker' }
 ];
 
 const QuizQuestionEditor = ({ question, index, updateQuestion, removeQuestion }) => {
@@ -146,19 +150,19 @@ const QuizQuestionEditor = ({ question, index, updateQuestion, removeQuestion })
 
     const handleTypeChange = (newType) => {
         let newOptions = question.options;
-        
+
         if (newType === 'TRUE_FALSE') {
             newOptions = [
                 { optionText: 'True', isCorrect: false },
                 { optionText: 'False', isCorrect: false }
             ];
         }
-        
+
         // Reset correct answers when changing type
         if (newType === 'SINGLE' || newType === 'TRUE_FALSE') {
             newOptions = newOptions.map(opt => ({ ...opt, isCorrect: false }));
         }
-        
+
         updateQuestion(question.tempId, { questionType: newType, options: newOptions });
     };
 
@@ -232,73 +236,113 @@ const QuizQuestionEditor = ({ question, index, updateQuestion, removeQuestion })
                                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
                             />
                         </div>
-                    </div>
 
-                    {/* Options */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Answer Options <span className="text-gray-500">(click checkmark to mark correct)</span>
-                        </label>
-                        <div className="space-y-3">
-                            {question.options.map((option, optIndex) => (
-                                <div key={optIndex} className="p-3 border border-gray-200 rounded-lg bg-gray-50">
-                                    <div className="flex items-center space-x-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => toggleCorrect(optIndex)}
-                                            className={`p-2 rounded-lg border-2 transition ${
-                                                option.isCorrect 
-                                                    ? 'bg-emerald-500 border-emerald-500 text-white' 
-                                                    : 'border-gray-300 text-gray-400 hover:border-emerald-400'
-                                            }`}
-                                            title={option.isCorrect ? 'Correct answer' : 'Mark as correct'}
-                                        >
-                                            <Check size={16} />
-                                        </button>
-                                        <input
-                                            type="text"
-                                            value={option.optionText}
-                                            onChange={(e) => handleOptionChange(optIndex, 'optionText', e.target.value)}
-                                            className={`flex-1 p-2 border rounded-lg ${
-                                                option.isCorrect ? 'border-emerald-300 bg-emerald-50' : 'border-gray-300 bg-white'
-                                            }`}
-                                            placeholder={`Option ${optIndex + 1}`}
-                                            disabled={question.questionType === 'TRUE_FALSE'}
-                                        />
-                                        {question.questionType !== 'TRUE_FALSE' && question.options.length > 2 && (
-                                            <button
-                                                type="button"
-                                                onClick={() => removeOption(optIndex)}
-                                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        )}
-                                    </div>
-                                    {/* Option Image */}
-                                    {question.questionType !== 'TRUE_FALSE' && (
-                                        <div className="mt-2 ml-10">
-                                            <ImageUploader
-                                                image={option.optionImage}
-                                                onUpload={(img) => handleOptionChange(optIndex, 'optionImage', img)}
-                                                onRemove={() => handleOptionChange(optIndex, 'optionImage', null)}
-                                                label="Add Option Image"
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                        {question.questionType !== 'TRUE_FALSE' && (
-                            <button
-                                type="button"
-                                onClick={addOption}
-                                className="mt-2 text-sm text-emerald-600 hover:text-emerald-700 flex items-center"
-                            >
-                                <PlusCircle size={16} className="mr-1" /> Add Option
-                            </button>
+                        {/* Rating Scale (Only for RATING) */}
+                        {question.questionType === 'RATING' && (
+                            <div className="col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Max Rating (Stars)</label>
+                                <input
+                                    type="number"
+                                    min="3"
+                                    max="10"
+                                    value={question.ratingScale || 5}
+                                    onChange={(e) => updateQuestion(question.tempId, { ratingScale: parseInt(e.target.value) || 5 })}
+                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                                />
+                            </div>
                         )}
                     </div>
+
+                    {/* Answer Options or Input Preview */}
+                    {['SINGLE', 'MULTIPLE', 'TRUE_FALSE'].includes(question.questionType) ? (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Answer Options <span className="text-gray-500">(click checkmark to mark correct)</span>
+                            </label>
+                            <div className="space-y-3">
+                                {question.options.map((option, optIndex) => (
+                                    <div key={optIndex} className="p-3 border border-gray-200 rounded-lg bg-gray-50">
+                                        <div className="flex items-center space-x-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleCorrect(optIndex)}
+                                                className={`p-2 rounded-lg border-2 transition ${option.isCorrect
+                                                    ? 'bg-emerald-500 border-emerald-500 text-white'
+                                                    : 'border-gray-300 text-gray-400 hover:border-emerald-400'
+                                                    }`}
+                                                title={option.isCorrect ? 'Correct answer' : 'Mark as correct'}
+                                            >
+                                                <Check size={16} />
+                                            </button>
+                                            <input
+                                                type="text"
+                                                value={option.optionText}
+                                                onChange={(e) => handleOptionChange(optIndex, 'optionText', e.target.value)}
+                                                className={`flex-1 p-2 border rounded-lg ${option.isCorrect ? 'border-emerald-300 bg-emerald-50' : 'border-gray-300 bg-white'
+                                                    }`}
+                                                placeholder={`Option ${optIndex + 1}`}
+                                                disabled={question.questionType === 'TRUE_FALSE'}
+                                            />
+                                            {question.questionType !== 'TRUE_FALSE' && question.options.length > 2 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeOption(optIndex)}
+                                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            )}
+                                        </div>
+                                        {/* Option Image */}
+                                        {question.questionType !== 'TRUE_FALSE' && (
+                                            <div className="mt-2 ml-10">
+                                                <ImageUploader
+                                                    image={option.optionImage}
+                                                    onUpload={(img) => handleOptionChange(optIndex, 'optionImage', img)}
+                                                    onRemove={() => handleOptionChange(optIndex, 'optionImage', null)}
+                                                    label="Add Option Image"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                            {question.questionType !== 'TRUE_FALSE' && (
+                                <button
+                                    type="button"
+                                    onClick={addOption}
+                                    className="mt-2 text-sm text-emerald-600 hover:text-emerald-700 flex items-center"
+                                >
+                                    <PlusCircle size={16} className="mr-1" /> Add Option
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300">
+                            <label className="block text-sm font-medium text-gray-500 mb-2">Student Answer Preview</label>
+                            {question.questionType === 'RATING' && (
+                                <div className="flex gap-1" title={`Rating out of ${question.ratingScale || 5}`}>
+                                    {[...Array(parseInt(question.ratingScale) || 5)].map((_, i) => (
+                                        <img
+                                            key={i}
+                                            src="https://img.icons8.com/fluency/48/star.png"
+                                            alt="star"
+                                            className="w-8 h-8 opacity-50 grayscale"
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                            {question.questionType === 'SHORT_TEXT' && (
+                                <input disabled className="w-full p-2 border rounded bg-white text-gray-400" placeholder="Short answer text..." />
+                            )}
+                            {question.questionType === 'LONG_TEXT' && (
+                                <textarea disabled className="w-full p-2 border rounded bg-white text-gray-400" rows="3" placeholder="Long answer text..." />
+                            )}
+                            {question.questionType === 'DATE' && (
+                                <input disabled type="date" className="w-full p-2 border rounded bg-white text-gray-400" />
+                            )}
+                        </div>
+                    )}
 
                     {/* Explanation (optional) */}
                     <div>
@@ -331,7 +375,7 @@ const QuizQuestionEditor = ({ question, index, updateQuestion, removeQuestion })
 const QuizCreatePage = ({ navigate }) => {
     const { user } = useAuth();
     const isPremiumUser = user?.isPlanActive || false;
-    
+
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [classesInput, setClassesInput] = useState('');
@@ -384,6 +428,7 @@ const QuizCreatePage = ({ navigate }) => {
             tempId: generateTempId(),
             questionText: '',
             questionType: 'SINGLE',
+            ratingScale: 5,
             options: [
                 { optionText: 'Option 1', isCorrect: false },
                 { optionText: 'Option 2', isCorrect: false }
@@ -409,35 +454,41 @@ const QuizCreatePage = ({ navigate }) => {
             return;
         }
 
-        // Normalize shape and ensure tempIds
-        const normalized = newQs.map((q) => ({
-            tempId: q.tempId || generateTempId(),
-            questionText: q.questionText?.trim() || '',
-            questionType: q.questionType || 'SINGLE',
-            options: Array.isArray(q.options) ? q.options.map((o, idx) => ({
-                optionText: typeof o === 'string' ? o : (o.optionText || `Option ${idx + 1}`),
-                isCorrect: typeof o === 'object' ? Boolean(o.isCorrect) : false
-            })) : [
-                { optionText: 'Option 1', isCorrect: false },
-                { optionText: 'Option 2', isCorrect: false }
-            ],
-            points: q.points || 1,
-            explanation: q.explanation || ''
-        }));
+        const normalized = newQs.map(normalizeImportedQuestion);
 
         setQuestions((prev) => [...prev, ...normalized]);
         setStatus(`Imported ${normalized.length} question${normalized.length > 1 ? 's' : ''} from AI.`);
     };
 
+    const normalizeImportedQuestion = (q) => ({
+        tempId: q.tempId || generateTempId(),
+        questionText: q.questionText?.trim() || '',
+        questionType: q.questionType || 'SINGLE',
+        ratingScale: q.ratingScale || 5,
+        options: Array.isArray(q.options) ? q.options.map((o, idx) => ({
+            optionText: typeof o === 'string' ? o : (o.optionText || `Option ${idx + 1}`),
+            isCorrect: typeof o === 'object' ? Boolean(o.isCorrect) : false
+        })) : [
+            { optionText: 'Option 1', isCorrect: false },
+            { optionText: 'Option 2', isCorrect: false }
+        ],
+        points: q.points || 1,
+        explanation: q.explanation || ''
+    });
+
     const validateQuiz = () => {
         if (!title.trim()) return 'Quiz title is required';
         if (questions.length === 0) return 'Add at least one question';
-        
+
         for (let i = 0; i < questions.length; i++) {
             const q = questions[i];
             if (!q.questionText.trim()) return `Question ${i + 1} needs text`;
-            if (q.options.some(opt => !opt.optionText.trim())) return `Question ${i + 1} has empty options`;
-            if (!q.options.some(opt => opt.isCorrect)) return `Question ${i + 1} needs a correct answer marked`;
+
+            // Only validate options for choice-based questions
+            if (['SINGLE', 'MULTIPLE', 'TRUE_FALSE'].includes(q.questionType)) {
+                if (q.options.some(opt => !opt.optionText.trim())) return `Question ${i + 1} has empty options`;
+                if (!q.options.some(opt => opt.isCorrect)) return `Question ${i + 1} needs a correct answer marked`;
+            }
         }
         return null;
     };
@@ -456,7 +507,7 @@ const QuizCreatePage = ({ navigate }) => {
         try {
             // Remove tempId before sending
             const cleanQuestions = questions.map(({ tempId, ...rest }) => rest);
-            
+
             await createQuiz({
                 title,
                 description,
@@ -468,7 +519,7 @@ const QuizCreatePage = ({ navigate }) => {
                 endAt: endAtLocal ? new Date(endAtLocal).toISOString() : null,
                 timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
             });
-            
+
             setStatus('Quiz created successfully! Redirecting...');
             setTimeout(() => navigate('quiz-dashboard'), 1200);
         } catch (err) {
@@ -521,274 +572,273 @@ const QuizCreatePage = ({ navigate }) => {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Classes/Sections <span className="text-gray-400">(optional - for student grouping)</span>
                                 </label>
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                value={classesInput}
-                                onChange={(e) => setClassesInput(e.target.value)}
-                                onKeyDown={handleClassKeyDown}
-                                className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
-                                placeholder="e.g., CSE 5A (press Enter to add)"
-                            />
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={classesInput}
+                                        onChange={(e) => setClassesInput(e.target.value)}
+                                        onKeyDown={handleClassKeyDown}
+                                        className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
+                                        placeholder="e.g., CSE 5A (press Enter to add)"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={addClass}
+                                        className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
+                                    >
+                                        Add
+                                    </button>
+                                </div>
+                                {classes.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {classes.map((cls, idx) => (
+                                            <span
+                                                key={idx}
+                                                className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm"
+                                            >
+                                                {cls}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeClass(cls)}
+                                                    className="ml-1 text-emerald-600 hover:text-red-500"
+                                                >
+                                                    ×
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Total Points Display */}
+                            <div className="flex items-center justify-between bg-emerald-50 p-3 rounded-lg">
+                                <span className="text-emerald-800 font-medium">Total Points:</span>
+                                <span className="text-2xl font-bold text-emerald-600">{totalPoints}</span>
+                            </div>
+                        </div>
+
+                        {/* Quiz Settings */}
+                        <div className="bg-white p-6 rounded-xl shadow-lg border border-emerald-100">
                             <button
                                 type="button"
-                                onClick={addClass}
-                                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
+                                onClick={() => setShowSettings(!showSettings)}
+                                className="w-full flex items-center justify-between text-left"
                             >
-                                Add
+                                <h2 className="text-xl font-bold text-gray-800 flex items-center">
+                                    <Settings size={24} className="mr-2 text-emerald-600" />
+                                    Quiz Settings
+                                </h2>
+                                {showSettings ? <ChevronUp /> : <ChevronDown />}
+                            </button>
+
+                            {showSettings && (
+                                <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            <Clock size={16} className="inline mr-1" />
+                                            Time Limit (minutes)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={settings.timeLimit}
+                                            onChange={(e) => setSettings(s => ({ ...s, timeLimit: parseInt(e.target.value) || 0 }))}
+                                            className="w-full p-2 border border-gray-300 rounded-lg"
+                                            placeholder="0 = No limit"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Passing Score (%)</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="100"
+                                            value={settings.passingScore}
+                                            onChange={(e) => setSettings(s => ({ ...s, passingScore: parseInt(e.target.value) || 0 }))}
+                                            className="w-full p-2 border border-gray-300 rounded-lg"
+                                        />
+                                    </div>
+                                    <div className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            id="shuffleQuestions"
+                                            checked={settings.shuffleQuestions}
+                                            onChange={(e) => setSettings(s => ({ ...s, shuffleQuestions: e.target.checked }))}
+                                            className="mr-2"
+                                        />
+                                        <label htmlFor="shuffleQuestions" className="text-sm text-gray-700">Shuffle Questions</label>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            id="shuffleOptions"
+                                            checked={settings.shuffleOptions}
+                                            onChange={(e) => setSettings(s => ({ ...s, shuffleOptions: e.target.checked }))}
+                                            className="mr-2"
+                                        />
+                                        <label htmlFor="shuffleOptions" className="text-sm text-gray-700">Shuffle Options</label>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            id="showCorrectAnswers"
+                                            checked={settings.showCorrectAnswers}
+                                            onChange={(e) => setSettings(s => ({ ...s, showCorrectAnswers: e.target.checked }))}
+                                            className="mr-2"
+                                        />
+                                        <label htmlFor="showCorrectAnswers" className="text-sm text-gray-700">Show Correct Answers After</label>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            id="showExplanations"
+                                            checked={settings.showExplanations}
+                                            onChange={(e) => setSettings(s => ({ ...s, showExplanations: e.target.checked }))}
+                                            className="mr-2"
+                                        />
+                                        <label htmlFor="showExplanations" className="text-sm text-gray-700">Show Explanations</label>
+                                    </div>
+
+                                    {/* Premium Features Section */}
+                                    <div className="border-t pt-3 mt-2">
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                            Anti-Cheating Features
+                                            {!isPremiumUser && (
+                                                <span className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full normal-case">
+                                                    PRO
+                                                </span>
+                                            )}
+                                        </p>
+
+                                        <div className="space-y-2">
+                                            <PremiumSettingRow
+                                                id="tabSwitchingEnabled"
+                                                checked={settings.tabSwitchingEnabled}
+                                                onChange={(e) => setSettings(s => ({ ...s, tabSwitchingEnabled: e.target.checked }))}
+                                                label="Enable Tab Switch Detection"
+                                                description="Auto-submits quiz after 3 tab switches"
+                                                isPremiumUser={isPremiumUser}
+                                                onUpgradeClick={() => setShowPremiumModal(true)}
+                                            />
+
+                                            <PremiumSettingRow
+                                                id="preventDuplicateRollNo"
+                                                checked={settings.preventDuplicateRollNo}
+                                                onChange={(e) => setSettings(s => ({ ...s, preventDuplicateRollNo: e.target.checked }))}
+                                                label="Prevent Duplicate Roll Numbers"
+                                                description="Same roll number can only submit once"
+                                                isPremiumUser={isPremiumUser}
+                                                onUpgradeClick={() => setShowPremiumModal(true)}
+                                            />
+
+                                            <PremiumSettingRow
+                                                id="requireSequentialAnswering"
+                                                checked={settings.requireSequentialAnswering}
+                                                onChange={(e) => setSettings(s => ({ ...s, requireSequentialAnswering: e.target.checked }))}
+                                                label="Require Sequential Answering"
+                                                description="Must answer current question before moving to next"
+                                                isPremiumUser={isPremiumUser}
+                                                onUpgradeClick={() => setShowPremiumModal(true)}
+                                            />
+
+                                            <PremiumSettingRow
+                                                id="fullscreenModeEnabled"
+                                                checked={settings.fullscreenModeEnabled}
+                                                onChange={(e) => setSettings(s => ({ ...s, fullscreenModeEnabled: e.target.checked }))}
+                                                label="Force Fullscreen Mode"
+                                                description="Quiz must be taken in fullscreen. Auto-submits after 3 exits. Includes split-screen detection."
+                                                isPremiumUser={isPremiumUser}
+                                                onUpgradeClick={() => setShowPremiumModal(true)}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            {/* Scheduling */}
+                            <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-gray-800">Schedule Quiz</h3>
+                                        <p className="text-xs text-gray-500">Optional — make the quiz available only during the scheduled window.</p>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <label className="inline-flex items-center">
+                                            <input type="checkbox" className="mr-2" checked={isScheduled} onChange={(e) => setIsScheduled(e.target.checked)} />
+                                            <span className="text-sm">Enable Schedule</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {isScheduled && (
+                                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs text-gray-600">Start (local)</label>
+                                            <input
+                                                type="datetime-local"
+                                                value={startAtLocal}
+                                                onChange={(e) => setStartAtLocal(e.target.value)}
+                                                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-gray-600">End (local)</label>
+                                            <input
+                                                type="datetime-local"
+                                                value={endAtLocal}
+                                                onChange={(e) => setEndAtLocal(e.target.value)}
+                                                className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Premium Upgrade Modal */}
+                        <PremiumUpgradeModal
+                            isOpen={showPremiumModal}
+                            onClose={() => setShowPremiumModal(false)}
+                            featureName="Anti-Cheating Features"
+                        />
+
+                        {/* Questions */}
+                        <div className="space-y-4">
+                            <h2 className="text-xl font-bold text-gray-800">Quiz Questions</h2>
+
+                            {questions.map((q, index) => (
+                                <QuizQuestionEditor
+                                    key={q.tempId}
+                                    question={q}
+                                    index={index}
+                                    updateQuestion={updateQuestion}
+                                    removeQuestion={removeQuestion}
+                                />
+                            ))}
+
+                            <button
+                                type="button"
+                                onClick={addQuestion}
+                                className="w-full flex items-center justify-center p-4 border-2 border-dashed border-emerald-300 text-emerald-600 rounded-xl hover:bg-emerald-50 transition font-medium"
+                            >
+                                <PlusCircle size={24} className="mr-2" /> Add Question
                             </button>
                         </div>
-                        {classes.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-2">
-                                {classes.map((cls, idx) => (
-                                    <span
-                                        key={idx}
-                                        className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm"
-                                    >
-                                        {cls}
-                                        <button
-                                            type="button"
-                                            onClick={() => removeClass(cls)}
-                                            className="ml-1 text-emerald-600 hover:text-red-500"
-                                        >
-                                            ×
-                                        </button>
-                                    </span>
-                                ))}
-                            </div>
+
+                        {/* Status & Submit */}
+                        {status && (
+                            <p className={`p-3 rounded-lg text-sm font-medium ${status.startsWith('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                                }`}>
+                                {status}
+                            </p>
                         )}
-                    </div>
-                    
-                    {/* Total Points Display */}
-                    <div className="flex items-center justify-between bg-emerald-50 p-3 rounded-lg">
-                        <span className="text-emerald-800 font-medium">Total Points:</span>
-                        <span className="text-2xl font-bold text-emerald-600">{totalPoints}</span>
-                    </div>
-                </div>
 
-                {/* Quiz Settings */}
-                <div className="bg-white p-6 rounded-xl shadow-lg border border-emerald-100">
-                    <button
-                        type="button"
-                        onClick={() => setShowSettings(!showSettings)}
-                        className="w-full flex items-center justify-between text-left"
-                    >
-                        <h2 className="text-xl font-bold text-gray-800 flex items-center">
-                            <Settings size={24} className="mr-2 text-emerald-600" />
-                            Quiz Settings
-                        </h2>
-                        {showSettings ? <ChevronUp /> : <ChevronDown />}
-                    </button>
-                    
-                    {showSettings && (
-                        <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    <Clock size={16} className="inline mr-1" />
-                                    Time Limit (minutes)
-                                </label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    value={settings.timeLimit}
-                                    onChange={(e) => setSettings(s => ({ ...s, timeLimit: parseInt(e.target.value) || 0 }))}
-                                    className="w-full p-2 border border-gray-300 rounded-lg"
-                                    placeholder="0 = No limit"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Passing Score (%)</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="100"
-                                    value={settings.passingScore}
-                                    onChange={(e) => setSettings(s => ({ ...s, passingScore: parseInt(e.target.value) || 0 }))}
-                                    className="w-full p-2 border border-gray-300 rounded-lg"
-                                />
-                            </div>
-                            <div className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    id="shuffleQuestions"
-                                    checked={settings.shuffleQuestions}
-                                    onChange={(e) => setSettings(s => ({ ...s, shuffleQuestions: e.target.checked }))}
-                                    className="mr-2"
-                                />
-                                <label htmlFor="shuffleQuestions" className="text-sm text-gray-700">Shuffle Questions</label>
-                            </div>
-                            <div className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    id="shuffleOptions"
-                                    checked={settings.shuffleOptions}
-                                    onChange={(e) => setSettings(s => ({ ...s, shuffleOptions: e.target.checked }))}
-                                    className="mr-2"
-                                />
-                                <label htmlFor="shuffleOptions" className="text-sm text-gray-700">Shuffle Options</label>
-                            </div>
-                            <div className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    id="showCorrectAnswers"
-                                    checked={settings.showCorrectAnswers}
-                                    onChange={(e) => setSettings(s => ({ ...s, showCorrectAnswers: e.target.checked }))}
-                                    className="mr-2"
-                                />
-                                <label htmlFor="showCorrectAnswers" className="text-sm text-gray-700">Show Correct Answers After</label>
-                            </div>
-                            <div className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    id="showExplanations"
-                                    checked={settings.showExplanations}
-                                    onChange={(e) => setSettings(s => ({ ...s, showExplanations: e.target.checked }))}
-                                    className="mr-2"
-                                />
-                                <label htmlFor="showExplanations" className="text-sm text-gray-700">Show Explanations</label>
-                            </div>
-                            
-                            {/* Premium Features Section */}
-                            <div className="border-t pt-3 mt-2">
-                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                    Anti-Cheating Features
-                                    {!isPremiumUser && (
-                                        <span className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full normal-case">
-                                            PRO
-                                        </span>
-                                    )}
-                                </p>
-                                
-                                <div className="space-y-2">
-                                    <PremiumSettingRow
-                                        id="tabSwitchingEnabled"
-                                        checked={settings.tabSwitchingEnabled}
-                                        onChange={(e) => setSettings(s => ({ ...s, tabSwitchingEnabled: e.target.checked }))}
-                                        label="Enable Tab Switch Detection"
-                                        description="Auto-submits quiz after 3 tab switches"
-                                        isPremiumUser={isPremiumUser}
-                                        onUpgradeClick={() => setShowPremiumModal(true)}
-                                    />
-                                    
-                                    <PremiumSettingRow
-                                        id="preventDuplicateRollNo"
-                                        checked={settings.preventDuplicateRollNo}
-                                        onChange={(e) => setSettings(s => ({ ...s, preventDuplicateRollNo: e.target.checked }))}
-                                        label="Prevent Duplicate Roll Numbers"
-                                        description="Same roll number can only submit once"
-                                        isPremiumUser={isPremiumUser}
-                                        onUpgradeClick={() => setShowPremiumModal(true)}
-                                    />
-                                    
-                                    <PremiumSettingRow
-                                        id="requireSequentialAnswering"
-                                        checked={settings.requireSequentialAnswering}
-                                        onChange={(e) => setSettings(s => ({ ...s, requireSequentialAnswering: e.target.checked }))}
-                                        label="Require Sequential Answering"
-                                        description="Must answer current question before moving to next"
-                                        isPremiumUser={isPremiumUser}
-                                        onUpgradeClick={() => setShowPremiumModal(true)}
-                                    />
-                                    
-                                    <PremiumSettingRow
-                                        id="fullscreenModeEnabled"
-                                        checked={settings.fullscreenModeEnabled}
-                                        onChange={(e) => setSettings(s => ({ ...s, fullscreenModeEnabled: e.target.checked }))}
-                                        label="Force Fullscreen Mode"
-                                        description="Quiz must be taken in fullscreen. Auto-submits after 3 exits. Includes split-screen detection."
-                                        isPremiumUser={isPremiumUser}
-                                        onUpgradeClick={() => setShowPremiumModal(true)}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    {/* Scheduling */}
-                    <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="text-sm font-semibold text-gray-800">Schedule Quiz</h3>
-                                <p className="text-xs text-gray-500">Optional — make the quiz available only during the scheduled window.</p>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <label className="inline-flex items-center">
-                                    <input type="checkbox" className="mr-2" checked={isScheduled} onChange={(e) => setIsScheduled(e.target.checked)} />
-                                    <span className="text-sm">Enable Schedule</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        {isScheduled && (
-                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-xs text-gray-600">Start (local)</label>
-                                    <input
-                                        type="datetime-local"
-                                        value={startAtLocal}
-                                        onChange={(e) => setStartAtLocal(e.target.value)}
-                                        className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-gray-600">End (local)</label>
-                                    <input
-                                        type="datetime-local"
-                                        value={endAtLocal}
-                                        onChange={(e) => setEndAtLocal(e.target.value)}
-                                        className="mt-1 p-2 w-full border border-gray-300 rounded-lg"
-                                    />
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Premium Upgrade Modal */}
-                <PremiumUpgradeModal 
-                    isOpen={showPremiumModal} 
-                    onClose={() => setShowPremiumModal(false)}
-                    featureName="Anti-Cheating Features"
-                />
-
-                {/* Questions */}
-                <div className="space-y-4">
-                    <h2 className="text-xl font-bold text-gray-800">Quiz Questions</h2>
-                    
-                    {questions.map((q, index) => (
-                        <QuizQuestionEditor
-                            key={q.tempId}
-                            question={q}
-                            index={index}
-                            updateQuestion={updateQuestion}
-                            removeQuestion={removeQuestion}
-                        />
-                    ))}
-
-                    <button
-                        type="button"
-                        onClick={addQuestion}
-                        className="w-full flex items-center justify-center p-4 border-2 border-dashed border-emerald-300 text-emerald-600 rounded-xl hover:bg-emerald-50 transition font-medium"
-                    >
-                        <PlusCircle size={24} className="mr-2" /> Add Question
-                    </button>
-                </div>
-
-                {/* Status & Submit */}
-                {status && (
-                    <p className={`p-3 rounded-lg text-sm font-medium ${
-                        status.startsWith('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-                    }`}>
-                        {status}
-                    </p>
-                )}
-
-                <button
-                    type="submit"
-                    disabled={loading || questions.length === 0}
-                    className="w-full py-3 px-4 rounded-lg shadow-lg text-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500 disabled:opacity-50 transition"
-                >
-                    {loading ? 'Creating Quiz...' : 'Create Quiz'}
-                </button>
+                        <button
+                            type="submit"
+                            disabled={loading || questions.length === 0}
+                            className="w-full py-3 px-4 rounded-lg shadow-lg text-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500 disabled:opacity-50 transition"
+                        >
+                            {loading ? 'Creating Quiz...' : 'Create Quiz'}
+                        </button>
                     </form>
                 </div>
 

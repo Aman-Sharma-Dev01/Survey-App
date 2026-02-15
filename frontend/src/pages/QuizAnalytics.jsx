@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { BarChart3, Users, CheckCircle, XCircle, Clock, TrendingUp, Loader, Filter, Trophy, Download, ChevronDown } from 'lucide-react';
+import { BarChart3, Users, CheckCircle, XCircle, Clock, TrendingUp, Loader, Filter, Trophy, Download, ChevronDown, Star } from 'lucide-react';
 import { getQuizAnalytics } from '../services/quizService';
 
 const QuizAnalyticsPage = ({ quizId, navigate }) => {
@@ -67,7 +67,7 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
     // Calculate top performer (highest score, with time as tiebreaker)
     const topPerformer = useMemo(() => {
         if (filteredResponses.length === 0) return null;
-        
+
         // Sort by percentage (desc), then by timeTaken (asc) for tiebreaker
         const sorted = [...filteredResponses].sort((a, b) => {
             if (b.percentage !== a.percentage) {
@@ -75,7 +75,7 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
             }
             return (a.timeTaken || Infinity) - (b.timeTaken || Infinity); // Less time wins
         });
-        
+
         return sorted[0];
     }, [filteredResponses]);
 
@@ -123,12 +123,12 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
         // Add BOM for Excel UTF-8 compatibility
         const BOM = '\uFEFF';
         const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-        
+
         // Create download link
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         const fileName = `${quiz.title.replace(/[^a-z0-9]/gi, '_')}_responses${selectedClass ? `_${selectedClass.replace(/[^a-z0-9]/gi, '_')}` : ''}.csv`;
-        
+
         link.setAttribute('href', url);
         link.setAttribute('download', fileName);
         link.style.visibility = 'hidden';
@@ -198,7 +198,7 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
                         </>
                     )}
                 </div>
-                
+
                 {/* Export Button */}
                 <button
                     onClick={exportToExcel}
@@ -286,7 +286,7 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
                             </div>
                             <div className="text-center">
                                 <p className="text-3xl font-bold text-amber-600">
-                                    {topPerformer.timeTaken 
+                                    {topPerformer.timeTaken
                                         ? `${Math.floor(topPerformer.timeTaken / 60)}m ${topPerformer.timeTaken % 60}s`
                                         : '-'}
                                 </p>
@@ -308,9 +308,9 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
                         Question Performance
                         <span className="ml-2 text-sm font-normal text-gray-500">({questionStats.length} questions)</span>
                     </h2>
-                    <ChevronDown 
-                        size={24} 
-                        className={`text-gray-500 transition-transform duration-300 ${isQuestionPerformanceOpen ? 'rotate-180' : ''}`} 
+                    <ChevronDown
+                        size={24}
+                        className={`text-gray-500 transition-transform duration-300 ${isQuestionPerformanceOpen ? 'rotate-180' : ''}`}
                     />
                 </button>
                 <div className={`transition-all duration-300 ease-in-out ${isQuestionPerformanceOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
@@ -321,27 +321,55 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
                                     <p className="font-medium text-gray-800">
                                         Q{idx + 1}. {q.questionText}
                                     </p>
-                                    <span className={`px-2 py-1 rounded text-sm font-medium ${
-                                        q.accuracy >= 70 ? 'bg-emerald-100 text-emerald-700' :
-                                        q.accuracy >= 40 ? 'bg-yellow-100 text-yellow-700' :
-                                        'bg-red-100 text-red-700'
-                                    }`}>
-                                        {q.accuracy}% correct
-                                    </span>
+                                    {q.questionType === 'RATING' ? (
+                                        <span className="px-2 py-1 rounded text-sm font-medium bg-blue-100 text-blue-700">
+                                            Avg: {q.averageRating || 0} ★
+                                        </span>
+                                    ) : ['SHORT_TEXT', 'LONG_TEXT', 'DATE'].includes(q.questionType) ? (
+                                        <span className="px-2 py-1 rounded text-sm font-medium bg-gray-100 text-gray-700">
+                                            Text Response
+                                        </span>
+                                    ) : (
+                                        <span className={`px-2 py-1 rounded text-sm font-medium ${q.accuracy >= 70 ? 'bg-emerald-100 text-emerald-700' :
+                                                q.accuracy >= 40 ? 'bg-yellow-100 text-yellow-700' :
+                                                    'bg-red-100 text-red-700'
+                                            }`}>
+                                            {q.accuracy}% correct
+                                        </span>
+                                    )}
                                 </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div 
-                                        className={`h-2 rounded-full transition-all ${
-                                            q.accuracy >= 70 ? 'bg-emerald-500' :
-                                            q.accuracy >= 40 ? 'bg-yellow-500' :
-                                            'bg-red-500'
-                                        }`}
-                                        style={{ width: `${q.accuracy}%` }}
-                                    />
-                                </div>
-                                <p className="text-sm text-gray-500 mt-1">
-                                    {q.correctCount} / {q.totalAttempts} answered correctly
-                                </p>
+
+                                {q.questionType === 'RATING' ? (
+                                    <div className="flex items-center gap-1">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Star
+                                                key={i}
+                                                size={16}
+                                                className={`${i < Math.round(q.averageRating || 0) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
+                                            />
+                                        ))}
+                                        <span className="text-gray-500 text-sm ml-2">({q.totalAttempts} ratings)</span>
+                                    </div>
+                                ) : ['SHORT_TEXT', 'LONG_TEXT', 'DATE'].includes(q.questionType) ? (
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        {q.totalAttempts} responses received
+                                    </p>
+                                ) : (
+                                    <>
+                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                            <div
+                                                className={`h-2 rounded-full transition-all ${q.accuracy >= 70 ? 'bg-emerald-500' :
+                                                        q.accuracy >= 40 ? 'bg-yellow-500' :
+                                                            'bg-red-500'
+                                                    }`}
+                                                style={{ width: `${q.accuracy}%` }}
+                                            />
+                                        </div>
+                                        <p className="text-sm text-gray-500 mt-1">
+                                            {q.correctCount} / {q.totalAttempts} answered correctly
+                                        </p>
+                                    </>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -379,13 +407,12 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
                             </thead>
                             <tbody>
                                 {filteredResponses.map((response) => (
-                                    <tr 
-                                        key={response._id} 
-                                        className={`border-b border-gray-100 ${
-                                            response.autoSubmittedDueToTabSwitch 
-                                                ? 'bg-red-50 hover:bg-red-100' 
+                                    <tr
+                                        key={response._id}
+                                        className={`border-b border-gray-100 ${response.autoSubmittedDueToTabSwitch
+                                                ? 'bg-red-50 hover:bg-red-100'
                                                 : 'hover:bg-gray-50'
-                                        }`}
+                                            }`}
                                         title={response.autoSubmittedDueToTabSwitch ? 'Auto-submitted due to tab switching' : ''}
                                     >
                                         <td className={`py-3 px-4 ${response.autoSubmittedDueToTabSwitch ? 'text-red-700 font-medium' : 'text-gray-800'}`}>
@@ -426,7 +453,7 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
                                             )}
                                         </td>
                                         <td className={`py-3 px-4 ${response.autoSubmittedDueToTabSwitch ? 'text-red-600' : 'text-gray-600'}`}>
-                                            {response.timeTaken 
+                                            {response.timeTaken
                                                 ? `${Math.floor(response.timeTaken / 60)}m ${response.timeTaken % 60}s`
                                                 : '-'}
                                         </td>
