@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { PlusCircle, Trash2, ChevronDown, ChevronUp, Check, Settings, Clock, HelpCircle, Image, X, Loader } from 'lucide-react';
+import { PlusCircle, Trash2, ChevronDown, ChevronUp, Check, Settings, Clock, HelpCircle, Image, X, Loader, Eye, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { generateTempId } from '../services/api';
 import { createQuiz } from '../services/quizService';
 import { uploadImage, deleteImage } from '../services/uploadService';
@@ -372,6 +372,201 @@ const QuizQuestionEditor = ({ question, index, updateQuestion, removeQuestion })
     );
 };
 
+
+// Quiz Preview Modal Component
+const QuizPreviewModal = ({ isOpen, onClose, title, description, questions, settings }) => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [previewAnswers, setPreviewAnswers] = useState({});
+    const [hoveredStar, setHoveredStar] = useState(null);
+
+    if (!isOpen || questions.length === 0) return null;
+
+    const currentQ = questions[currentIndex];
+    const totalPoints = questions.reduce((sum, q) => sum + (q.points || 1), 0);
+
+    const handleOptionClick = (qIdx, optionText, isMultiple) => {
+        const key = `q${qIdx}`;
+        setPreviewAnswers(prev => {
+            const current = prev[key] || [];
+            if (isMultiple) {
+                return { ...prev, [key]: current.includes(optionText) ? current.filter(o => o !== optionText) : [...current, optionText] };
+            }
+            return { ...prev, [key]: [optionText] };
+        });
+    };
+
+    const handleTextChange = (qIdx, value) => {
+        setPreviewAnswers(prev => ({ ...prev, [`q${qIdx}`]: [value] }));
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-5 flex items-center justify-between">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <Eye size={20} />
+                            <span className="text-xs font-medium bg-white/20 px-2 py-0.5 rounded">PREVIEW MODE</span>
+                        </div>
+                        <h2 className="text-xl font-bold">{title || 'Untitled Quiz'}</h2>
+                        {description && <p className="text-sm text-emerald-100 mt-1">{description}</p>}
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-lg transition">
+                        <X size={24} />
+                    </button>
+                </div>
+
+                {/* Quiz Info Bar */}
+                <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b text-sm text-gray-600">
+                    <span>{questions.length} Questions • {totalPoints} Points</span>
+                    {settings.timeLimit > 0 && <span className="flex items-center gap-1"><Clock size={14} /> {settings.timeLimit} min</span>}
+                </div>
+
+                {/* Question Area */}
+                <div className="flex-1 overflow-y-auto p-6">
+                    {/* Question Header */}
+                    <div className="flex items-start justify-between mb-4">
+                        <div>
+                            <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
+                                Question {currentIndex + 1} of {questions.length}
+                            </span>
+                            <span className="text-xs text-gray-400 ml-2">{currentQ.points || 1} pt{(currentQ.points || 1) > 1 ? 's' : ''}</span>
+                        </div>
+                        <span className="text-xs text-gray-400 capitalize">
+                            {QUESTION_TYPES.find(t => t.value === currentQ.questionType)?.label || currentQ.questionType}
+                        </span>
+                    </div>
+
+                    {/* Question Text */}
+                    <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                        {currentQ.questionText || <span className="italic text-gray-400">No question text</span>}
+                    </h3>
+
+                    {/* Question Image */}
+                    {currentQ.questionImage?.url && (
+                        <img src={currentQ.questionImage.url} alt="Question" className="mt-2 mb-4 max-h-48 rounded-lg border object-contain" />
+                    )}
+
+                    {/* Answer Area */}
+                    <div className="mt-5 space-y-3">
+                        {['SINGLE', 'MULTIPLE', 'TRUE_FALSE'].includes(currentQ.questionType) ? (
+                            currentQ.options.map((opt, idx) => {
+                                const key = `q${currentIndex}`;
+                                const isSelected = (previewAnswers[key] || []).includes(opt.optionText);
+                                const isMultiple = currentQ.questionType === 'MULTIPLE';
+                                return (
+                                    <button
+                                        key={idx}
+                                        onClick={() => handleOptionClick(currentIndex, opt.optionText, isMultiple)}
+                                        className={`w-full p-4 text-left rounded-xl border-2 transition-all ${isSelected
+                                                ? 'border-emerald-500 bg-emerald-50 shadow-md'
+                                                : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-5 h-5 rounded-${isMultiple ? 'md' : 'full'} border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'
+                                                }`}>
+                                                {isSelected && <Check size={12} className="text-white" />}
+                                            </div>
+                                            <span className="text-base">{opt.optionText}</span>
+                                        </div>
+                                        {opt.optionImage?.url && (
+                                            <img src={opt.optionImage.url} alt={`Option ${idx + 1}`} className="mt-2 max-h-24 rounded border object-contain" />
+                                        )}
+                                    </button>
+                                );
+                            })
+                        ) : currentQ.questionType === 'RATING' ? (
+                            <div className="flex flex-col items-center py-6">
+                                <div className="flex gap-2">
+                                    {[...Array(currentQ.ratingScale || 5)].map((_, i) => {
+                                        const val = i + 1;
+                                        const selected = parseInt(previewAnswers[`q${currentIndex}`]?.[0] || 0);
+                                        const isActive = (hoveredStar !== null ? hoveredStar >= val : selected >= val);
+                                        return (
+                                            <button
+                                                key={i}
+                                                onClick={() => handleTextChange(currentIndex, val.toString())}
+                                                onMouseEnter={() => setHoveredStar(val)}
+                                                onMouseLeave={() => setHoveredStar(null)}
+                                                className="focus:outline-none transition-transform hover:scale-125"
+                                            >
+                                                <Star size={36} className={isActive ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'} />
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <p className="mt-3 text-gray-500 font-medium">
+                                    {previewAnswers[`q${currentIndex}`]?.[0] || '0'} / {currentQ.ratingScale || 5}
+                                </p>
+                            </div>
+                        ) : currentQ.questionType === 'SHORT_TEXT' ? (
+                            <input
+                                type="text"
+                                className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                placeholder="Type your answer here..."
+                                value={previewAnswers[`q${currentIndex}`]?.[0] || ''}
+                                onChange={(e) => handleTextChange(currentIndex, e.target.value)}
+                            />
+                        ) : currentQ.questionType === 'LONG_TEXT' ? (
+                            <textarea
+                                rows={5}
+                                className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                placeholder="Type your detailed answer here..."
+                                value={previewAnswers[`q${currentIndex}`]?.[0] || ''}
+                                onChange={(e) => handleTextChange(currentIndex, e.target.value)}
+                            />
+                        ) : currentQ.questionType === 'DATE' ? (
+                            <input
+                                type="date"
+                                className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                value={previewAnswers[`q${currentIndex}`]?.[0] || ''}
+                                onChange={(e) => handleTextChange(currentIndex, e.target.value)}
+                            />
+                        ) : null}
+                    </div>
+                </div>
+
+                {/* Footer Navigation */}
+                <div className="flex items-center justify-between p-4 border-t bg-gray-50">
+                    <button
+                        onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
+                        disabled={currentIndex === 0}
+                        className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                    >
+                        <ChevronLeft size={18} /> Previous
+                    </button>
+
+                    {/* Question Dots */}
+                    <div className="flex gap-1.5 flex-wrap justify-center max-w-[60%]">
+                        {questions.map((_, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => setCurrentIndex(idx)}
+                                className={`w-3 h-3 rounded-full transition-all ${idx === currentIndex
+                                        ? 'bg-emerald-600 scale-125'
+                                        : previewAnswers[`q${idx}`]
+                                            ? 'bg-emerald-300'
+                                            : 'bg-gray-300'
+                                    }`}
+                            />
+                        ))}
+                    </div>
+
+                    <button
+                        onClick={() => setCurrentIndex(Math.min(questions.length - 1, currentIndex + 1))}
+                        disabled={currentIndex === questions.length - 1}
+                        className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                    >
+                        Next <ChevronRight size={18} />
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const QuizCreatePage = ({ navigate }) => {
     const { user } = useAuth();
     const isPremiumUser = user?.isPlanActive || false;
@@ -403,6 +598,7 @@ const QuizCreatePage = ({ navigate }) => {
     const [isScheduled, setIsScheduled] = useState(false);
     const [startAtLocal, setStartAtLocal] = useState(''); // datetime-local string
     const [endAtLocal, setEndAtLocal] = useState('');
+    const [showPreview, setShowPreview] = useState(false);
 
     const addClass = () => {
         const trimmed = classesInput.trim();
@@ -832,13 +1028,40 @@ const QuizCreatePage = ({ navigate }) => {
                             </p>
                         )}
 
-                        <button
-                            type="submit"
-                            disabled={loading || questions.length === 0}
-                            className="w-full py-3 px-4 rounded-lg shadow-lg text-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500 disabled:opacity-50 transition"
-                        >
-                            {loading ? 'Creating Quiz...' : 'Create Quiz'}
-                        </button>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const error = validateQuiz();
+                                    if (error) {
+                                        setStatus(`Error: ${error}`);
+                                        return;
+                                    }
+                                    setShowPreview(true);
+                                }}
+                                disabled={questions.length === 0}
+                                className="flex-1 py-3 px-4 rounded-lg shadow-lg text-xl font-semibold text-emerald-700 bg-emerald-50 border-2 border-emerald-300 hover:bg-emerald-100 focus:outline-none focus:ring-4 focus:ring-emerald-200 disabled:opacity-50 transition flex items-center justify-center gap-2"
+                            >
+                                <Eye size={22} /> Preview
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={loading || questions.length === 0}
+                                className="flex-[2] py-3 px-4 rounded-lg shadow-lg text-xl font-semibold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500 disabled:opacity-50 transition"
+                            >
+                                {loading ? 'Creating Quiz...' : 'Create Quiz'}
+                            </button>
+                        </div>
+
+                        {/* Quiz Preview Modal */}
+                        <QuizPreviewModal
+                            isOpen={showPreview}
+                            onClose={() => setShowPreview(false)}
+                            title={title}
+                            description={description}
+                            questions={questions}
+                            settings={settings}
+                        />
                     </form>
                 </div>
 
