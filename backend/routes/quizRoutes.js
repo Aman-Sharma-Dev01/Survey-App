@@ -1,9 +1,22 @@
 import express from 'express';
 import Quiz from '../models/Quiz.js';
 import QuizResponse from '../models/QuizResponse.js';
+import User from '../models/User.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+// --- Collaboration Helpers ---
+const isCreatorOrCollaborator = (quiz, userId) => {
+    if (quiz.creator.toString() === userId.toString()) return 'creator';
+    const collab = quiz.collaborators?.find(c => c.user.toString() === userId.toString());
+    return collab ? collab.role : null;
+};
+
+const canEdit = (quiz, userId) => {
+    const role = isCreatorOrCollaborator(quiz, userId);
+    return role === 'creator' || role === 'editor';
+};
 
 /* ===========================================================
    CREATE NEW QUIZ
@@ -40,8 +53,13 @@ router.post('/', protect, async (req, res) => {
 =========================================================== */
 router.get('/', protect, async (req, res) => {
     try {
-        const quizzes = await Quiz.find({ creator: req.user._id })
-            .sort({ createdAt: -1 });
+        // Fetch owned quizzes + quizzes shared with this user
+        const quizzes = await Quiz.find({
+            $or: [
+                { creator: req.user._id },
+                { 'collaborators.user': req.user._id }
+            ]
+        }).sort({ createdAt: -1 });
         res.json(quizzes);
     } catch (error) {
         console.error('Error in GET /api/quizzes:', error);
@@ -328,7 +346,7 @@ router.get('/analytics/:id', protect, async (req, res) => {
             return res.status(404).json({ message: 'Quiz not found' });
         }
 
-        if (quiz.creator.toString() !== req.user._id.toString()) {
+        if (!isCreatorOrCollaborator(quiz, req.user._id)) {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
@@ -435,13 +453,13 @@ router.get('/analytics/:id', protect, async (req, res) => {
 =========================================================== */
 router.get('/:id', protect, async (req, res) => {
     try {
-        const quiz = await Quiz.findById(req.params.id);
+        const quiz = await Quiz.findById(req.params.id).populate('collaborators.user', 'name email avatar');
 
         if (!quiz) {
             return res.status(404).json({ message: 'Quiz not found' });
         }
 
-        if (quiz.creator.toString() !== req.user._id.toString()) {
+        if (!isCreatorOrCollaborator(quiz, req.user._id)) {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
@@ -463,8 +481,8 @@ router.put('/:id', protect, async (req, res) => {
             return res.status(404).json({ message: 'Quiz not found' });
         }
 
-        if (quiz.creator.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ message: 'Not authorized' });
+        if (!canEdit(quiz, req.user._id)) {
+            return res.status(403).json({ message: 'Not authorized to edit this quiz' });
         }
 
         const { title, description, questions, settings, isPublished, classes, isScheduled, startAt, endAt, timeZone } = req.body;
@@ -512,6 +530,94 @@ router.delete('/:id', protect, async (req, res) => {
         res.json({ message: 'Quiz and all responses deleted' });
     } catch (error) {
         res.status(500).json({ message: 'Error deleting quiz' });
+    }
+});
+
+/* ===========================================================
+   ADD COLLABORATOR TO QUIZ
+   POST /api/quizzes/:id/collaborators (Private - Creator only)
+=========================================================== */
+router.post('/:id/collaborators', protect, async (req, res) => {
+    try {
+        const { email, role } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required' });
+        }
+
+        const quiz = await Quiz.findById(req.params.id);
+        if (!quiz) {
+            return res.status(404).json({ message: 'Quiz not found' });
+        }
+
+        // Only the creator can add collaborators
+        if (quiz.creator.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Only the quiz creator can add collaborators' });
+        }
+
+        // Check if the user exists in SurveyZen
+        const collaboratorUser = await User.findOne({ email: email.toLowerCase() }).select('_id name email avatar');
+        if (!collaboratorUser) {
+            return res.status(404).json({ message: 'No SurveyZen account found with this email. Ask them to sign up first.' });
+        }
+
+        // Can't add yourself
+        if (collaboratorUser._id.toString() === req.user._id.toString()) {
+            return res.status(400).json({ message: 'You cannot add yourself as a collaborator' });
+        }
+
+        // Check if already a collaborator
+        const existing = quiz.collaborators.find(c => c.user.toString() === collaboratorUser._id.toString());
+        if (existing) {
+            return res.status(400).json({ message: 'This user is already a collaborator' });
+        }
+
+        quiz.collaborators.push({
+            user: collaboratorUser._id,
+            email: collaboratorUser.email,
+            role: role || 'editor'
+        });
+
+        await quiz.save();
+
+        // Return the new collaborator with populated user info
+        res.status(201).json({
+            user: { _id: collaboratorUser._id, name: collaboratorUser.name, email: collaboratorUser.email, avatar: collaboratorUser.avatar },
+            email: collaboratorUser.email,
+            role: role || 'editor',
+            addedAt: new Date()
+        });
+    } catch (error) {
+        console.error('Add collaborator error:', error);
+        res.status(500).json({ message: 'Error adding collaborator' });
+    }
+});
+
+/* ===========================================================
+   REMOVE COLLABORATOR FROM QUIZ
+   DELETE /api/quizzes/:id/collaborators/:userId (Private - Creator only)
+=========================================================== */
+router.delete('/:id/collaborators/:userId', protect, async (req, res) => {
+    try {
+        const quiz = await Quiz.findById(req.params.id);
+        if (!quiz) {
+            return res.status(404).json({ message: 'Quiz not found' });
+        }
+
+        // Only the creator can remove collaborators
+        if (quiz.creator.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Only the quiz creator can remove collaborators' });
+        }
+
+        quiz.collaborators = quiz.collaborators.filter(
+            c => c.user.toString() !== req.params.userId
+        );
+
+        await quiz.save();
+        res.json({ message: 'Collaborator removed' });
+    } catch (error) {
+        console.error('Remove collaborator error:', error);
+        res.status(500).json({ message: 'Error removing collaborator' });
     }
 });
 

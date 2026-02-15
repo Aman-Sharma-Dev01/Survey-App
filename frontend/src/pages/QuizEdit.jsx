@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { PlusCircle, Trash2, ChevronDown, ChevronUp, Check, Settings, Clock, HelpCircle, Image, X, Loader, Save, ArrowLeft } from 'lucide-react';
+import { PlusCircle, Trash2, ChevronDown, ChevronUp, Check, Settings, Clock, HelpCircle, Image, X, Loader, Save, ArrowLeft, Users, UserPlus, Mail } from 'lucide-react';
 import { generateTempId } from '../services/api';
-import { getQuizById, updateQuiz } from '../services/quizService';
+import { getQuizById, updateQuiz, addCollaborator, removeCollaborator } from '../services/quizService';
 import { uploadImage, deleteImage } from '../services/uploadService';
 import QuizChatWidget from '../components/QuizChatWidget';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -53,9 +53,9 @@ const ImageUploader = ({ image, onUpload, onRemove, label }) => {
         <div className="relative">
             {image?.url ? (
                 <div className="relative inline-block">
-                    <img 
-                        src={image.url} 
-                        alt={label} 
+                    <img
+                        src={image.url}
+                        alt={label}
                         className="max-w-full max-h-48 rounded-lg border border-gray-200 object-contain"
                     />
                     <button
@@ -142,18 +142,18 @@ const QuizQuestionEditor = ({ question, index, updateQuestion, removeQuestion })
 
     const handleTypeChange = (newType) => {
         let newOptions = question.options;
-        
+
         if (newType === 'TRUE_FALSE') {
             newOptions = [
                 { optionText: 'True', isCorrect: false },
                 { optionText: 'False', isCorrect: false }
             ];
         }
-        
+
         if (newType === 'SINGLE' || newType === 'TRUE_FALSE') {
             newOptions = newOptions.map(opt => ({ ...opt, isCorrect: false }));
         }
-        
+
         updateQuestion(question.tempId, { questionType: newType, options: newOptions });
     };
 
@@ -236,11 +236,10 @@ const QuizQuestionEditor = ({ question, index, updateQuestion, removeQuestion })
                                         <button
                                             type="button"
                                             onClick={() => toggleCorrect(optIndex)}
-                                            className={`p-2 rounded-lg border-2 transition ${
-                                                option.isCorrect 
-                                                    ? 'bg-emerald-500 border-emerald-500 text-white' 
-                                                    : 'border-gray-300 text-gray-400 hover:border-emerald-400'
-                                            }`}
+                                            className={`p-2 rounded-lg border-2 transition ${option.isCorrect
+                                                ? 'bg-emerald-500 border-emerald-500 text-white'
+                                                : 'border-gray-300 text-gray-400 hover:border-emerald-400'
+                                                }`}
                                             title={option.isCorrect ? 'Marked as correct' : 'Mark as correct'}
                                         >
                                             <Check size={16} />
@@ -322,7 +321,7 @@ const QuizQuestionEditor = ({ question, index, updateQuestion, removeQuestion })
 const QuizEditPage = ({ quizId, navigate }) => {
     const { user } = useAuth();
     const isPremiumUser = user?.isPlanActive || false;
-    
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [title, setTitle] = useState('');
@@ -351,6 +350,13 @@ const QuizEditPage = ({ quizId, navigate }) => {
     const [isScheduled, setIsScheduled] = useState(false);
     const [startAtLocal, setStartAtLocal] = useState('');
     const [endAtLocal, setEndAtLocal] = useState('');
+    // Collaboration state
+    const [collaborators, setCollaborators] = useState([]);
+    const [collabEmail, setCollabEmail] = useState('');
+    const [collabRole, setCollabRole] = useState('editor');
+    const [collabStatus, setCollabStatus] = useState('');
+    const [collabLoading, setCollabLoading] = useState(false);
+    const [quizCreator, setQuizCreator] = useState(null);
 
     useEffect(() => {
         const fetchQuiz = async () => {
@@ -383,6 +389,9 @@ const QuizEditPage = ({ quizId, navigate }) => {
                 };
                 setStartAtLocal(quiz.startAt ? toLocal(quiz.startAt) : '');
                 setEndAtLocal(quiz.endAt ? toLocal(quiz.endAt) : '');
+                // Set collaboration data
+                setQuizCreator(quiz.creator);
+                setCollaborators(quiz.collaborators || []);
             } catch (err) {
                 setStatus('Error: Failed to load quiz');
             } finally {
@@ -408,6 +417,36 @@ const QuizEditPage = ({ quizId, navigate }) => {
         if (e.key === 'Enter' || e.key === ',') {
             e.preventDefault();
             addClass();
+        }
+    };
+
+    // --- Collaboration handlers ---
+    const handleAddCollaborator = async () => {
+        if (!collabEmail.trim()) return;
+        setCollabLoading(true);
+        setCollabStatus('');
+        try {
+            const newCollab = await addCollaborator(quizId, collabEmail.trim(), collabRole);
+            setCollaborators(prev => [...prev, newCollab]);
+            setCollabEmail('');
+            setCollabStatus(`Added ${newCollab.email} as ${newCollab.role}`);
+        } catch (err) {
+            setCollabStatus(err.message || 'Error adding collaborator');
+        } finally {
+            setCollabLoading(false);
+        }
+    };
+
+    const handleRemoveCollaborator = async (userId) => {
+        try {
+            await removeCollaborator(quizId, userId);
+            setCollaborators(prev => prev.filter(c => {
+                const id = typeof c.user === 'object' ? c.user._id : c.user;
+                return id !== userId;
+            }));
+            setCollabStatus('Collaborator removed');
+        } catch (err) {
+            setCollabStatus(err.message || 'Error removing collaborator');
         }
     };
 
@@ -463,7 +502,7 @@ const QuizEditPage = ({ quizId, navigate }) => {
     const validateQuiz = () => {
         if (!title.trim()) return 'Quiz title is required';
         if (questions.length === 0) return 'Add at least one question';
-        
+
         for (let i = 0; i < questions.length; i++) {
             const q = questions[i];
             if (!q.questionText.trim()) return `Question ${i + 1} needs text`;
@@ -487,7 +526,7 @@ const QuizEditPage = ({ quizId, navigate }) => {
         try {
             // Remove tempId before sending
             const cleanQuestions = questions.map(({ tempId, _id, ...rest }) => rest);
-            
+
             await updateQuiz(quizId, {
                 title,
                 description,
@@ -499,7 +538,7 @@ const QuizEditPage = ({ quizId, navigate }) => {
                 endAt: endAtLocal ? new Date(endAtLocal).toISOString() : null,
                 timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
             });
-            
+
             setStatus('Quiz updated successfully! Redirecting...');
             setTimeout(() => navigate('quiz-dashboard'), 1200);
         } catch (err) {
@@ -600,6 +639,127 @@ const QuizEditPage = ({ quizId, navigate }) => {
                         )}
                     </div>
 
+                    {/* Collaborators Section (only visible to quiz creator) */}
+                    {(() => {
+                        const creatorId = typeof quizCreator === 'object' ? (quizCreator._id || quizCreator) : quizCreator;
+                        console.log('[Collab Debug] user._id:', user?._id, 'creatorId:', String(creatorId), 'match:', String(user?._id) === String(creatorId));
+                        return null;
+                    })()}
+                    {user && quizCreator && String(user._id) === String(typeof quizCreator === 'object' ? (quizCreator._id || quizCreator) : quizCreator) && (
+                        <div className="pt-4 border-t border-gray-200">
+                            <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-2 mb-3">
+                                <Users size={18} className="text-emerald-600" />
+                                Collaborators
+                            </h3>
+
+                            {/* Add Collaborator */}
+                            <div className="flex gap-2 mb-3">
+                                <div className="relative flex-1">
+                                    <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                    <input
+                                        type="email"
+                                        value={collabEmail}
+                                        onChange={(e) => { setCollabEmail(e.target.value); setCollabStatus(''); }}
+                                        placeholder="Enter SurveyZen email..."
+                                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                handleAddCollaborator();
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                <select
+                                    value={collabRole}
+                                    onChange={(e) => setCollabRole(e.target.value)}
+                                    className="px-2 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-emerald-500"
+                                >
+                                    <option value="editor">Editor</option>
+                                    <option value="viewer">Viewer</option>
+                                </select>
+                                <button
+                                    type="button"
+                                    onClick={handleAddCollaborator}
+                                    disabled={collabLoading || !collabEmail.trim()}
+                                    className="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition flex items-center gap-1 text-sm font-medium"
+                                >
+                                    {collabLoading ? <Loader size={14} className="animate-spin" /> : <UserPlus size={14} />}
+                                    Add
+                                </button>
+                            </div>
+
+                            {collabStatus && (
+                                <p className={`text-xs mb-2 px-2 py-1 rounded ${collabStatus.startsWith('Error') || collabStatus.startsWith('No ')
+                                    ? 'bg-red-50 text-red-600'
+                                    : 'bg-green-50 text-green-600'
+                                    }`}>
+                                    {collabStatus}
+                                </p>
+                            )}
+
+                            {/* Collaborator List */}
+                            {collaborators.length > 0 ? (
+                                <div className="space-y-2">
+                                    {collaborators.map((collab) => {
+                                        const collabUser = collab.user;
+                                        const displayName = typeof collabUser === 'object'
+                                            ? (collabUser.name || collabUser.email)
+                                            : collab.email;
+                                        const displayEmail = typeof collabUser === 'object'
+                                            ? collabUser.email
+                                            : collab.email;
+                                        const userId = typeof collabUser === 'object' ? collabUser._id : collabUser;
+
+                                        return (
+                                            <div key={userId} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-100">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-semibold">
+                                                        {displayName?.charAt(0)?.toUpperCase() || '?'}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-medium text-gray-800">{displayName}</p>
+                                                        {displayName !== displayEmail && (
+                                                            <p className="text-xs text-gray-500">{displayEmail}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${collab.role === 'editor'
+                                                        ? 'bg-blue-100 text-blue-700'
+                                                        : 'bg-gray-200 text-gray-600'
+                                                        }`}>
+                                                        {collab.role}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveCollaborator(userId)}
+                                                        className="p-1 text-red-500 hover:bg-red-50 rounded transition"
+                                                        title="Remove collaborator"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <p className="text-xs text-gray-400 italic">No collaborators yet. Add someone to let them edit this quiz.</p>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Shared Quiz Indicator (for collaborators) */}
+                    {user && quizCreator && String(user._id) !== String(typeof quizCreator === 'object' ? (quizCreator._id || quizCreator) : quizCreator) && (
+                        <div className="pt-3 border-t border-gray-200">
+                            <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm">
+                                <Users size={16} />
+                                <span>You are a collaborator on this quiz</span>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="flex justify-between items-center pt-2 border-t">
                         <span className="text-gray-600">Total Points:</span>
                         <span className="text-2xl font-bold text-emerald-600">{totalPoints}</span>
@@ -689,7 +849,7 @@ const QuizEditPage = ({ quizId, navigate }) => {
                                 />
                                 <label htmlFor="showExplanations" className="text-sm text-gray-700">Show Explanations</label>
                             </div>
-                            
+
                             {/* Premium Features Section */}
                             <div className="border-t pt-3 mt-2">
                                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -700,7 +860,7 @@ const QuizEditPage = ({ quizId, navigate }) => {
                                         </span>
                                     )}
                                 </p>
-                                
+
                                 <div className="space-y-2">
                                     <PremiumSettingRow
                                         id="tabSwitchingEnabled"
@@ -711,7 +871,7 @@ const QuizEditPage = ({ quizId, navigate }) => {
                                         isPremiumUser={isPremiumUser}
                                         onUpgradeClick={() => setShowPremiumModal(true)}
                                     />
-                                    
+
                                     <PremiumSettingRow
                                         id="preventDuplicateRollNo"
                                         checked={settings.preventDuplicateRollNo}
@@ -721,7 +881,7 @@ const QuizEditPage = ({ quizId, navigate }) => {
                                         isPremiumUser={isPremiumUser}
                                         onUpgradeClick={() => setShowPremiumModal(true)}
                                     />
-                                    
+
                                     <PremiumSettingRow
                                         id="requireSequentialAnswering"
                                         checked={settings.requireSequentialAnswering}
@@ -731,7 +891,7 @@ const QuizEditPage = ({ quizId, navigate }) => {
                                         isPremiumUser={isPremiumUser}
                                         onUpgradeClick={() => setShowPremiumModal(true)}
                                     />
-                                    
+
                                     <PremiumSettingRow
                                         id="fullscreenModeEnabled"
                                         checked={settings.fullscreenModeEnabled}
@@ -786,8 +946,8 @@ const QuizEditPage = ({ quizId, navigate }) => {
                 </div>
 
                 {/* Premium Upgrade Modal */}
-                <PremiumUpgradeModal 
-                    isOpen={showPremiumModal} 
+                <PremiumUpgradeModal
+                    isOpen={showPremiumModal}
                     onClose={() => setShowPremiumModal(false)}
                     featureName="Anti-Cheating Features"
                 />
@@ -795,7 +955,7 @@ const QuizEditPage = ({ quizId, navigate }) => {
                 {/* Questions */}
                 <div className="space-y-4">
                     <h2 className="text-xl font-bold text-gray-800">Quiz Questions</h2>
-                    
+
                     {questions.map((q, index) => (
                         <QuizQuestionEditor
                             key={q.tempId}
@@ -817,9 +977,8 @@ const QuizEditPage = ({ quizId, navigate }) => {
 
                 {/* Status & Submit */}
                 {status && (
-                    <p className={`p-3 rounded-lg text-sm font-medium ${
-                        status.startsWith('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-                    }`}>
+                    <p className={`p-3 rounded-lg text-sm font-medium ${status.startsWith('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                        }`}>
                         {status}
                     </p>
                 )}

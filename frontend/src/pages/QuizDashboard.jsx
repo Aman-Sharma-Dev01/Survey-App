@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { PlusCircle, Loader, Trash2, BarChart3, Link, Play, Eye, EyeOff, Edit, Search, QrCode } from 'lucide-react';
+import { PlusCircle, Loader, Trash2, BarChart3, Link, Play, Eye, EyeOff, Edit, Search, QrCode, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getCreatorQuizzes, deleteQuiz, updateQuizPublishStatus, getQuizQRCodeUrl, getQuizShareUrl } from '../services/quizService';
 
-const QuizCard = ({ quiz, onPublish, onDelete, onAnalytics, onEdit, onCopyLink, onShowQR }) => {
+const QuizCard = ({ quiz, onPublish, onDelete, onAnalytics, onEdit, onCopyLink, onShowQR, currentUserId }) => {
     const [copying, setCopying] = useState(false);
+    const isOwner = quiz.creator?.toString() === currentUserId || (typeof quiz.creator === 'object' && quiz.creator?._id?.toString() === currentUserId);
 
     const handleCopy = async () => {
         setCopying(true);
@@ -24,11 +25,17 @@ const QuizCard = ({ quiz, onPublish, onDelete, onAnalytics, onEdit, onCopyLink, 
                     <h3 className="text-lg font-bold text-gray-800">{quiz.title}</h3>
                     <p className="text-sm text-gray-500 mt-1 line-clamp-2">{quiz.description || 'No description'}</p>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    quiz.isPublished ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'
-                }`}>
-                    {quiz.isPublished ? 'Published' : 'Draft'}
-                </span>
+                <div className="flex items-center gap-2">
+                    {!isOwner && (
+                        <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 flex items-center gap-1">
+                            <Users size={12} /> Shared
+                        </span>
+                    )}
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${quiz.isPublished ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'
+                        }`}>
+                        {quiz.isPublished ? 'Published' : 'Draft'}
+                    </span>
+                </div>
             </div>
 
             <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
@@ -46,11 +53,10 @@ const QuizCard = ({ quiz, onPublish, onDelete, onAnalytics, onEdit, onCopyLink, 
             <div className="flex flex-wrap gap-2">
                 <button
                     onClick={() => onPublish(quiz, !quiz.isPublished)}
-                    className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition ${
-                        quiz.isPublished
+                    className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition ${quiz.isPublished
                             ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                    }`}
+                        }`}
                 >
                     {quiz.isPublished ? <EyeOff size={16} className="mr-1" /> : <Eye size={16} className="mr-1" />}
                     {quiz.isPublished ? 'Unpublish' : 'Publish'}
@@ -91,19 +97,21 @@ const QuizCard = ({ quiz, onPublish, onDelete, onAnalytics, onEdit, onCopyLink, 
                     <BarChart3 size={16} className="mr-1" /> Analytics
                 </button>
 
-                <button
-                    onClick={() => onDelete(quiz._id)}
-                    className="flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 transition"
-                >
-                    <Trash2 size={16} className="mr-1" /> Delete
-                </button>
+                {isOwner && (
+                    <button
+                        onClick={() => onDelete(quiz._id)}
+                        className="flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 transition"
+                    >
+                        <Trash2 size={16} className="mr-1" /> Delete
+                    </button>
+                )}
             </div>
         </div>
     );
 };
 
 const QuizDashboardPage = ({ navigate }) => {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, user } = useAuth();
     const [quizzes, setQuizzes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -275,6 +283,7 @@ const QuizDashboardPage = ({ navigate }) => {
                                 <QuizCard
                                     key={quiz._id}
                                     quiz={quiz}
+                                    currentUserId={user?._id}
                                     onPublish={handlePublish}
                                     onDelete={handleDelete}
                                     onEdit={handleEdit}

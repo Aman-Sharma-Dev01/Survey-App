@@ -3,15 +3,15 @@ import mongoose from 'mongoose';
 // Schema for a single quiz question
 const quizQuestionSchema = mongoose.Schema({
     questionText: { type: String, required: true },
-    questionImage: { 
+    questionImage: {
         url: { type: String },
         publicId: { type: String }
     },
-    questionType: { 
-        type: String, 
-        enum: ['SINGLE', 'MULTIPLE', 'TRUE_FALSE', 'RATING', 'SHORT_TEXT', 'LONG_TEXT', 'DATE'], 
+    questionType: {
+        type: String,
+        enum: ['SINGLE', 'MULTIPLE', 'TRUE_FALSE', 'RATING', 'SHORT_TEXT', 'LONG_TEXT', 'DATE'],
         default: 'SINGLE',
-        required: true 
+        required: true
     },
     ratingScale: { type: Number, default: 5 }, // For RATING type (e.g., 5 or 10 stars)
     options: [{
@@ -54,6 +54,14 @@ const quizSchema = mongoose.Schema(
         endAt: { type: Date, default: null },
         timeZone: { type: String, default: 'UTC' }, // optional IANA timezone
 
+        // Collaboration
+        collaborators: [{
+            user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+            email: { type: String },
+            role: { type: String, enum: ['editor', 'viewer'], default: 'editor' },
+            addedAt: { type: Date, default: Date.now }
+        }],
+
         isPublished: { type: Boolean, default: false },
         attemptCount: { type: Number, default: 0 }
     },
@@ -61,12 +69,12 @@ const quizSchema = mongoose.Schema(
 );
 
 // Virtual for total points
-quizSchema.virtual('totalPoints').get(function() {
+quizSchema.virtual('totalPoints').get(function () {
     return this.questions.reduce((sum, q) => sum + (q.points || 1), 0);
 });
 
 // Virtual to check if quiz is currently active (based on schedule)
-quizSchema.virtual('isActive').get(function() {
+quizSchema.virtual('isActive').get(function () {
     // If not published, not active
     if (!this.isPublished) return false;
 

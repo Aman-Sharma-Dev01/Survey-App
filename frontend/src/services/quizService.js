@@ -62,6 +62,20 @@ export const getQuizAnalytics = async (quizId) => {
     return fetchApi(`/quizzes/analytics/${quizId}`, 'GET', null, true);
 };
 
+/* ===========================================================
+   COLLABORATION
+=========================================================== */
+
+// Add a collaborator to a quiz
+export const addCollaborator = async (quizId, email, role = 'editor') => {
+    return fetchApi(`/quizzes/${quizId}/collaborators`, 'POST', { email, role }, true);
+};
+
+// Remove a collaborator from a quiz
+export const removeCollaborator = async (quizId, userId) => {
+    return fetchApi(`/quizzes/${quizId}/collaborators/${userId}`, 'DELETE', null, true);
+};
+
 /**
  * Get share URL for a quiz (public link)
  * @param {string} quizId
