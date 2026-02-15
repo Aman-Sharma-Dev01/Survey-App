@@ -9,7 +9,10 @@ const router = express.Router();
 // --- Collaboration Helpers ---
 const isCreatorOrCollaborator = (quiz, userId) => {
     if (quiz.creator.toString() === userId.toString()) return 'creator';
-    const collab = quiz.collaborators?.find(c => c.user.toString() === userId.toString());
+    const collab = quiz.collaborators?.find(c => {
+        const collabId = c.user?._id || c.user;
+        return collabId?.toString() === userId.toString();
+    });
     return collab ? collab.role : null;
 };
 

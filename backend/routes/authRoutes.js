@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 import { protect } from '../middleware/authMiddleware.js';
 // import { sendRegistrationEmail } from '../utils/notificationService.js'; // Removed SMS import
 // import { sendRegistrationEmail } from '../utils/emailService.js';
-import { sendVerificationEmail, sendResetPasswordEmail ,sendRegistrationEmail } from '../utils/emailService.js';
+import { sendVerificationEmail, sendResetPasswordEmail, sendRegistrationEmail } from '../utils/emailService.js';
 import { assignCouponToNewUser } from './couponRoutes.js';
 
 
@@ -69,7 +69,7 @@ router.post('/register', async (req, res) => {
             console.error('Error assigning coupon during registration:', error);
         }
 
-        res.json({ 
+        res.json({
             message: "Registration successful! You can now login.",
             autoVerified: true
         });
@@ -88,6 +88,11 @@ router.post('/login', async (req, res) => {
 
     if (!user.isVerified) {
         return res.status(403).json({ message: "Please verify your email before logging in." });
+    }
+
+    // If user signed up via Google OAuth and has no password, they can't use email/password login
+    if (!user.password) {
+        return res.status(401).json({ message: 'This account uses Google Sign-In. Please log in with Google.' });
     }
 
     if (user && (await user.matchPassword(password))) {
@@ -118,12 +123,12 @@ router.post('/google', async (req, res) => {
         // Verify the Google ID token
         const { OAuth2Client } = await import('google-auth-library');
         const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-        
+
         const ticket = await client.verifyIdToken({
             idToken: credential,
             audience: process.env.GOOGLE_CLIENT_ID,
         });
-        
+
         const payload = ticket.getPayload();
         const { sub: googleId, email, name, picture } = payload;
 
@@ -215,13 +220,13 @@ router.post('/google/code', async (req, res) => {
         );
 
         const { tokens } = await client.getToken(code);
-        
+
         // Verify the ID token to get user info
         const ticket = await client.verifyIdToken({
             idToken: tokens.id_token,
             audience: process.env.GOOGLE_CLIENT_ID,
         });
-        
+
         const payload = ticket.getPayload();
         const { sub: googleId, email, name, picture } = payload;
 
@@ -302,7 +307,7 @@ router.get('/profile', protect, async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        
+
         // Check if plan is still active
         const isPlanActive = user.hasPremiumFeatures();
 
@@ -337,26 +342,26 @@ router.post('/use-credits', protect, async (req, res) => {
     try {
         const { amount = 10 } = req.body;
         const user = await User.findById(req.user._id);
-        
+
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        
+
         if (user.credits < amount) {
-            return res.status(403).json({ 
-                message: 'Insufficient credits', 
+            return res.status(403).json({
+                message: 'Insufficient credits',
                 credits: user.credits,
-                required: amount 
+                required: amount
             });
         }
-        
+
         user.credits -= amount;
         await user.save();
-        
-        res.json({ 
-            success: true, 
+
+        res.json({
+            success: true,
             credits: user.credits,
-            deducted: amount 
+            deducted: amount
         });
     } catch (error) {
         res.status(500).json({ message: 'Error using credits' });
@@ -388,14 +393,14 @@ router.get("/verify/:token", async (req, res) => {
     user.isVerified = true;
     user.verificationToken = undefined;
     await user.save();
-    
+
     // Assign coupon to new user if offer is active
     try {
         await assignCouponToNewUser(user._id, user.email);
     } catch (error) {
         console.error('Error assigning coupon during verification:', error);
     }
-    
+
     sendRegistrationEmail(user.email, user.name);
     return res.json({ message: "Verification successful" });
 });
@@ -464,7 +469,7 @@ router.put('/system-settings', protect, async (req, res) => {
         const user = await User.findById(req.user._id);
         console.log('System settings update request by:', user?.email);
         console.log('Request body:', req.body);
-        
+
         if (!user || user.email !== ADMIN_EMAIL) {
             return res.status(403).json({ message: 'Admin access required' });
         }

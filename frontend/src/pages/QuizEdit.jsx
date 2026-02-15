@@ -640,11 +640,7 @@ const QuizEditPage = ({ quizId, navigate }) => {
                     </div>
 
                     {/* Collaborators Section (only visible to quiz creator) */}
-                    {(() => {
-                        const creatorId = typeof quizCreator === 'object' ? (quizCreator._id || quizCreator) : quizCreator;
-                        console.log('[Collab Debug] user._id:', user?._id, 'creatorId:', String(creatorId), 'match:', String(user?._id) === String(creatorId));
-                        return null;
-                    })()}
+
                     {user && quizCreator && String(user._id) === String(typeof quizCreator === 'object' ? (quizCreator._id || quizCreator) : quizCreator) && (
                         <div className="pt-4 border-t border-gray-200">
                             <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-2 mb-3">
