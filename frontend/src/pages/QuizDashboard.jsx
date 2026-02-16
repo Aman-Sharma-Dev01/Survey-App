@@ -54,8 +54,8 @@ const QuizCard = ({ quiz, onPublish, onDelete, onAnalytics, onEdit, onCopyLink, 
                 <button
                     onClick={() => onPublish(quiz, !quiz.isPublished)}
                     className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition ${quiz.isPublished
-                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
                         }`}
                 >
                     {quiz.isPublished ? <EyeOff size={16} className="mr-1" /> : <Eye size={16} className="mr-1" />}
@@ -230,14 +230,25 @@ const QuizDashboardPage = ({ navigate }) => {
             )}
 
             {(() => {
-                const filteredQuizzes = quizzes.filter(quiz => {
-                    const query = searchQuery.toLowerCase().trim();
+                const query = searchQuery.toLowerCase().trim();
+                const filterBySearch = (quiz) => {
                     if (!query) return true;
                     return (
                         quiz.title?.toLowerCase().includes(query) ||
                         quiz.description?.toLowerCase().includes(query)
                     );
-                });
+                };
+
+                const isOwner = (quiz) => {
+                    const creatorId = typeof quiz.creator === 'object' ? quiz.creator?._id : quiz.creator;
+                    return creatorId?.toString() === user?._id;
+                };
+
+                const myQuizzes = quizzes.filter(q => isOwner(q)).filter(filterBySearch);
+                const sharedQuizzes = quizzes.filter(q => !isOwner(q)).filter(filterBySearch);
+
+                const allOwned = quizzes.filter(q => isOwner(q));
+                const allShared = quizzes.filter(q => !isOwner(q));
 
                 if (quizzes.length === 0) {
                     return (
@@ -255,7 +266,7 @@ const QuizDashboardPage = ({ navigate }) => {
                     );
                 }
 
-                if (filteredQuizzes.length === 0) {
+                if (myQuizzes.length === 0 && sharedQuizzes.length === 0 && searchQuery) {
                     return (
                         <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
                             <Search size={48} className="mx-auto text-gray-400 mb-4" />
@@ -271,30 +282,83 @@ const QuizDashboardPage = ({ navigate }) => {
                     );
                 }
 
+                const renderQuizGrid = (quizList) => (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {quizList.map(quiz => (
+                            <QuizCard
+                                key={quiz._id}
+                                quiz={quiz}
+                                currentUserId={user?._id}
+                                onPublish={handlePublish}
+                                onDelete={handleDelete}
+                                onEdit={handleEdit}
+                                onAnalytics={handleAnalytics}
+                                onShowQR={(q) => {
+                                    setSelectedQuiz(q);
+                                    setShowQRModal(true);
+                                }}
+                            />
+                        ))}
+                    </div>
+                );
+
                 return (
                     <>
                         {searchQuery && (
                             <p className="text-sm text-gray-500 mb-4">
-                                Showing {filteredQuizzes.length} of {quizzes.length} quizzes
+                                Showing {myQuizzes.length + sharedQuizzes.length} of {quizzes.length} quizzes
                             </p>
                         )}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredQuizzes.map(quiz => (
-                                <QuizCard
-                                    key={quiz._id}
-                                    quiz={quiz}
-                                    currentUserId={user?._id}
-                                    onPublish={handlePublish}
-                                    onDelete={handleDelete}
-                                    onEdit={handleEdit}
-                                    onAnalytics={handleAnalytics}
-                                    onShowQR={(q) => {
-                                        setSelectedQuiz(q);
-                                        setShowQRModal(true);
-                                    }}
-                                />
-                            ))}
+
+                        {/* ── My Quizzes Section ── */}
+                        <div className="mb-10">
+                            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                📝 My Quizzes
+                                <span className="text-sm font-normal text-gray-500">({myQuizzes.length})</span>
+                            </h2>
+                            {myQuizzes.length > 0 ? (
+                                renderQuizGrid(myQuizzes)
+                            ) : (
+                                <div className="text-center py-10 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                                    <Play size={36} className="mx-auto text-gray-400 mb-3" />
+                                    <p className="text-gray-500">
+                                        {searchQuery
+                                            ? `No owned quizzes match "${searchQuery}"`
+                                            : 'You haven\'t created any quizzes yet'}
+                                    </p>
+                                    {!searchQuery && (
+                                        <button
+                                            onClick={() => navigate('quiz-create')}
+                                            className="mt-3 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm"
+                                        >
+                                            Create Your First Quiz
+                                        </button>
+                                    )}
+                                </div>
+                            )}
                         </div>
+
+                        {/* ── Shared with Me Section ── */}
+                        {(allShared.length > 0 || sharedQuizzes.length > 0) && (
+                            <div className="mb-10">
+                                <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <Users size={20} className="text-blue-600" />
+                                    Shared with Me
+                                    <span className="text-sm font-normal text-gray-500">({sharedQuizzes.length})</span>
+                                </h2>
+                                {sharedQuizzes.length > 0 ? (
+                                    renderQuizGrid(sharedQuizzes)
+                                ) : (
+                                    <div className="text-center py-10 bg-blue-50 rounded-xl border-2 border-dashed border-blue-200">
+                                        <Search size={36} className="mx-auto text-blue-300 mb-3" />
+                                        <p className="text-blue-400">
+                                            No shared quizzes match "{searchQuery}"
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {showQRModal && selectedQuiz && (
                             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                                 <div className="bg-white rounded-2xl max-w-md w-full p-6">
