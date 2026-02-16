@@ -891,8 +891,8 @@ const QuizTakePage = ({ quizId }) => {
                             value={participantName}
                             onChange={(e) => setParticipantName(e.target.value)}
                             className={`w-full max-w-xs mx-auto p-3 border rounded-lg text-center ${quiz.classes && quiz.classes.length > 0 && !participantName.trim()
-                                    ? 'border-orange-300'
-                                    : 'border-gray-300'
+                                ? 'border-orange-300'
+                                : 'border-gray-300'
                                 }`}
                             placeholder="Enter your name"
                         />
@@ -924,21 +924,69 @@ const QuizTakePage = ({ quizId }) => {
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Roll Number <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                type="text"
-                                value={participantRollNo}
-                                onChange={(e) => {
-                                    setParticipantRollNo(e.target.value);
-                                    setRollNoError(''); // Clear error when typing
-                                }}
-                                className={`w-full max-w-xs mx-auto p-3 border rounded-lg text-center ${rollNoError
+                            {quiz.rollNumbers && quiz.rollNumbers.length > 0 ? (
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={participantRollNo}
+                                        onChange={(e) => {
+                                            setParticipantRollNo(e.target.value);
+                                            setRollNoError('');
+                                        }}
+                                        className={`w-full max-w-xs mx-auto p-3 border rounded-lg text-center ${rollNoError
+                                            ? 'border-red-500 bg-red-50'
+                                            : !participantRollNo.trim()
+                                                ? 'border-orange-300'
+                                                : 'border-gray-300'
+                                            }`}
+                                        placeholder="Type to search your roll number..."
+                                    />
+                                    {participantRollNo.trim() && (() => {
+                                        const search = participantRollNo.trim().toUpperCase();
+                                        const matches = quiz.rollNumbers.filter(rn => rn.toUpperCase().includes(search));
+                                        const exactMatch = matches.length === 1 && matches[0].toUpperCase() === search;
+                                        if (exactMatch) return null;
+                                        return matches.length > 0 ? (
+                                            <div className="mt-1 max-h-48 overflow-y-auto border border-gray-200 rounded-lg bg-white shadow-lg z-10 relative max-w-xs mx-auto">
+                                                {matches.slice(0, 50).map((rn, i) => (
+                                                    <button
+                                                        key={i}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setParticipantRollNo(rn);
+                                                            setRollNoError('');
+                                                        }}
+                                                        className="w-full text-left px-4 py-2.5 text-sm hover:bg-emerald-50 border-b border-gray-100 last:border-b-0 transition"
+                                                    >
+                                                        {rn}
+                                                    </button>
+                                                ))}
+                                                {matches.length > 50 && (
+                                                    <p className="px-4 py-2 text-xs text-gray-400">+{matches.length - 50} more, keep typing...</p>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <p className="mt-1 text-sm text-red-500 text-center">No matching roll number found</p>
+                                        );
+                                    })()}
+                                </div>
+                            ) : (
+                                <input
+                                    type="text"
+                                    value={participantRollNo}
+                                    onChange={(e) => {
+                                        setParticipantRollNo(e.target.value);
+                                        setRollNoError('');
+                                    }}
+                                    className={`w-full max-w-xs mx-auto p-3 border rounded-lg text-center ${rollNoError
                                         ? 'border-red-500 bg-red-50'
                                         : !participantRollNo.trim()
                                             ? 'border-orange-300'
                                             : 'border-gray-300'
-                                    }`}
-                                placeholder="Enter your roll number"
-                            />
+                                        }`}
+                                    placeholder="Enter your roll number"
+                                />
+                            )}
                             {rollNoError && (
                                 <p className="text-red-600 text-sm mt-2 font-medium">{rollNoError}</p>
                             )}
@@ -1367,8 +1415,8 @@ const QuizTakePage = ({ quizId }) => {
                                         key={idx}
                                         onClick={() => handleOptionSelect(currentQuestion._id, option.optionText, isMultiple)}
                                         className={`w-full p-2.5 sm:p-4 text-left rounded-lg border-2 transition ${isSelected
-                                                ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
-                                                : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
+                                            ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                                            : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
                                             }`}
                                     >
                                         <div className="flex items-center">
@@ -1469,12 +1517,12 @@ const QuizTakePage = ({ quizId }) => {
                                 onClick={() => canAccess && setCurrentIndex(idx)}
                                 disabled={!canAccess}
                                 className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full text-xs sm:text-sm font-medium transition flex-shrink-0 ${idx === currentIndex
-                                        ? 'bg-emerald-600 text-white'
-                                        : answers[questions[idx]._id]
-                                            ? 'bg-emerald-100 text-emerald-700'
-                                            : canAccess
-                                                ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                                : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+                                    ? 'bg-emerald-600 text-white'
+                                    : answers[questions[idx]._id]
+                                        ? 'bg-emerald-100 text-emerald-700'
+                                        : canAccess
+                                            ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                            : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
                                     }`}
                                 title={!canAccess ? 'Answer the current question first' : `Go to question ${idx + 1}`}
                             >

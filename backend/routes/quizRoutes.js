@@ -27,7 +27,7 @@ const canEdit = (quiz, userId) => {
 =========================================================== */
 router.post('/', protect, async (req, res) => {
     try {
-        const { title, description, questions, settings, classes, isScheduled, startAt, endAt, timeZone } = req.body;
+        const { title, description, questions, settings, classes, rollNumbers, isScheduled, startAt, endAt, timeZone } = req.body;
 
         const quiz = new Quiz({
             title,
@@ -35,6 +35,7 @@ router.post('/', protect, async (req, res) => {
             questions,
             settings,
             classes: classes || [],
+            rollNumbers: rollNumbers || [],
             creator: req.user._id,
             isScheduled: !!isScheduled,
             startAt: startAt ? new Date(startAt) : null,
@@ -62,7 +63,7 @@ router.get('/', protect, async (req, res) => {
                 { creator: req.user._id },
                 { 'collaborators.user': req.user._id }
             ]
-        }).sort({ createdAt: -1 });
+        }).populate('creator', 'name email').populate('collaborators.user', 'name email avatar').sort({ createdAt: -1 });
         res.json(quizzes);
     } catch (error) {
         console.error('Error in GET /api/quizzes:', error);
@@ -114,7 +115,8 @@ router.get('/public/:id', async (req, res) => {
             _id: quiz._id,
             title: quiz.title,
             description: quiz.description,
-            classes: quiz.classes || [], // Include classes for selection
+            classes: quiz.classes || [],
+            rollNumbers: quiz.rollNumbers || [],
             isScheduled: !!quiz.isScheduled,
             startAt: quiz.startAt || null,
             endAt: quiz.endAt || null,
@@ -250,6 +252,16 @@ router.post('/submit/:id', async (req, res) => {
 
             if (!question) {
                 return { ...answer, isCorrect: false, pointsEarned: 0 };
+            }
+
+            // Non-gradable types: just record the answer
+            if (['RATING', 'SHORT_TEXT', 'LONG_TEXT', 'DATE'].includes(question.questionType)) {
+                return {
+                    questionId: answer.questionId,
+                    selectedOptions: answer.selectedOptions,
+                    isCorrect: false,
+                    pointsEarned: 0
+                };
             }
 
             // Find correct options
@@ -488,7 +500,7 @@ router.put('/:id', protect, async (req, res) => {
             return res.status(403).json({ message: 'Not authorized to edit this quiz' });
         }
 
-        const { title, description, questions, settings, isPublished, classes, isScheduled, startAt, endAt, timeZone } = req.body;
+        const { title, description, questions, settings, isPublished, classes, rollNumbers, isScheduled, startAt, endAt, timeZone } = req.body;
 
         if (title) quiz.title = title;
         if (description !== undefined) quiz.description = description;
@@ -496,6 +508,7 @@ router.put('/:id', protect, async (req, res) => {
         if (settings) quiz.settings = { ...quiz.settings, ...settings };
         if (isPublished !== undefined) quiz.isPublished = isPublished;
         if (classes !== undefined) quiz.classes = classes;
+        if (rollNumbers !== undefined) quiz.rollNumbers = rollNumbers;
         if (typeof isScheduled === 'boolean') quiz.isScheduled = isScheduled;
         if (startAt !== undefined) quiz.startAt = startAt ? new Date(startAt) : null;
         if (endAt !== undefined) quiz.endAt = endAt ? new Date(endAt) : null;

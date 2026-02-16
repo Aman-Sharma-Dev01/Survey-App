@@ -100,6 +100,17 @@ const ImageUploader = ({ image, onUpload, onRemove, label }) => {
     );
 };
 
+// Helper: parse bulk-pasted roll numbers into a clean, deduped, sorted array
+const parseRollNumbers = (text) => {
+    if (!text || !text.trim()) return [];
+    return [...new Set(
+        text
+            .split(/[\n,;\t]+/)
+            .map(s => s.trim().toUpperCase())
+            .filter(Boolean)
+    )].sort();
+};
+
 // Question types for quiz
 const QUESTION_TYPES = [
     { value: 'SINGLE', label: 'Single Choice', description: 'One correct answer' },
@@ -163,7 +174,8 @@ const QuizQuestionEditor = ({ question, index, updateQuestion, removeQuestion })
             newOptions = newOptions.map(opt => ({ ...opt, isCorrect: false }));
         }
 
-        updateQuestion(question.tempId, { questionType: newType, options: newOptions });
+        const updates = { questionType: newType, options: newOptions };
+        updateQuestion(question.tempId, updates);
     };
 
     return (
@@ -460,8 +472,8 @@ const QuizPreviewModal = ({ isOpen, onClose, title, description, questions, sett
                                         key={idx}
                                         onClick={() => handleOptionClick(currentIndex, opt.optionText, isMultiple)}
                                         className={`w-full p-4 text-left rounded-xl border-2 transition-all ${isSelected
-                                                ? 'border-emerald-500 bg-emerald-50 shadow-md'
-                                                : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
+                                            ? 'border-emerald-500 bg-emerald-50 shadow-md'
+                                            : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
@@ -545,10 +557,10 @@ const QuizPreviewModal = ({ isOpen, onClose, title, description, questions, sett
                                 key={idx}
                                 onClick={() => setCurrentIndex(idx)}
                                 className={`w-3 h-3 rounded-full transition-all ${idx === currentIndex
-                                        ? 'bg-emerald-600 scale-125'
-                                        : previewAnswers[`q${idx}`]
-                                            ? 'bg-emerald-300'
-                                            : 'bg-gray-300'
+                                    ? 'bg-emerald-600 scale-125'
+                                    : previewAnswers[`q${idx}`]
+                                        ? 'bg-emerald-300'
+                                        : 'bg-gray-300'
                                     }`}
                             />
                         ))}
@@ -599,6 +611,7 @@ const QuizCreatePage = ({ navigate }) => {
     const [startAtLocal, setStartAtLocal] = useState(''); // datetime-local string
     const [endAtLocal, setEndAtLocal] = useState('');
     const [showPreview, setShowPreview] = useState(false);
+    const [rollNumbers, setRollNumbers] = useState([]);
 
     const addClass = () => {
         const trimmed = classesInput.trim();
@@ -708,6 +721,7 @@ const QuizCreatePage = ({ navigate }) => {
                 title,
                 description,
                 classes,
+                rollNumbers,
                 questions: cleanQuestions,
                 settings,
                 isScheduled: !!isScheduled,
@@ -802,6 +816,57 @@ const QuizCreatePage = ({ navigate }) => {
                                                 </button>
                                             </span>
                                         ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Roll Numbers Input */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Roll Numbers <span className="text-gray-400">(optional - students select from dropdown)</span>
+                                </label>
+                                <textarea
+                                    rows={4}
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 font-mono text-sm"
+                                    placeholder={"Paste roll numbers here...\nOne per line, comma or tab separated\nExample: 101, 102, 103"}
+                                    value={rollNumbers.join('\n')}
+                                    onChange={(e) => {
+                                        const cleaned = parseRollNumbers(e.target.value);
+                                        setRollNumbers(cleaned);
+                                    }}
+                                    onPaste={(e) => {
+                                        e.preventDefault();
+                                        const pasted = e.clipboardData.getData('text');
+                                        const merged = [...new Set([...rollNumbers, ...parseRollNumbers(pasted)])].sort();
+                                        setRollNumbers(merged);
+                                    }}
+                                />
+                                <div className="flex items-center justify-between mt-2">
+                                    <span className="text-sm text-gray-500">
+                                        {rollNumbers.length} roll number{rollNumbers.length !== 1 ? 's' : ''} added
+                                    </span>
+                                    {rollNumbers.length > 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setRollNumbers([])}
+                                            className="text-xs text-red-500 hover:text-red-700"
+                                        >
+                                            Clear All
+                                        </button>
+                                    )}
+                                </div>
+                                {rollNumbers.length > 0 && (
+                                    <div className="mt-2 max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50">
+                                        <div className="flex flex-wrap gap-1">
+                                            {rollNumbers.slice(0, 100).map((rn, i) => (
+                                                <span key={i} className="inline-block px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs rounded-full">
+                                                    {rn}
+                                                </span>
+                                            ))}
+                                            {rollNumbers.length > 100 && (
+                                                <span className="text-xs text-gray-400">+{rollNumbers.length - 100} more</span>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
                             </div>

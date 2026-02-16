@@ -33,6 +33,7 @@ const quizSchema = mongoose.Schema(
         description: { type: String },
         creator: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
         classes: [{ type: String }], // Array of class/section names (e.g., ['CSE 5A', 'CSE 5B', 'CSE 5C'])
+        rollNumbers: [{ type: String }], // List of allowed roll numbers for searchable dropdown
         questions: [quizQuestionSchema],
         settings: {
             timeLimit: { type: Number, default: 0 }, // Time limit in minutes (0 = no limit)

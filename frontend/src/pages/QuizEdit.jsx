@@ -98,11 +98,26 @@ const ImageUploader = ({ image, onUpload, onRemove, label }) => {
     );
 };
 
+// Helper: parse bulk-pasted roll numbers into a clean, deduped, sorted array
+const parseRollNumbers = (text) => {
+    if (!text || !text.trim()) return [];
+    return [...new Set(
+        text
+            .split(/[\n,;\t]+/)
+            .map(s => s.trim().toUpperCase())
+            .filter(Boolean)
+    )].sort();
+};
+
 // Question types for quiz
 const QUESTION_TYPES = [
     { value: 'SINGLE', label: 'Single Choice', description: 'One correct answer' },
     { value: 'MULTIPLE', label: 'Multiple Choice', description: 'Multiple correct answers' },
-    { value: 'TRUE_FALSE', label: 'True/False', description: 'Binary choice' }
+    { value: 'TRUE_FALSE', label: 'True/False', description: 'Binary choice' },
+    { value: 'RATING', label: 'Rating', description: 'Star rating' },
+    { value: 'SHORT_TEXT', label: 'Short Answer', description: 'One line text' },
+    { value: 'LONG_TEXT', label: 'Paragraph', description: 'Multi-line text' },
+    { value: 'DATE', label: 'Date', description: 'Date picker' }
 ];
 
 const QuizQuestionEditor = ({ question, index, updateQuestion, removeQuestion }) => {
@@ -154,7 +169,8 @@ const QuizQuestionEditor = ({ question, index, updateQuestion, removeQuestion })
             newOptions = newOptions.map(opt => ({ ...opt, isCorrect: false }));
         }
 
-        updateQuestion(question.tempId, { questionType: newType, options: newOptions });
+        const updates = { questionType: newType, options: newOptions };
+        updateQuestion(question.tempId, updates);
     };
 
     return (
@@ -225,72 +241,95 @@ const QuizQuestionEditor = ({ question, index, updateQuestion, removeQuestion })
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Answer Options <span className="text-gray-500">(click checkmark to mark correct)</span>
-                        </label>
-                        <div className="space-y-3">
-                            {question.options.map((option, optIndex) => (
-                                <div key={optIndex} className="p-3 border border-gray-200 rounded-lg bg-gray-50">
-                                    <div className="flex items-center space-x-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => toggleCorrect(optIndex)}
-                                            className={`p-2 rounded-lg border-2 transition ${option.isCorrect
-                                                ? 'bg-emerald-500 border-emerald-500 text-white'
-                                                : 'border-gray-300 text-gray-400 hover:border-emerald-400'
-                                                }`}
-                                            title={option.isCorrect ? 'Marked as correct' : 'Mark as correct'}
-                                        >
-                                            <Check size={16} />
-                                        </button>
-                                        <input
-                                            type="text"
-                                            value={option.optionText}
-                                            onChange={(e) => handleOptionChange(optIndex, 'optionText', e.target.value)}
-                                            disabled={question.questionType === 'TRUE_FALSE'}
-                                            className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 disabled:bg-gray-100"
-                                            placeholder={`Option ${optIndex + 1}`}
-                                        />
-                                        {question.questionType !== 'TRUE_FALSE' && question.options.length > 2 && (
+                    {/* Options Section - conditional on question type */}
+                    {['SINGLE', 'MULTIPLE', 'TRUE_FALSE'].includes(question.questionType) ? (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Answer Options <span className="text-gray-500">(click checkmark to mark correct)</span>
+                            </label>
+                            <div className="space-y-3">
+                                {question.options.map((option, optIndex) => (
+                                    <div key={optIndex} className="p-3 border border-gray-200 rounded-lg bg-gray-50">
+                                        <div className="flex items-center space-x-2">
                                             <button
                                                 type="button"
-                                                onClick={() => removeOption(optIndex)}
-                                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                                                onClick={() => toggleCorrect(optIndex)}
+                                                className={`p-2 rounded-lg border-2 transition ${option.isCorrect
+                                                    ? 'bg-emerald-500 border-emerald-500 text-white'
+                                                    : 'border-gray-300 text-gray-400 hover:border-emerald-400'
+                                                    }`}
+                                                title={option.isCorrect ? 'Marked as correct' : 'Mark as correct'}
                                             >
-                                                <Trash2 size={16} />
+                                                <Check size={16} />
                                             </button>
-                                        )}
+                                            <input
+                                                type="text"
+                                                value={option.optionText}
+                                                onChange={(e) => handleOptionChange(optIndex, 'optionText', e.target.value)}
+                                                disabled={question.questionType === 'TRUE_FALSE'}
+                                                className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 disabled:bg-gray-100"
+                                                placeholder={`Option ${optIndex + 1}`}
+                                            />
+                                            {question.questionType !== 'TRUE_FALSE' && question.options.length > 2 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeOption(optIndex)}
+                                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="mt-2 ml-10">
+                                            <ImageUploader
+                                                image={option.optionImage}
+                                                onUpload={(img) => {
+                                                    const newOptions = [...question.options];
+                                                    newOptions[optIndex] = { ...newOptions[optIndex], optionImage: img };
+                                                    updateQuestion(question.tempId, { options: newOptions });
+                                                }}
+                                                onRemove={() => {
+                                                    const newOptions = [...question.options];
+                                                    newOptions[optIndex] = { ...newOptions[optIndex], optionImage: null };
+                                                    updateQuestion(question.tempId, { options: newOptions });
+                                                }}
+                                                label="Add Option Image"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="mt-2 ml-10">
-                                        <ImageUploader
-                                            image={option.optionImage}
-                                            onUpload={(img) => {
-                                                const newOptions = [...question.options];
-                                                newOptions[optIndex] = { ...newOptions[optIndex], optionImage: img };
-                                                updateQuestion(question.tempId, { options: newOptions });
-                                            }}
-                                            onRemove={() => {
-                                                const newOptions = [...question.options];
-                                                newOptions[optIndex] = { ...newOptions[optIndex], optionImage: null };
-                                                updateQuestion(question.tempId, { options: newOptions });
-                                            }}
-                                            label="Add Option Image"
-                                        />
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
+                            {question.questionType !== 'TRUE_FALSE' && (
+                                <button
+                                    type="button"
+                                    onClick={addOption}
+                                    className="mt-3 text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center"
+                                >
+                                    <PlusCircle size={16} className="mr-1" /> Add Option
+                                </button>
+                            )}
                         </div>
-                        {question.questionType !== 'TRUE_FALSE' && (
-                            <button
-                                type="button"
-                                onClick={addOption}
-                                className="mt-3 text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center"
-                            >
-                                <PlusCircle size={16} className="mr-1" /> Add Option
-                            </button>
-                        )}
-                    </div>
+                    ) : (
+                        <div className="bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300">
+                            <label className="block text-sm font-medium text-gray-500 mb-2">Student Answer Preview</label>
+                            {question.questionType === 'RATING' && (
+                                <div className="flex gap-1">
+                                    {[...Array(parseInt(question.ratingScale) || 5)].map((_, i) => (
+                                        <img key={i} src="https://img.icons8.com/fluency/48/star.png" alt="star" className="w-8 h-8 opacity-50 grayscale" />
+                                    ))}
+                                </div>
+                            )}
+                            {question.questionType === 'SHORT_TEXT' && (
+                                <input disabled className="w-full p-2 border rounded bg-white text-gray-400" placeholder="Short answer text..." />
+                            )}
+                            {question.questionType === 'LONG_TEXT' && (
+                                <textarea disabled className="w-full p-2 border rounded bg-white text-gray-400" rows="3" placeholder="Long answer text..." />
+                            )}
+                            {question.questionType === 'DATE' && (
+                                <input disabled type="date" className="w-full p-2 border rounded bg-white text-gray-400" />
+                            )}
+                        </div>
+                    )}
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -357,6 +396,7 @@ const QuizEditPage = ({ quizId, navigate }) => {
     const [collabStatus, setCollabStatus] = useState('');
     const [collabLoading, setCollabLoading] = useState(false);
     const [quizCreator, setQuizCreator] = useState(null);
+    const [rollNumbers, setRollNumbers] = useState([]);
 
     useEffect(() => {
         const fetchQuiz = async () => {
@@ -365,6 +405,7 @@ const QuizEditPage = ({ quizId, navigate }) => {
                 setTitle(quiz.title || '');
                 setDescription(quiz.description || '');
                 setClasses(quiz.classes || []);
+                setRollNumbers(quiz.rollNumbers || []);
                 // Merge quiz settings with defaults to ensure new fields are included
                 setSettings(prevSettings => ({
                     ...prevSettings,
@@ -506,8 +547,11 @@ const QuizEditPage = ({ quizId, navigate }) => {
         for (let i = 0; i < questions.length; i++) {
             const q = questions[i];
             if (!q.questionText.trim()) return `Question ${i + 1} needs text`;
-            if (q.options.some(opt => !opt.optionText.trim())) return `Question ${i + 1} has empty options`;
-            if (!q.options.some(opt => opt.isCorrect)) return `Question ${i + 1} needs a correct answer marked`;
+            // Only validate options for choice-based questions
+            if (['SINGLE', 'MULTIPLE', 'TRUE_FALSE'].includes(q.questionType)) {
+                if (q.options.some(opt => !opt.optionText.trim())) return `Question ${i + 1} has empty options`;
+                if (!q.options.some(opt => opt.isCorrect)) return `Question ${i + 1} needs a correct answer marked`;
+            }
         }
         return null;
     };
@@ -531,6 +575,7 @@ const QuizEditPage = ({ quizId, navigate }) => {
                 title,
                 description,
                 classes,
+                rollNumbers,
                 questions: cleanQuestions,
                 settings,
                 isScheduled: !!isScheduled,
@@ -635,6 +680,57 @@ const QuizEditPage = ({ quizId, navigate }) => {
                                         </button>
                                     </span>
                                 ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Roll Numbers Input */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Roll Numbers <span className="text-gray-400">(optional - students select from dropdown)</span>
+                        </label>
+                        <textarea
+                            rows={4}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 font-mono text-sm"
+                            placeholder={"Paste roll numbers here...\nOne per line, comma or tab separated\nExample: 101, 102, 103"}
+                            value={rollNumbers.join('\n')}
+                            onChange={(e) => {
+                                const cleaned = parseRollNumbers(e.target.value);
+                                setRollNumbers(cleaned);
+                            }}
+                            onPaste={(e) => {
+                                e.preventDefault();
+                                const pasted = e.clipboardData.getData('text');
+                                const merged = [...new Set([...rollNumbers, ...parseRollNumbers(pasted)])].sort();
+                                setRollNumbers(merged);
+                            }}
+                        />
+                        <div className="flex items-center justify-between mt-2">
+                            <span className="text-sm text-gray-500">
+                                {rollNumbers.length} roll number{rollNumbers.length !== 1 ? 's' : ''} added
+                            </span>
+                            {rollNumbers.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setRollNumbers([])}
+                                    className="text-xs text-red-500 hover:text-red-700"
+                                >
+                                    Clear All
+                                </button>
+                            )}
+                        </div>
+                        {rollNumbers.length > 0 && (
+                            <div className="mt-2 max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50">
+                                <div className="flex flex-wrap gap-1">
+                                    {rollNumbers.slice(0, 100).map((rn, i) => (
+                                        <span key={i} className="inline-block px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs rounded-full">
+                                            {rn}
+                                        </span>
+                                    ))}
+                                    {rollNumbers.length > 100 && (
+                                        <span className="text-xs text-gray-400">+{rollNumbers.length - 100} more</span>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>
