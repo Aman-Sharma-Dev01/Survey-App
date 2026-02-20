@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { BarChart3, Users, CheckCircle, XCircle, Clock, TrendingUp, Loader, Filter, Trophy, Download, ChevronDown, Star } from 'lucide-react';
+import { BarChart3, Users, CheckCircle, XCircle, Clock, TrendingUp, Loader, Filter, Trophy, Download, ChevronDown, Star, X, Eye } from 'lucide-react';
 import { getQuizAnalytics } from '../services/quizService';
 
 const QuizAnalyticsPage = ({ quizId, navigate }) => {
@@ -8,6 +8,7 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
     const [error, setError] = useState('');
     const [selectedClass, setSelectedClass] = useState('');
     const [isQuestionPerformanceOpen, setIsQuestionPerformanceOpen] = useState(false);
+    const [selectedStudent, setSelectedStudent] = useState(null); // For modal
 
     useEffect(() => {
         const fetchAnalytics = async () => {
@@ -156,6 +157,169 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
     }
 
     const { quiz, questionStats } = data;
+
+    // Helper to get question details by ID
+    const getQuestionById = (questionId) => {
+        // First try from quiz.questions (has correct answers)
+        const fromQuiz = quiz.questions?.find(q => q._id === questionId?.toString() || q._id?.toString() === questionId?.toString());
+        if (fromQuiz) return fromQuiz;
+        
+        // Fallback to questionStats (has question text but no correct answers)
+        const fromStats = questionStats?.find(q => q.questionId === questionId?.toString() || q.questionId?.toString() === questionId?.toString());
+        if (fromStats) {
+            return {
+                _id: fromStats.questionId,
+                questionText: fromStats.questionText,
+                questionType: fromStats.questionType,
+                points: 1 // Default points
+            };
+        }
+        return null;
+    };
+
+    // Student Details Modal Component
+    const StudentDetailModal = ({ student, onClose }) => {
+        if (!student) return null;
+
+        const correctAnswers = student.answers?.filter(a => a.isCorrect).length || 0;
+        const incorrectAnswers = (student.answers?.length || 0) - correctAnswers;
+
+        return (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+                <div 
+                    className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden"
+                    onClick={e => e.stopPropagation()}
+                >
+                    {/* Modal Header */}
+                    <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-6 text-white">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h2 className="text-2xl font-bold">{student.participantName}</h2>
+                                <div className="flex gap-4 mt-2 text-emerald-100 text-sm">
+                                    {student.participantClass && <span>Class: {student.participantClass}</span>}
+                                    {student.participantRollNo && <span>Roll No: {student.participantRollNo}</span>}
+                                </div>
+                            </div>
+                            <button 
+                                onClick={onClose}
+                                className="p-2 hover:bg-white/20 rounded-full transition"
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+                        
+                        {/* Summary Stats */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
+                            <div className="bg-white/10 rounded-lg p-3 text-center">
+                                <p className="text-3xl font-bold">{student.score}/{student.totalPoints}</p>
+                                <p className="text-sm text-emerald-100">Total Score</p>
+                            </div>
+                            <div className="bg-white/10 rounded-lg p-3 text-center">
+                                <p className="text-3xl font-bold">{student.percentage}%</p>
+                                <p className="text-sm text-emerald-100">Percentage</p>
+                            </div>
+                            <div className="bg-white/10 rounded-lg p-3 text-center">
+                                <p className="text-3xl font-bold text-green-300">{correctAnswers}</p>
+                                <p className="text-sm text-emerald-100">Correct</p>
+                            </div>
+                            <div className="bg-white/10 rounded-lg p-3 text-center">
+                                <p className="text-3xl font-bold text-red-300">{incorrectAnswers}</p>
+                                <p className="text-sm text-emerald-100">Incorrect</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Question-wise Performance */}
+                    <div className="p-6 overflow-y-auto max-h-[50vh]">
+                        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <BarChart3 size={20} className="text-emerald-600" />
+                            Question-wise Performance
+                        </h3>
+                        
+                        {(!student.answers || student.answers.length === 0) ? (
+                            <div className="text-center py-8 text-gray-500">
+                                <p>Question-wise data not available for this response.</p>
+                                <p className="text-sm mt-2">This response was submitted before question-wise tracking was enabled.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {student.answers.map((answer, idx) => {
+                                    const question = getQuestionById(answer.questionId);
+                                    const maxPoints = question?.points || 1;
+                                    
+                                    return (
+                                        <div 
+                                            key={answer.questionId || idx} 
+                                            className={`p-4 rounded-lg border-l-4 ${
+                                                answer.isCorrect 
+                                                    ? 'bg-green-50 border-green-500' 
+                                                    : 'bg-red-50 border-red-500'
+                                            }`}
+                                        >
+                                            <div className="flex justify-between items-start gap-4">
+                                                <div className="flex-1">
+                                                    <p className="font-medium text-gray-800">
+                                                        Q{idx + 1}. {question?.questionText || 'Question'}
+                                                    </p>
+                                                    <div className="mt-2 text-sm text-gray-600">
+                                                        <p><span className="font-medium">Selected:</span> {answer.selectedOptions?.join(', ') || 'No answer'}</p>
+                                                        {!answer.isCorrect && question?.options && (
+                                                            <p className="text-green-700 mt-1">
+                                                                <span className="font-medium">Correct Answer:</span>{' '}
+                                                                {question.options.filter(o => o.isCorrect).map(o => o.optionText).join(', ')}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="text-right flex-shrink-0">
+                                                    <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
+                                                        answer.isCorrect 
+                                                            ? 'bg-green-100 text-green-700' 
+                                                            : 'bg-red-100 text-red-700'
+                                                    }`}>
+                                                        {answer.isCorrect ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                                                        {answer.pointsEarned || 0}/{maxPoints}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* Total Score Footer */}
+                        <div className="mt-6 pt-4 border-t border-gray-200">
+                            <div className="flex justify-between items-center">
+                                <span className="text-lg font-bold text-gray-800">Total Score</span>
+                                <span className={`text-2xl font-bold ${student.passed ? 'text-emerald-600' : 'text-red-600'}`}>
+                                    {student.score} / {student.totalPoints}
+                                    <span className="text-base ml-2">({student.percentage}%)</span>
+                                </span>
+                            </div>
+                            <div className="mt-2 flex items-center gap-2">
+                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                    student.autoSubmittedDueToTabSwitch 
+                                        ? 'bg-red-100 text-red-700' 
+                                        : student.passed 
+                                            ? 'bg-green-100 text-green-700' 
+                                            : 'bg-red-100 text-red-700'
+                                }`}>
+                                    {student.autoSubmittedDueToTabSwitch ? 'Caught (Tab Switch)' : student.passed ? 'Passed' : 'Failed'}
+                                </span>
+                                {student.timeTaken && (
+                                    <span className="text-sm text-gray-500 flex items-center gap-1">
+                                        <Clock size={14} />
+                                        {Math.floor(student.timeTaken / 60)}m {student.timeTaken % 60}s
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     return (
         <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
@@ -403,17 +567,19 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
                                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Status</th>
                                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Time</th>
                                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Date</th>
+                                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Details</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredResponses.map((response) => (
                                     <tr
                                         key={response._id}
-                                        className={`border-b border-gray-100 ${response.autoSubmittedDueToTabSwitch
+                                        className={`border-b border-gray-100 cursor-pointer transition-colors ${response.autoSubmittedDueToTabSwitch
                                                 ? 'bg-red-50 hover:bg-red-100'
-                                                : 'hover:bg-gray-50'
+                                                : 'hover:bg-emerald-50'
                                             }`}
-                                        title={response.autoSubmittedDueToTabSwitch ? 'Auto-submitted due to tab switching' : ''}
+                                        title={response.autoSubmittedDueToTabSwitch ? 'Auto-submitted due to tab switching' : 'Click to view details'}
+                                        onClick={() => setSelectedStudent(response)}
                                     >
                                         <td className={`py-3 px-4 ${response.autoSubmittedDueToTabSwitch ? 'text-red-700 font-medium' : 'text-gray-800'}`}>
                                             {response.participantName}
@@ -460,6 +626,18 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
                                         <td className={`py-3 px-4 ${response.autoSubmittedDueToTabSwitch ? 'text-red-600' : 'text-gray-600'}`}>
                                             {new Date(response.submittedAt).toLocaleDateString()}
                                         </td>
+                                        <td className="py-3 px-4">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedStudent(response);
+                                                }}
+                                                className="flex items-center gap-1 text-emerald-600 hover:text-emerald-700 font-medium text-sm"
+                                            >
+                                                <Eye size={16} />
+                                                View
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -467,6 +645,14 @@ const QuizAnalyticsPage = ({ quizId, navigate }) => {
                     </div>
                 )}
             </div>
+
+            {/* Student Detail Modal */}
+            {selectedStudent && (
+                <StudentDetailModal 
+                    student={selectedStudent} 
+                    onClose={() => setSelectedStudent(null)} 
+                />
+            )}
         </div>
     );
 };
