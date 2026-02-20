@@ -1,14 +1,14 @@
 // Replace with your backend server URL (manual switch)
 // export const BASE_URL = 'https://survey-app-egj3.onrender.com/api'; // new backend -- Do Not Use
 // export const BASE_URL = 'https://survey-app-e5xz.onrender.com/api'; // old backend ⭐️ -- NOT USE
-// export const BASE_URL = 'https://survey-app-uvcs.onrender.com/api'; // survyzen.live mail
-export const BASE_URL = 'http://localhost:5001/api'; // local dev
+export const BASE_URL = 'https://survey-app-uvcs.onrender.com/api'; // survyzen.live mail
+// export const BASE_URL = 'http://localhost:5001/api'; // local dev
 // Helper to access token storage directly (AuthContext stores token in localStorage)
 const getAuthToken = () => localStorage.getItem('token');
 const removeAuthToken = () => localStorage.removeItem('token');
 
 // Offline queue: will store outgoing mutating requests when offline and flush them when online
-import { init as initOfflineQueue, addRequest as addOfflineRequest, listenForOnline, flushQueue } from './offlineQueue';
+import { init as initOfflineQueue, addRequest as addOfflineRequest, listenForOnline } from './offlineQueue';
 // initialize offline queue with base URL and token getter
 initOfflineQueue(BASE_URL, getAuthToken).catch((e) => console.warn('offlineQueue init failed', e));
 listenForOnline();

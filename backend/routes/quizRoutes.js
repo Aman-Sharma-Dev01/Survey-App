@@ -196,10 +196,6 @@ router.post('/submit/:id', async (req, res) => {
     try {
         const { answers, participantName, participantEmail, participantClass, participantRollNo, timeTaken, startedAt, autoSubmittedDueToTabSwitch, autoSubmittedDueToFullscreenExit, autoSubmittedDueToSplitScreen } = req.body;
 
-        // Debug: log incoming answers
-        console.log('Submit - Incoming answers:', JSON.stringify(answers, null, 2));
-        console.log('Submit - Answers count:', answers?.length);
-
         const quiz = await Quiz.findById(req.params.id);
 
         if (!quiz) {
@@ -307,9 +303,6 @@ router.post('/submit/:id', async (req, res) => {
         const percentage = totalPoints > 0 ? Math.round((totalScore / totalPoints) * 100) : 0;
         const passed = percentage >= (quiz.settings.passingScore || 60);
 
-        // Debug log
-        console.log('Graded answers to save:', JSON.stringify(gradedAnswers, null, 2));
-
         // Create response
         const quizResponse = new QuizResponse({
             quiz: quiz._id,
@@ -330,10 +323,6 @@ router.post('/submit/:id', async (req, res) => {
         });
 
         await quizResponse.save();
-        
-        // Debug: verify saved data
-        const savedResponse = await QuizResponse.findById(quizResponse._id);
-        console.log('Saved response answers:', savedResponse.answers?.length, savedResponse.answers);
 
         // Update attempt count
         quiz.attemptCount += 1;
@@ -384,9 +373,6 @@ router.get('/analytics/:id', protect, async (req, res) => {
 
         const responses = await QuizResponse.find({ quiz: req.params.id })
             .sort({ submittedAt: -1 });
-
-        // Debug: check what answers are in responses
-        console.log('Analytics - First response answers:', responses[0]?.answers);
 
         // Calculate analytics
         const totalResponses = responses.length;
