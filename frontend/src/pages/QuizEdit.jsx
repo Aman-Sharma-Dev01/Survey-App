@@ -568,8 +568,10 @@ const QuizEditPage = ({ quizId, navigate }) => {
 
         setSaving(true);
         try {
-            // Remove tempId before sending
-            const cleanQuestions = questions.map(({ tempId, _id, ...rest }) => rest);
+            // Remove tempId before sending, but preserve _id for existing questions
+            // so Mongoose doesn't regenerate new ObjectIds (which would break grading
+            // for students who loaded the quiz before this edit)
+            const cleanQuestions = questions.map(({ tempId, ...rest }) => rest);
 
             await updateQuiz(quizId, {
                 title,
