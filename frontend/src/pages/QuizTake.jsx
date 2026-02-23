@@ -3,18 +3,40 @@ import QueuedSubmissions from '../components/QueuedSubmissions';
 import { Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, AlertTriangle, Maximize, RefreshCw, Star } from 'lucide-react';
 import { getPublicQuiz, submitQuizResponse, checkRollNoExists } from '../services/quizService';
 
+// Better string hash function (cyrb53-style) for seed generation
+const hashString = (str) => {
+    let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (let i = 0; i < str.length; i++) {
+        const ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+    h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+    h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+};
+
+// Mulberry32 PRNG — returns a function that produces successive random numbers
+const mulberry32 = (seed) => {
+    let s = seed | 0;
+    return () => {
+        s = (s + 0x6D2B79F5) | 0;
+        let t = Math.imul(s ^ (s >>> 15), 1 | s);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+};
+
 // Shuffle array helper with seed for consistency
 const shuffleArray = (array, seed = null) => {
     const arr = [...array];
-    // If seed provided, use seeded shuffle for consistency
     if (seed) {
-        const seededRandom = (s) => {
-            const x = Math.sin(s++) * 10000;
-            return x - Math.floor(x);
-        };
-        let seedNum = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const seedNum = hashString(String(seed));
+        const random = mulberry32(seedNum);
         for (let i = arr.length - 1; i > 0; i--) {
-            const j = Math.floor(seededRandom(seedNum + i) * (i + 1));
+            const j = Math.floor(random() * (i + 1));
             [arr[i], arr[j]] = [arr[j], arr[i]];
         }
     } else {
