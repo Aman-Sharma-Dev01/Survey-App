@@ -143,6 +143,22 @@ const QuizQuestionEditor = ({ question, index, updateQuestion, removeQuestion })
         });
     };
 
+    // Handle paste: split multi-line text into separate options (Google Forms-style)
+    const handleOptionPaste = (e, optIndex) => {
+        const pastedText = e.clipboardData.getData('text');
+        const lines = pastedText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        if (lines.length <= 1) return; // single line = normal paste
+
+        e.preventDefault();
+        const newOptions = [...question.options];
+        // Put first line into the current option
+        newOptions[optIndex] = { ...newOptions[optIndex], optionText: lines[0] };
+        // Insert remaining lines as new options after the current one
+        const extraOptions = lines.slice(1).map(text => ({ optionText: text, isCorrect: false }));
+        newOptions.splice(optIndex + 1, 0, ...extraOptions);
+        updateQuestion(question.tempId, { options: newOptions });
+    };
+
     const toggleCorrect = (optIndex) => {
         if (question.questionType === 'SINGLE' || question.questionType === 'TRUE_FALSE') {
             const newOptions = question.options.map((opt, i) => ({
@@ -266,6 +282,7 @@ const QuizQuestionEditor = ({ question, index, updateQuestion, removeQuestion })
                                                 type="text"
                                                 value={option.optionText}
                                                 onChange={(e) => handleOptionChange(optIndex, 'optionText', e.target.value)}
+                                                onPaste={question.questionType !== 'TRUE_FALSE' ? (e) => handleOptionPaste(e, optIndex) : undefined}
                                                 disabled={question.questionType === 'TRUE_FALSE'}
                                                 className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 disabled:bg-gray-100"
                                                 placeholder={`Option ${optIndex + 1}`}
