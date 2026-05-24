@@ -21,6 +21,7 @@ import couponRoutes from './routes/couponRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
 import interviewRoutes from './routes/interviewRoutes.js';
+import { LogFlow } from 'logflow-sdk';
 
 // Load environment variables
 dotenv.config();
@@ -33,6 +34,18 @@ const app = express();
 // __dirname replacement for ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+
+const logger = new LogFlow({
+  apiKey:  process.env.LOGFLOW_API_KEY,    
+  baseUrl: process.env.LOGFLOW_BASE_URL,
+});
+
+await logger.initialize();
+app.use(logger.middleware());
+
+
+
 
 // Middleware
 // app.use(cors());
@@ -53,12 +66,18 @@ app.use(express.json()); // Allows parsing of JSON request bodies
 
 // Simple test route
 app.get('/', (req, res) => {
-    res.send('Survey API is running...');
+    res.status(200).json({
+        success: true,
+        message: 'Survey API is running...'
+    });
 });
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-    res.status(200).send('OK');
+    res.status(200).json({
+        success: true,
+        status: 'OK'
+    });
 });
 
 // Routes
